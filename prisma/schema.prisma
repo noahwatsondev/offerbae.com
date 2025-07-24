@@ -14,61 +14,92 @@ datasource db {
   url      = env("POSTGRES_PRISMA_URL") // Ensure this is consistent
 }
 
-// =========================================================================
-// ADD THIS USER MODEL BLOCK
-// This represents a user of your application (e.g., an admin, content creator)
-model User {
-  id        String    @id @default(cuid()) // Using cuid() for consistency with other models
-  email     String    @unique // Essential for authentication
-  name      String?   // User's display name
-  password  String    // Hashed password (ensure you store hashes, not plain text!)
-  role      String    @default("ADMIN") // Example: "ADMIN", "EDITOR", "VIEWER"
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
-  // If a User can create multiple Articles, add a relation here
-  articles  Article[]
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }
-// =========================================================================
 
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// THIS IS THE ONE AND ONLY USER MODEL YOU SHOULD HAVE
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // For credentials provider (it's optional if you only use OAuth)
+  role          String    @default("editor") // Add role for RBAC: "admin", "editor"
+  accounts      Account[]
+  sessions      Session[]
+  articles      Article[] // Link to articles if an author
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
 
 // Represents an affiliate advertiser (e.g., Rakuten, Commission Junction)
 model Advertiser {
-  id         String       @id @default(cuid())
-  name       String       @unique
+  id          String       @id @default(cuid())
+  name        String       @unique
   // If you need to store API keys, store them securely (e.g., in a secret manager),
   // not directly in the DB or in plain text here.
-  // apiKey     String? // Remove or implement secure storage outside DB
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  products   Product[]
+  // apiKey      String? // Remove or implement secure storage outside DB
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  products    Product[]
   // Add an array for `couponCodes` if they are linked directly to advertisers
   couponCodes CouponCode[]
 }
 
 // Represents a product/offer fetched from an affiliate API
 model Product {
-  id                   String        @id @default(cuid()) // Your internal unique ID
-  affiliateProductId   String        @unique // The ID from the affiliate network (e.g., Rakuten's product ID)
-  name                 String
-  slug                 String        @unique // URL-friendly name, e.g., "super-gadget-discount"
-  description          String?
-  price                Float
-  currency             String        @default("USD")
-  imageUrl             String?
-  productUrl           String        // The direct link to the product page on the merchant's site
-  affiliateLink        String        @db.VarChar(2048) // The actual affiliate tracking link
-  category             String?       // e.g., "Electronics", "Apparel"
-  subCategory          String?
-  merchantName         String?       // The name of the merchant (e.g., "Best Buy", "Nike")
-  brand                String?       // The brand of the product (e.g., "Dell", "Adidas")
-  advertiserId         String
-  advertiser           Advertiser    @relation(fields: [advertiserId], references: [id])
-  lastFetchedAt        DateTime      // When this data was last updated from the external API
-  couponCodeId         String?       // Optional: Link to a specific coupon code if relevant
-  couponCode           CouponCode?   @relation(fields: [couponCodeId], references: [id])
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  id                 String        @id @default(cuid()) // Your internal unique ID
+  affiliateProductId String        @unique // The ID from the affiliate network (e.g., Rakuten's product ID)
+  name               String
+  slug               String        @unique // URL-friendly name, e.g., "super-gadget-discount"
+  description        String?
+  price              Float
+  currency           String        @default("USD")
+  imageUrl           String?
+  productUrl         String        // The direct link to the product page on the merchant's site
+  affiliateLink      String        @db.VarChar(2048) // The actual affiliate tracking link
+  category           String?       // e.g., "Electronics", "Apparel"
+  subCategory        String?
+  merchantName       String?       // The name of the merchant (e.g., "Best Buy", "Nike")
+  brand              String?       // The brand of the product (e.g., "Dell", "Adidas")
+  advertiserId       String
+  advertiser         Advertiser    @relation(fields: [advertiserId], references: [id])
+  lastFetchedAt      DateTime      // When this data was last updated from the external API
+  couponCodeId       String?       // Optional: Link to a specific coupon code if relevant
+  couponCode         CouponCode?   @relation(fields: [couponCodeId], references: [id])
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   // For User Flow 1: Add fields for comparison, reviews, discounts
   originalPrice        Float?
