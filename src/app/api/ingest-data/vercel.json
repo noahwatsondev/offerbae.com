@@ -1,0 +1,9 @@
+// vercel.json
+{
+  "crons": [
+    {
+      "path": "/api/ingest-data",
+      "schedule": "0 */6 * * *" // Run every 6 hours (at minute 0)
+    }
+  ]
+}

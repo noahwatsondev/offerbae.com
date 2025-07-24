@@ -1,103 +1,123 @@
-import Image from "next/image";
+// src/app/page.tsx
+import { prisma } from '@/lib/prisma';
+import { redis } from '@/lib/redis';
+import Image from 'next/image';
+import Link from 'next/link';
+import ProductCard from '@/components/ProductCard';
+import SearchInput from '@/components/SearchInput';
+import Header from '@/components/Header'; // Create this component
+import Footer from '@/components/Footer'; // Create this component
+import { Suspense } from 'react'; // For loading state for dynamic components
 
-export default function Home() {
+const CACHE_KEY_FEATURED_PRODUCTS = 'featured_products_homepage';
+const CACHE_KEY_TOP_CATEGORIES = 'top_categories_homepage';
+const CACHE_TTL_SECONDS = 3600; // 1 hour
+
+export default async function HomePage() {
+  let featuredProducts = [];
+  let categories = [];
+
+  try {
+    // Fetch featured products
+    const cachedProducts = await redis.get(CACHE_KEY_FEATURED_PRODUCTS);
+    if (cachedProducts) {
+      featuredProducts = JSON.parse(cachedProducts);
+    } else {
+      featuredProducts = await prisma.product.findMany({
+        take: 12, // Fetch a few featured products
+        orderBy: { lastFetchedAt: 'desc' },
+        where: { imageUrl: { not: null, not: '' } }, // Ensure products have images
+        include: { advertiser: true },
+      });
+      await redis.setex(CACHE_KEY_FEATURED_PRODUCTS, CACHE_TTL_SECONDS, JSON.stringify(featuredProducts));
+    }
+
+    // Fetch top categories
+    const cachedCategories = await redis.get(CACHE_KEY_TOP_CATEGORIES);
+    if (cachedCategories) {
+      categories = JSON.parse(cachedCategories);
+    } else {
+      const rawCategories = await prisma.product.findMany({
+        select: { category: true },
+        distinct: ['category'],
+        where: { category: { not: null, not: '' } },
+        take: 8 // Limit to top 8 categories for display
+      });
+      categories = rawCategories.map(c => c.category);
+      await redis.setex(CACHE_KEY_TOP_CATEGORIES, CACHE_TTL_SECONDS, JSON.stringify(categories));
+    }
+
+  } catch (error) {
+    console.error("Error fetching homepage data:", error);
+    // Fallback to direct DB query or empty array if cache fails
+    featuredProducts = await prisma.product.findMany({
+      take: 12,
+      orderBy: { lastFetchedAt: 'desc' },
+      where: { imageUrl: { not: null, not: '' } },
+      include: { advertiser: true },
+    });
+    categories = (await prisma.product.findMany({
+      select: { category: true },
+      distinct: ['category'],
+      where: { category: { not: null, not: '' } },
+      take: 8
+    })).map(c => c.category);
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+      <Header />
+      <main className="container mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <section className="text-center mb-16 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-16 rounded-xl shadow-lg">
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-4 animate-fade-in-up">
+            Unlock Amazing Deals & Discounts!
+          </h1>
+          <p className="text-lg md:text-xl mb-8 opacity-90 animate-fade-in-up delay-100">
+            Your ultimate source for verified coupon codes, product reviews, and unbeatable savings.
+          </p>
+          <div className="flex justify-center animate-fade-in-up delay-200">
+            <SearchInput />
+          </div>
+        </section>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+        {/* Top Categories Section */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Explore Top Categories</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {categories.map((cat, index) => (
+              cat && (
+                <Link key={index} href={`/${slugify(cat, { lower: true, strict: true })}`} className="block p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 text-center text-lg font-semibold text-blue-700 hover:text-blue-900 border border-gray-100">
+                  {cat}
+                </Link>
+              )
+            ))}
+          </div>
+        </section>
+
+        {/* Featured Offers Section */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Featured Offers & Trending Deals</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              <p className="col-span-full text-center text-gray-600">No featured products available at the moment.</p>
+            )}
+          </div>
+        </section>
+
+        {/* Latest Articles/Guides Section (Optional) */}
+        {/* <section className="mb-16">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Latest Guides & Reviews</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/ * Fetch and render ArticleCard components here * /}
+          </div>
+        </section> */}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      <Footer />
+    </>
   );
 }
