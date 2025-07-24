@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL") // Ensure this is consistent
+}
+
+// =========================================================================
+// ADD THIS USER MODEL BLOCK
+// This represents a user of your application (e.g., an admin, content creator)
+model User {
+  id        String    @id @default(cuid()) // Using cuid() for consistency with other models
+  email     String    @unique // Essential for authentication
+  name      String?   // User's display name
+  password  String    // Hashed password (ensure you store hashes, not plain text!)
+  role      String    @default("ADMIN") // Example: "ADMIN", "EDITOR", "VIEWER"
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // If a User can create multiple Articles, add a relation here
+  articles  Article[]
+}
+// =========================================================================
+
+
+// Represents an affiliate advertiser (e.g., Rakuten, Commission Junction)
+model Advertiser {
+  id         String       @id @default(cuid())
+  name       String       @unique
+  // If you need to store API keys, store them securely (e.g., in a secret manager),
+  // not directly in the DB or in plain text here.
+  // apiKey     String? // Remove or implement secure storage outside DB
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  products   Product[]
+  // Add an array for `couponCodes` if they are linked directly to advertisers
+  couponCodes CouponCode[]
+}
+
+// Represents a product/offer fetched from an affiliate API
+model Product {
+  id                   String        @id @default(cuid()) // Your internal unique ID
+  affiliateProductId   String        @unique // The ID from the affiliate network (e.g., Rakuten's product ID)
+  name                 String
+  slug                 String        @unique // URL-friendly name, e.g., "super-gadget-discount"
+  description          String?
+  price                Float
+  currency             String        @default("USD")
+  imageUrl             String?
+  productUrl           String        // The direct link to the product page on the merchant's site
+  affiliateLink        String        @db.VarChar(2048) // The actual affiliate tracking link
+  category             String?       // e.g., "Electronics", "Apparel"
+  subCategory          String?
+  merchantName         String?       // The name of the merchant (e.g., "Best Buy", "Nike")
+  brand                String?       // The brand of the product (e.g., "Dell", "Adidas")
+  advertiserId         String
+  advertiser           Advertiser    @relation(fields: [advertiserId], references: [id])
+  lastFetchedAt        DateTime      // When this data was last updated from the external API
+  couponCodeId         String?       // Optional: Link to a specific coupon code if relevant
+  couponCode           CouponCode?   @relation(fields: [couponCodeId], references: [id])
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  // For User Flow 1: Add fields for comparison, reviews, discounts
+  originalPrice        Float?
+  discountPercentage   Float?
+  // You might store average rating here from external sources, or link to a separate Review model if you manage them
+  // avgRating            Float?
+  // numReviews           Int?
+  availability         String?       // e.g., "In Stock", "Out of Stock"
+  // Example for a searchable content field
+  searchContent        String?       @db.Text // Concatenated text for full-text search (name, desc, category, brand)
+
+  @@index([category]) // Index for faster category lookups
+  @@index([brand]) // Index for faster brand lookups
+  @@index([merchantName]) // Index for faster merchant lookups
+  @@index([slug]) // Index for faster slug lookups
+  @@index([affiliateProductId]) // Index for fast unique lookups during upsert
+}
+
+// Represents a coupon code or promo code (for User Flow 2)
+model CouponCode {
+  id           String    @id @default(cuid())
+  code         String?   // The actual coupon code (e.g., "SAVE15")
+  discount     String    // e.g., "$15 off", "20% off", "Free Shipping"
+  description  String?   // Short description of the coupon
+  merchantName String    // The merchant this code applies to
+  merchantUrl  String?   // Direct URL to the merchant's site (affiliate link)
+  affiliateLink String @db.VarChar(2048) // The actual affiliate tracking link for this coupon
+  advertiserId String    // The affiliate network where this coupon was found
+  advertiser   Advertiser @relation(fields: [advertiserId], references: [id])
+  expirationDate DateTime?
+  isActive     Boolean   @default(true)
+  terms        String?   @db.Text // Full terms and conditions
+  lastVerified DateTime  @default(now()) // When this code was last verified working
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // For User Flow 2:
+  // Add a field to track its usage/effectiveness
+  timesUsed    Int       @default(0) // How many times "View Code" was clicked
+  products     Product[] // Products that this coupon applies to (optional relation)
+
+  @@unique([code, merchantName]) // A code for a specific merchant should be unique
+  @@index([merchantName]) // Index for faster merchant lookups
+}
+
+// Represents a piece of content (articles, guides) for SEO
+model Article {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  content         String   @db.Text
+  excerpt         String?  @db.Text // Short summary for listing pages
+  imageUrl        String?
+  authorId        String   // Link to the User who created it
+  author          User     @relation(fields: [authorId], references: [id])
+  published       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // For SEO optimization
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  keywords        String?  // Comma-separated keywords
+}
