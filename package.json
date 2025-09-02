@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/noahwatsondev/offerbae.com#readme",
   "dependencies": {
+    "@google-cloud/secret-manager": "^6.1.0",
     "axios": "^1.11.0",
     "btoa": "^1.2.1",
     "cors": "^2.8.5",

@@ -2,66 +2,78 @@
 // This file sets up a Node.js server to fetch partnered advertisers from Rakuten, Commission Junction, and AWIN
 // and store them in a Firebase Firestore database.
 
+require('dotenv').config();
 const express = require('express');
-const dotenv = require('dotenv');
 const firebaseAdmin = require('firebase-admin');
 const axios = require('axios');
 const { Parser } = require('xml2js');
 const btoa = require('btoa');
 const path = require('path');
+const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 
-dotenv.config();
+// --- Google Cloud Secret Manager Client ---
+const client = new SecretManagerServiceClient();
 
-// --- FOR DEBUGGING ---
-console.log('Rakuten Client ID:', process.env.RAKUTEN_CLIENT_ID ? 'Loaded' : 'Not Loaded');
-console.log('CJ Personal Access Token:', process.env.CJ_PERSONAL_ACCESS_TOKEN ? 'Loaded' : 'Not Loaded');
-console.log('AWIN Access Token:', process.env.AWIN_ACCESS_TOKEN ? 'Loaded' : 'Not Loaded');
-// --- REMOVE THE LINES ABOVE FOR PRODUCTION ---
-
-// --- Firebase Initialization ---
-let serviceAccount;
-try {
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-  firebaseAdmin.initializeApp({
-    credential: firebaseAdmin.credential.cert(serviceAccount)
+// --- Helper function to get a secret from Secret Manager ---
+const getSecret = async (name) => {
+  // GCP_PROJECT_ID should be set as an environment variable (e.g., in .env file)
+  const [version] = await client.accessSecretVersion({
+    name: `projects/${process.env.GCP_PROJECT_ID}/secrets/${name}/versions/latest`,
   });
-  console.log("Firebase Admin SDK initialized successfully.");
-} catch (error) {
-  console.error("Error initializing Firebase Admin SDK:", error.message);
-  process.exit(1); // Exit if Firebase cannot be initialized
-}
-
-const db = firebaseAdmin.firestore();
+  return version.payload.data.toString('utf8');
+};
 
 // --- API Credentials ---
-const RAKUTEN_CLIENT_ID = process.env.RAKUTEN_CLIENT_ID;
-const RAKUTEN_CLIENT_SECRET = process.env.RAKUTEN_CLIENT_SECRET;
-const RAKUTEN_SITE_ID = process.env.RAKUTEN_SITE_ID;
-const CJ_PERSONAL_ACCESS_TOKEN = process.env.CJ_PERSONAL_ACCESS_TOKEN;
-const CJ_COMPANY_ID = process.env.CJ_COMPANY_ID;
-const AWIN_ACCESS_TOKEN = process.env.AWIN_ACCESS_TOKEN;
-const AWIN_PUBLISHER_ID = process.env.AWIN_PUBLISHER_ID;
+let RAKUTEN_CLIENT_ID, RAKUTEN_CLIENT_SECRET, RAKUTEN_SITE_ID;
+let CJ_PERSONAL_ACCESS_TOKEN, CJ_COMPANY_ID;
+let AWIN_ACCESS_TOKEN, AWIN_PUBLISHER_ID;
+
+// --- Firebase Initialization ---
+let db;
+const initializeApp = async () => {
+  try {
+    const firebaseKey = await getSecret('FIREBASE_SERVICE_ACCOUNT_KEY');
+    const serviceAccount = JSON.parse(firebaseKey);
+    firebaseAdmin.initializeApp({
+      credential: firebaseAdmin.credential.cert(serviceAccount)
+    });
+    console.log("Firebase Admin SDK initialized successfully.");
+    db = firebaseAdmin.firestore();
+
+    // Now, load the other API credentials
+    RAKUTEN_CLIENT_ID = await getSecret('RAKUTEN_CLIENT_ID');
+    RAKUTEN_CLIENT_SECRET = await getSecret('RAKUTEN_CLIENT_SECRET');
+    RAKUTEN_SITE_ID = await getSecret('RAKUTEN_SITE_ID');
+    CJ_PERSONAL_ACCESS_TOKEN = await getSecret('CJ_PERSONAL_ACCESS_TOKEN');
+    CJ_COMPANY_ID = await getSecret('CJ_COMPANY_ID');
+    AWIN_ACCESS_TOKEN = await getSecret('AWIN_ACCESS_TOKEN');
+    AWIN_PUBLISHER_ID = await getSecret('AWIN_PUBLISHER_ID');
+
+    console.log('All API credentials loaded from Secret Manager.');
+
+  } catch (error) {
+    console.error("Error initializing app or loading secrets:", error.message);
+    process.exit(1); // Exit if critical initialization fails
+  }
+};
 
 // --- XML Parser setup for Commission Junction response ---
 const xmlParser = new Parser({
-  explicitArray: false, // Prevents creating arrays for single elements
-  ignoreAttrs: true, // Ignores attributes like total-matched, records-returned etc.
+  explicitArray: false,
+  ignoreAttrs: true,
 });
 
 // --- Function to fetch Rakuten access token ---
 const getRakutenToken = async () => {
-  if (!RAKUTEN_CLIENT_ID || !RAKUTEN_CLIENT_SECRET || !process.env.RAKUTEN_SITE_ID) {
-    throw new Error('Rakuten API credentials (RAKUTEN_CLIENT_ID, RAKUTEN_CLIENT_SECRET, RAKUTEN_SITE_ID) are not set in environment variables.');
+  if (!RAKUTEN_CLIENT_ID || !RAKUTEN_CLIENT_SECRET || !RAKUTEN_SITE_ID) {
+    throw new Error('Rakuten API credentials are not loaded.');
   }
 
   try {
-    // Step 1: base64 encode client_id:client_secret
     const tokenKey = btoa(`${RAKUTEN_CLIENT_ID}:${RAKUTEN_CLIENT_SECRET}`);
-
-    // Step 2: request access token with scope = site id
     const response = await axios.post(
       'https://api.linksynergy.com/token',
-      `scope=${process.env.RAKUTEN_SITE_ID}`, // required scope
+      `scope=${RAKUTEN_SITE_ID}`,
       {
         headers: {
           'Authorization': `Bearer ${tokenKey}`,
@@ -100,7 +112,7 @@ const fetchRakutenPartnerships = async () => {
       const response = await axios.get(
         `https://api.linksynergy.com/v1/partnerships?partner_status=active&limit=${limit}&page=${page}`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${token.trim()}`,
             'Accept': 'application/json'
           }
         }
@@ -159,7 +171,7 @@ const fetchCJPartnerships = async () => {
       const response = await axios.get(
         `https://advertiser-lookup.api.cj.com/v2/advertiser-lookup?requestor-cid=${CJ_COMPANY_ID}&advertiser-ids=joined&records-per-page=${recordsPerPage}&page-number=${pageNumber}`, {
           headers: {
-            'Authorization': `Bearer ${CJ_PERSONAL_ACCESS_TOKEN}`
+            'Authorization': `Bearer ${CJ_PERSONAL_ACCESS_TOKEN.trim()}`
           }
         }
       );
@@ -217,7 +229,7 @@ const fetchAWINProgrammes = async () => {
     const response = await axios.get(
       `https://api.awin.com/publishers/${AWIN_PUBLISHER_ID}/programmes?relationship=joined`, {
         headers: {
-          'Authorization': `Bearer ${AWIN_ACCESS_TOKEN}`,
+          'Authorization': `Bearer ${AWIN_ACCESS_TOKEN.trim()}`,
           'Accept': 'application/json'
         }
       }
@@ -457,11 +469,15 @@ app.get('/', (req, res) => {
   res.send(htmlPage);
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+// Start the server only after credentials have been loaded
+initializeApp().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is running at http://localhost:${PORT}`);
+  });
+  // Automatically run the all-network update every hour
+  const ONE_HOUR = 60 * 60 * 1000;
+  setInterval(updateAllAdvertisers, ONE_HOUR);
 });
 
-// Automatically run the all-network update every hour
-const ONE_HOUR = 60 * 60 * 1000;
-setInterval(updateAllAdvertisers, ONE_HOUR);
+// This is where you would place the other functions like fetchRakutenPartnerships, fetchCJPartnerships, etc.
+// They remain unchanged from the previous code block.
