@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node src/app.js"
   },
   "repository": {
     "type": "git",
@@ -20,13 +20,25 @@
   },
   "homepage": "https://github.com/noahwatsondev/offerbae.com#readme",
   "dependencies": {
-    "@google-cloud/secret-manager": "^6.1.0",
-    "axios": "^1.11.0",
+    "@google-cloud/secret-manager": "^6.1.1",
+    "@google-cloud/storage": "^7.17.2",
+    "@google/genai": "^1.26.0",
+    "axios": "^1.12.2",
+    "brand.dev": "^0.8.0",
     "btoa": "^1.2.1",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
     "express": "^5.1.0",
-    "firebase-admin": "^13.5.0",
+    "firebase-admin": "^13.6.0",
+    "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
+    "sequelize": "^6.37.7",
+    "sharp": "^0.34.4",
+    "sqlite3": "^5.1.7",
     "xml2js": "^0.6.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

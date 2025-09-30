@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Style | Mission Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f9fafb;
+            --surface: #ffffff;
+            --text-main: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        header .container {
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary);
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"],
+        input[type="file"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 0.9rem;
+        }
+
+        input[type="color"] {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+        }
+
+        .preview-box {
+            margin-top: 0.5rem;
+            padding: 1rem;
+            border: 1px dashed var(--border);
+            border-radius: 0.375rem;
+            text-align: left;
+            background: #fafafa;
+        }
+
+        .preview-box img {
+            max-width: 200px;
+            max-height: 100px;
+            object-fit: contain;
+            background: white;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, .5);
+            margin-right: 20px;
+        }
+
+        }
+
+        /* Buttons (Copied from index.ejs for Preview) */
+        .toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .toggle-btn:hover {
+            background-color: #f9fafb;
+            border-color: var(--text-secondary);
+        }
+
+        .toggle-btn.active {
+            background-color: #eff6ff;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Live Preview Base Styles */
+        .preview-filter-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            background-color: var(--surface);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .preview-category-link {
+            color: var(--text-secondary);
+            background-color: #f3f4f6;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            border: none;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .preview-category-link.active {
+            color: white;
+            background-color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container" style="padding: 0 1.5rem;">
+            <h1>Mission Control</h1>
+            <div class="nav-links">
+                <a href="/mission-control/style" class="nav-link active">Style</a>
+                <a href="/mission-control/architecture" class="nav-link">Architecture</a>
+                <a href="/mission-control" class="nav-link" style="color: var(--text-main);">← Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <form action="/mission-control/style" method="POST" enctype="multipart/form-data">
+
+            <!-- Branding Section -->
+            <div class="card">
+                <h2>Branding</h2>
+
+                <div class="form-group">
+                    <label for="logoText">Logo Text</label>
+                    <input type="text" id="logoText" name="logoText" value="<%= settings.logoText || 'OfferBae' %>"
+                        placeholder="e.g. OfferBae">
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Displayed to the
+                        right of the logo image.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="logoImage">Logo Image</label>
+                    <input type="file" id="logoImage" name="logoImage" accept="image/*">
+                    <% if (settings.logoUrl) { %>
+                        <div class="preview-box">
+                            <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                                <img id="currentLogo" src="<%= settings.logoUrl %>" alt="Current Logo"
+                                    style="max-width: 150px; height: auto;">
+                                <div id="colorPalette" style="flex: 1;">
+                                    <ul
+                                        style="list-style: none; padding: 0; margin: 0; font-family: monospace; font-size: 0.8rem;">
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <% } %>
+                </div>
+
+                <div class="form-group">
+                    <label for="logoStyles">Logo Text Styles</label>
+                    <textarea id="logoStyles" name="logoStyles" rows="4"
+                        style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                        placeholder="color: white;&#10;text-decoration: none;"><%= settings.logoStyles || "" %></textarea>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Enter raw
+                        CSS rules
+                        (e.g. color: red; font-weight: bold;)</p>
+
+                    <div style="margin-top: 1rem;">
+                        <label style="font-size: 0.8rem; margin-bottom: 0.5rem; display: block;">Live
+                            Preview:</label>
+                        <div id="previewContainer"
+                            style="padding: 1.5rem; border: 1px dashed var(--border); border-radius: 0.375rem; background-color: <%= settings.bgColor || '#f9fafb' %>; text-align: left;">
+                            <h1 id="logoPreview" style="margin: 0; font-size: 1.5rem; <%= settings.logoStyles || '' %>">
+                                <%= settings.logoText || 'OfferBae' %>
+                            </h1>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label for="headerStyles">Header Styles</label>
+                        <textarea id="headerStyles" name="headerStyles" rows="4"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="border-bottom: 2px solid #ccc;&#10;padding: 2rem 0;"><%= settings.headerStyles || "" %></textarea>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Enter raw CSS
+                            rules for the header container.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appearance Section -->
+            <div class="card">
+                <h2>Appearance</h2>
+
+                <div class="form-group">
+                    <label for="defaultLinkColor">Default Link Color</label>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <input type="color" id="defaultLinkColor" name="defaultLinkColor"
+                            value="<%= settings.defaultLinkColor || '#4f46e5' %>">
+                        <span style="font-family: monospace; color: var(--text-secondary);">
+                            <%= settings.defaultLinkColor || '#4f46e5' %>
+                        </span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                        Global default color for links.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="bgColor">Background Color</label>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <input type="color" id="bgColor" name="bgColor" value="<%= settings.bgColor || '#f9fafb' %>">
+                        <span style="font-family: monospace; color: var(--text-secondary);">
+                            <%= settings.bgColor || '#f9fafb' %>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bgImage">Background Image</label>
+                    <input type="file" id="bgImage" name="bgImage" accept="image/*">
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Overrides
+                        background color if set.</p>
+                    <% if (settings.bgImageUrl) { %>
+                        <div class="preview-box">
+                            <p style="margin-bottom: 0.5rem; font-size: 0.8rem;">Current Background:</p>
+                            <img src="<%= settings.bgImageUrl %>" alt="Current Background">
+                        </div>
+                        <% } %>
+                </div>
+            </div>
+
+            <!-- Homepage Section -->
+            <div class="card">
+                <h2>Homepage</h2>
+                <div class="form-group">
+                    <label for="categoriesHeading">Categories Heading</label>
+                    <input type="text" id="categoriesHeading" name="categoriesHeading"
+                        value="<%= settings.categoriesHeading || '' %>" placeholder="e.g. Browse by Category">
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Heading text
+                        displayed above the category list.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="categoriesHeadingStyles">Categories Heading Styles</label>
+                    <textarea id="categoriesHeadingStyles" name="categoriesHeadingStyles" rows="3"
+                        style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                        placeholder="font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; display: block;"><%= settings.categoriesHeadingStyles || "" %></textarea>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">CSS for the
+                        categories heading.</p>
+                </div>
+                <div class="form-group">
+                    <label for="filterInputStyles">Search Bar Styles</label>
+                    <textarea id="filterInputStyles" name="filterInputStyles" rows="3"
+                        style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                        placeholder="border: 2px solid var(--primary); background-color: white;"><%= settings.filterInputStyles || "" %></textarea>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">CSS for
+                        .filter-input</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="categorySelectedStyles">Selected Category</label>
+                    <textarea id="categorySelectedStyles" name="categorySelectedStyles" rows="3"
+                        style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                        placeholder="background-color: var(--primary); color: white;"><%= settings.categorySelectedStyles || "" %></textarea>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">CSS for
+                        .category-link.active-category</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="categoryLinkStyles">Category Links</label>
+                    <textarea id="categoryLinkStyles" name="categoryLinkStyles" rows="3"
+                        style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                        placeholder="border-radius: 9999px; background-color: #f3f4f6;"><%= settings.categoryLinkStyles || "" %></textarea>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">CSS for
+                        .category-link</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="categoryHoverStyles">Category Link Hover</label>
+                    <textarea id="categoryHoverStyles" name="categoryHoverStyles" rows="3"
+                        style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                        placeholder="background-color: #e5e7eb; color: black;"><%= settings.categoryHoverStyles || "" %></textarea>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">CSS for
+                        .category-link:hover</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="offersCtaStyles">Offers CTA Style</label>
+                    <textarea id="offersCtaStyles" name="offersCtaStyles" rows="3"
+                        style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                        placeholder="background-color: var(--primary); color: white;"><%= settings.offersCtaStyles || "" %></textarea>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">CSS for
+                        .toggle-offers-btn</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="offersCtaCountStyles">Offers CTA (Count) Style</label>
+                    <textarea id="offersCtaCountStyles" name="offersCtaCountStyles" rows="3"
+                        style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                        placeholder="font-weight: bold; background: white; color: var(--primary);"><%= settings.offersCtaCountStyles || "" %></textarea>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">CSS for
+                        .toggle-offers-btn .count</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="productsCtaStyles">Products CTA Style</label>
+                    <textarea id="productsCtaStyles" name="productsCtaStyles" rows="3"
+                        style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                        placeholder="background-color: transparent; border: 1px solid var(--primary);"><%= settings.productsCtaStyles || "" %></textarea>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">CSS for
+                        .toggle-products-btn</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="productsCtaCountStyles">Products CTA (Count) Style</label>
+                    <textarea id="productsCtaCountStyles" name="productsCtaCountStyles" rows="3"
+                        style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                        placeholder="font-weight: bold; background: var(--primary); color: white;"><%= settings.productsCtaCountStyles || "" %></textarea>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">CSS for
+                        .toggle-products-btn .count</p>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <label style="font-size: 0.8rem; margin-bottom: 0.5rem; display: block;">Live Preview:</label>
+                    <div id="homepagePreviewContainer"
+                        style="padding: 1.5rem; border: 1px dashed var(--border); border-radius: 0.375rem; background-color: <%= settings.bgColor || '#f9fafb' %>; text-align: left;">
+
+                        <!-- Search Bar Preview -->
+                        <h3 id="previewCategoriesHeading" class="preview-heading"></h3>
+                        <input type="text" class="preview-filter-input" placeholder="Search placeholder..." readonly>
+
+                        <!-- Category Buttons Preview -->
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="preview-category-link active">Active</button>
+                            <button type="button" class="preview-category-link">Inactive</button>
+                        </div>
+
+                        <!-- CTA Buttons Preview -->
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button type="button" class="toggle-offers-btn toggle-btn"><span class="count">5</span>
+                                Offers</button>
+                            <button type="button" class="toggle-products-btn toggle-btn"><span class="count">12</span>
+                                Products</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem;">
+                    <h3
+                        style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                        Sub-Tables (Offers & Products)</h3>
+
+                    <!-- OFFERS -->
+                    <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--primary);">
+                        Offers Table</h4>
+
+                    <div class="form-group">
+                        <label for="offerRowStyles">Offer - Row</label>
+                        <textarea id="offerRowStyles" name="offerRowStyles" rows="2"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="background-color: #f9f9f9;"><%= settings.offerRowStyles || "" %></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="offerImageStyles">Offer - Image</label>
+                        <textarea id="offerImageStyles" name="offerImageStyles" rows="2"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="border-radius: 4px;"><%= settings.offerImageStyles || "" %></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="offerPromoCodeStyles">Offer - Promo Code</label>
+                        <textarea id="offerPromoCodeStyles" name="offerPromoCodeStyles" rows="2"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="font-weight: bold; color: green;"><%= settings.offerPromoCodeStyles || "" %></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="offerTitleStyles">Offer - Title</label>
+                        <textarea id="offerTitleStyles" name="offerTitleStyles" rows="2"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="font-size: 1.1rem;"><%= settings.offerTitleStyles || "" %></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="offerTimeLeftStyles">Offer - Time Left</label>
+                        <textarea id="offerTimeLeftStyles" name="offerTimeLeftStyles" rows="2"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="font-style: italic;"><%= settings.offerTimeLeftStyles || "" %></textarea>
+                    </div>
+
+                    <!-- PRODUCTS -->
+                    <h4
+                        style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--primary); margin-top: 1.5rem;">
+                        Products Table</h4>
+
+                    <div class="form-group">
+                        <label for="productRowStyles">Product - Row</label>
+                        <textarea id="productRowStyles" name="productRowStyles" rows="2"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="border-bottom: 1px solid #eee;"><%= settings.productRowStyles || "" %></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="productImageStyles">Product - Image</label>
+                        <textarea id="productImageStyles" name="productImageStyles" rows="2"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="border: 1px solid #ccc;"><%= settings.productImageStyles || "" %></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="productTitleStyles">Product - Title</label>
+                        <textarea id="productTitleStyles" name="productTitleStyles" rows="2"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="font-weight: 600;"><%= settings.productTitleStyles || "" %></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="productPriceStyles">Product - Price</label>
+                        <textarea id="productPriceStyles" name="productPriceStyles" rows="2"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="font-size: 1.2rem;"><%= settings.productPriceStyles || "" %></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="productSalePriceStyles">Product - Sale Price</label>
+                        <textarea id="productSalePriceStyles" name="productSalePriceStyles" rows="2"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="color: red;"><%= settings.productSalePriceStyles || "" %></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: right;">
+                <button type="submit" class="btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const logoText = document.getElementById('logoText');
+            const logoStyles = document.getElementById('logoStyles');
+            const logoPreview = document.getElementById('logoPreview');
+            const previewContainer = document.getElementById('previewContainer');
+            const bgColor = document.getElementById('bgColor');
+            const previewBox = document.querySelector('.preview-box');
+            const headerStyles = document.getElementById('headerStyles');
+
+            // Homepage Preview Elements
+            const categoriesHeading = document.getElementById('categoriesHeading');
+            const categoriesHeadingStyles = document.getElementById('categoriesHeadingStyles');
+            const previewCategoriesHeading = document.getElementById('previewCategoriesHeading');
+
+            const filterInputStyles = document.getElementById('filterInputStyles');
+            const categorySelectedStyles = document.getElementById('categorySelectedStyles');
+            const categoryLinkStyles = document.getElementById('categoryLinkStyles');
+            const categoryHoverStyles = document.getElementById('categoryHoverStyles');
+            const homepagePreviewContainer = document.getElementById('homepagePreviewContainer');
+            const livePreviewStyles = document.createElement('style');
+            livePreviewStyles.id = 'live-preview-styles';
+            document.head.appendChild(livePreviewStyles);
+
+            function updatePreview() {
+                if (logoPreview) {
+                    logoPreview.innerText = logoText.value || 'OfferBae';
+                    logoPreview.style.cssText = `margin: 0; font-size: 1.5rem; ${logoStyles.value}`;
+                }
+                // Update containers based on bgcolor
+                if (previewContainer) {
+                    previewContainer.style.backgroundColor = bgColor.value;
+                }
+                if (homepagePreviewContainer) {
+                    homepagePreviewContainer.style.backgroundColor = bgColor.value;
+                }
+            }
+
+            function updateHomepagePreview() {
+                const filterCss = filterInputStyles ? filterInputStyles.value : '';
+                const catSelectedCss = categorySelectedStyles ? categorySelectedStyles.value : '';
+                const catLinkCss = categoryLinkStyles ? categoryLinkStyles.value : '';
+                const catHoverCss = categoryHoverStyles ? categoryHoverStyles.value : '';
+                const headingCss = categoriesHeadingStyles ? categoriesHeadingStyles.value : '';
+
+                // Update Heading Text
+                if (previewCategoriesHeading) {
+                    previewCategoriesHeading.innerText = categoriesHeading ? (categoriesHeading.value || 'Preview Heading') : '';
+                    // We'll apply styles via the stylesheet below for consistency, but text needs direct update
+                }
+
+                // Dynamically inject styles for the preview classes
+                // Increased specificty by adding ID parent to override defaults and browser UA styles
+                const offersCss = offersCtaStyles ? offersCtaStyles.value : '';
+                const productsCss = productsCtaStyles ? productsCtaStyles.value : '';
+                const offersCountCss = offersCtaCountStyles ? offersCtaCountStyles.value : '';
+                const productsCountCss = productsCtaCountStyles ? productsCtaCountStyles.value : '';
+
+                let css = `
+                     #homepagePreviewContainer .preview-filter-input {
+                         ${filterCss}
+                     }
+                     #homepagePreviewContainer .preview-heading {
+                         ${headingCss}
+                     }
+                     #homepagePreviewContainer .preview-category-link {
+                         ${catLinkCss}
+                     }
+                     #homepagePreviewContainer .preview-category-link.active {
+                         ${catSelectedCss}
+                     }
+                     #homepagePreviewContainer .preview-category-link:not(.active):hover {
+                         ${catHoverCss}
+                     }
+                     #homepagePreviewContainer .preview-offers-btn {
+                         ${offersCss}
+                     }
+                     #homepagePreviewContainer .preview-products-btn {
+                         ${productsCss}
+                     }
+                     
+                     /* Updated selectors to match index.ejs classes used in updated preview HTML */
+                     #homepagePreviewContainer .toggle-offers-btn {
+                         ${offersCss}
+                     }
+                     #homepagePreviewContainer .toggle-products-btn {
+                         ${productsCss}
+                     }
+                     #homepagePreviewContainer .toggle-offers-btn .count {
+                         ${offersCountCss}
+                     }
+                     #homepagePreviewContainer .toggle-products-btn .count {
+                         ${productsCountCss}
+                     }
+                     #homepagePreviewContainer .preview-offers-btn .count {
+                         ${offersCountCss}
+                     }
+                     #homepagePreviewContainer .preview-products-btn .count {
+                         ${productsCountCss}
+                     }
+                 `;
+                livePreviewStyles.textContent = css;
+            }
+
+            // Attach listeners
+            [logoText, logoStyles, bgColor, headerStyles].forEach(el => {
+                if (el) el.addEventListener('input', updatePreview);
+            });
+
+            const offersCtaStyles = document.getElementById('offersCtaStyles');
+            const productsCtaStyles = document.getElementById('productsCtaStyles');
+            const offersCtaCountStyles = document.getElementById('offersCtaCountStyles');
+            const productsCtaCountStyles = document.getElementById('productsCtaCountStyles');
+
+            [filterInputStyles, categorySelectedStyles, categoryLinkStyles, categoryHoverStyles, offersCtaStyles, productsCtaStyles, offersCtaCountStyles, productsCtaCountStyles, categoriesHeading, categoriesHeadingStyles].forEach(el => {
+                if (el) el.addEventListener('input', updateHomepagePreview);
+            });
+
+            // Color Analysis Logic
+            const img = document.getElementById('currentLogo');
+            const paletteContainer = document.getElementById('colorPalette');
+
+            if (img && paletteContainer) {
+                // Ensure image is loaded before analysis
+                if (img.complete) {
+                    analyzeLogoColors();
+                } else {
+                    img.addEventListener('load', analyzeLogoColors);
+                }
+
+                function analyzeLogoColors() {
+                    const proxyImg = new Image();
+                    proxyImg.crossOrigin = "Anonymous";
+                    proxyImg.src = '/api/proxy-image?url=' + encodeURIComponent(img.src);
+
+                    proxyImg.onload = function () {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = proxyImg.width;
+                        canvas.height = proxyImg.height;
+
+                        try {
+                            ctx.drawImage(proxyImg, 0, 0, proxyImg.width, proxyImg.height);
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const data = imageData.data;
+                            const colorCounts = {};
+
+                            for (let i = 0; i < data.length; i += 4) {
+                                const r = data[i];
+                                const g = data[i + 1];
+                                const b = data[i + 2];
+                                const a = data[i + 3];
+
+                                if (a < 128) continue; // Ignore transparent pixels
+
+                                const hex = rgbToHex(r, g, b);
+                                colorCounts[hex] = (colorCounts[hex] || 0) + 1;
+                            }
+
+                            const sortedColors = Object.entries(colorCounts)
+                                .sort(([, a], [, b]) => b - a)
+                                .slice(0, 5)
+                                .map(([color]) => color);
+
+                            const ul = paletteContainer.querySelector('ul');
+                            ul.innerHTML = sortedColors.map(color => `
+                                     <li style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+                                         <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${color}; margin-right: 0.5rem; border: 1px solid rgba(0,0,0,0.1);"></span>
+                                         ${color}
+                                     </li>
+                                 `).join('');
+
+                        } catch (e) {
+                            console.error('Canvas error:', e);
+                        }
+                    };
+
+                    proxyImg.onerror = function () {
+                        console.error('Cannot load image via proxy.');
+                    };
+                }
+
+                function rgbToHex(r, g, b) {
+                    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+                }
+            }
+
+            // Initial run
+            updatePreview();
+            updateHomepagePreview();
+        });
+    </script>
+</body>
+
+</html>

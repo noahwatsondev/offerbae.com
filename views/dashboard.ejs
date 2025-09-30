@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OfferBae Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Filter Bar Styles */
+        .filter-bar {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: var(--text-main);
+            background-color: var(--bg);
+        }
+
+        .filter-select:focus,
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+
+        .table-container {
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding-bottom: 2rem !important;
+            border-bottom: 0;
+            padding-top: 2rem !important;
+        }
+
+        .stat-sub {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .logo-cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .logo-cell img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inactive {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .network-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .network-rakuten {
+            background-color: #bfdbfe;
+            color: #1e40af;
+        }
+
+        .network-cj {
+            background-color: #fed7aa;
+            color: #9a3412;
+        }
+
+        .network-awin {
+            background-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .action-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+            color: var(--primary) !important;
+            cursor: not-allowed !important;
+        }
+    </style>
+</head>
+
+<body>
+    <% var networks=[...new Set(advertisers.map(a=> a.network))].sort();
+        var allCategories = advertisers.flatMap(a => a.categories);
+        var categories = [...new Set(allCategories)].sort();
+
+        // Create a map of coupons by advertiser ID for easy lookup
+        var couponsByAdvertiser = {};
+        if (typeof coupons !== 'undefined' && coupons) {
+        coupons.forEach(c => {
+        if (!couponsByAdvertiser[c.advertiserId]) {
+        couponsByAdvertiser[c.advertiserId] = [];
+        }
+        couponsByAdvertiser[c.advertiserId].push(c);
+        });
+        }
+        %>
+
+        <div class="container">
+            <header>
+                <h1>OfferBae Admin</h1>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <a href="/mission-control/style" style="
+                        text-decoration: none;
+                        color: var(--text-secondary);
+                        font-weight: 500;
+                        font-size: 0.9rem;
+                    ">Style</a>
+                    <a href="/mission-control/architecture" style="
+                        text-decoration: none;
+                        color: var(--text-secondary);
+                        font-weight: 500;
+                        font-size: 0.9rem;
+                    ">Architecture</a>
+                    <form action="/refresh" method="POST" style="margin: 0;">
+                        <button type="submit" style="
+                            background-color: var(--primary);
+                            color: white;
+                            border: none;
+                            padding: 0.5rem 1rem;
+                            border-radius: 6px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: background-color 0.2s;
+                        " onmouseover="this.style.backgroundColor='var(--primary-hover)'"
+                            onmouseout="this.style.backgroundColor='var(--primary)'">
+                            Sync Now
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Network Totals</div>
+                    <div style="margin-top: 10px; font-weight: 500;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: var(--text-secondary);">Brands:</span>
+                            <span id="total-count" class="stat-value"
+                                style="font-size: 1.1rem !important; margin: 0 !important;">
+                                <%= stats.totalAdvertisers %>
+                            </span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: var(--text-secondary);">Offers:</span>
+                            <span class="stat-value" style="font-size: 1.1rem !important; margin: 0 !important;">
+                                <%= stats.totalCoupons.toLocaleString() %>
+                            </span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary);">Products:</span>
+                            <span class="stat-value" style="font-size: 1.1rem !important; margin: 0 !important;">
+                                <%= stats.totalProducts.toLocaleString() %>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div class="stat-label">Rakuten</div>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="refresh-icon" data-network="Rakuten"
+                            style="width: 16px; height: 16px; cursor: pointer; color: var(--text-secondary);">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                    </div>
+                    <div id="rakuten-count" class="stat-value">
+                        <%= stats.networkDetailed.Rakuten.advertisers %>
+                    </div>
+                    <div class="stat-sub">Offers:
+                        <%= stats.networkDetailed.Rakuten.offers.toLocaleString() %>
+                    </div>
+                    <div class="stat-sub">Products:
+                        <%= stats.networkDetailed.Rakuten.products.toLocaleString() %>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div class="stat-label">CJ</div>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="refresh-icon" data-network="CJ"
+                            style="width: 16px; height: 16px; cursor: pointer; color: var(--text-secondary);">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                    </div>
+                    <div id="cj-count" class="stat-value">
+                        <%= stats.networkDetailed.CJ.advertisers %>
+                    </div>
+                    <div class="stat-sub">Offers:
+                        <%= stats.networkDetailed.CJ.offers.toLocaleString() %>
+                    </div>
+                    <div class="stat-sub">Products:
+                        <%= stats.networkDetailed.CJ.products.toLocaleString() %>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div class="stat-label">AWIN</div>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="refresh-icon" data-network="AWIN"
+                            style="width: 16px; height: 16px; cursor: pointer; color: var(--text-secondary);">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                    </div>
+                    <div id="awin-count" class="stat-value">
+                        <%= stats.networkDetailed.AWIN.advertisers %>
+                    </div>
+                    <div class="stat-sub">Offers:
+                        <%= stats.networkDetailed.AWIN.offers.toLocaleString() %>
+                    </div>
+                    <div class="stat-sub">Products:
+                        <%= stats.networkDetailed.AWIN.products.toLocaleString() %>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" id="search-input" class="filter-input" placeholder="Search brands...">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Network</label>
+                    <select id="network-filter" class="filter-select">
+                        <option value="all">All Networks</option>
+                        <% networks.forEach(n=> { %>
+                            <option value="<%= n %>">
+                                <%= n %>
+                            </option>
+                            <% }); %>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Category</label>
+                    <select id="category-filter" class="filter-select">
+                        <option value="all">All Categories</option>
+                        <% categories.forEach(c=> { %>
+                            <option value="<%= c %>">
+                                <%= c %>
+                            </option>
+                            <% }); %>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="brands-table">
+                    <thead>
+                        <tr>
+                            <th>Logo</th>
+                            <th onclick="sortTable(1)" style="cursor: pointer;">Name ↕</th>
+                            <th onclick="sortTable(2)" style="cursor: pointer;">Network ↕</th>
+                            <th onclick="sortTable(3)" style="cursor: pointer;">Status ↕</th>
+                            <th onclick="sortTable(4, 'number')" style="cursor: pointer;">Offers ↕</th>
+                            <th onclick="sortTable(5, 'number')" style="cursor: pointer;">Products ↕</th>
+                            <th onclick="sortTable(6)" style="cursor: pointer;">Categories ↕</th>
+                            <th style="text-align: center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                </svg>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <% advertisers.forEach(adv=> { %>
+                            <tr class="brand-row" data-network="<%= adv.network %>"
+                                data-categories='<%= JSON.stringify(adv.categories || []).toLowerCase() %>'
+                                data-name="<%= adv.name.toLowerCase() %>">
+                                <td>
+                                    <div class="logo-cell" data-adv-id="<%= adv.id %>">
+                                        <% if (adv.logoUrl) { %>
+                                            <img src="<%= adv.logoUrl %>" alt="<%= adv.name %>"
+                                                style="width: 100%; height: 100%; object-fit: contain;">
+                                            <% } else { %>
+                                                <span>?</span>
+                                                <% } %>
+                                    </div>
+                                </td>
+
+                                <td data-sort="<%= adv.name.toLowerCase() %>">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <strong>
+                                            <%= adv.name %>
+                                        </strong>
+
+                                        <% if (adv.manualHomeUrl) { %>
+                                            <a href="<%= adv.manualHomeUrl %>" target="_blank"
+                                                title="Affiliate Home Link"
+                                                style="text-decoration: none; line-height: 0;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"
+                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6">
+                                                    </path>
+                                                    <polyline points="15 3 21 3 21 9"></polyline>
+                                                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                                                </svg>
+                                            </a>
+                                            <% } %>
+
+                                                <% if (adv.url) { %>
+                                                    <a href="<%= adv.url %>" target="_blank" title="Brand Website"
+                                                        style="text-decoration: none; line-height: 0;">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                            viewBox="0 0 24 24" fill="none" stroke="#6b7280"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path
+                                                                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6">
+                                                            </path>
+                                                            <polyline points="15 3 21 3 21 9"></polyline>
+                                                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                                                        </svg>
+                                                    </a>
+                                                    <% } %>
+                                    </div>
+                                    <span
+                                        style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">
+                                        <%= adv.id %>
+                                    </span>
+                                </td>
+                                <td data-sort="<%= adv.network.toLowerCase() %>">
+                                    <span class="network-badge network-<%= adv.network.toLowerCase() %>">
+                                        <%= adv.network %>
+                                    </span>
+                                </td>
+                                <td data-sort="<%= adv.status %>">
+                                    <span
+                                        class="status-badge <%= adv.status === 'active' || adv.status === 'joined' ? 'status-active' : 'status-inactive' %>">
+                                        <%= adv.status %>
+                                    </span>
+                                </td>
+                                <% var offCount=offerCounts[adv.id] || 0; %>
+                                    <td data-sort="<%= offCount %>">
+                                        <% if (offCount> 0) { %>
+                                            <!-- Lazy Load Button for Offers -->
+
+
+                                            <button class="toggle-offers-btn" data-adv-id="<%= adv.id %>"
+                                                data-loaded="false" style="
+                                            background: none;
+                                            border: 1px solid var(--primary);
+                                            color: var(--primary);
+                                            padding: 0.25rem 0.5rem;
+                                            border-radius: 4px;
+                                            cursor: pointer;
+                                            font-size: 0.75rem;
+                                            font-weight: 600;
+                                            white-space: nowrap;
+                                            min-width: 100px;
+                                        ">Show (<%= offCount.toLocaleString() %>)</button>
+                                            <% } else { %>
+                                                <span style="color: var(--text-secondary); font-size: 0.75rem;">-</span>
+                                                <% } %>
+                                    </td>
+                                    <% var pCount=productCounts[adv.id] || 0; %>
+                                        <td data-sort="<%= pCount %>">
+                                            <% if (pCount> 0) { %>
+                                                <button class="toggle-products-btn" data-adv-id="<%= adv.id %>"
+                                                    data-loaded="false" style="
+                                            background: none;
+                                            border: 1px solid var(--primary);
+                                            color: var(--primary);
+                                            padding: 0.25rem 0.5rem;
+                                            border-radius: 4px;
+                                            cursor: pointer;
+                                            font-size: 0.75rem;
+                                            font-weight: 600;
+                                            white-space: nowrap;
+                                            min-width: 100px;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            gap: 6px;
+                                        ">
+                                                    <span>Show (<%= pCount.toLocaleString() %>)</span>
+                                                    <% if (adv.saleProductCount> 0) { %>
+                                                        <span title="<%= adv.saleProductCount %> items on sale" style="
+                                                    background-color: #ef4444; 
+                                                    color: white; 
+                                                    border-radius: 4px; 
+                                                    padding: 1px 4px; 
+                                                    font-size: 0.6rem; 
+                                                    font-weight: 700;
+                                                ">SALE</span>
+                                                        <% } %>
+                                                </button>
+                                                <% } else { %>
+                                                    <span
+                                                        style="color: var(--text-secondary); font-size: 0.75rem;">-</span>
+                                                    <% } %>
+                                        </td>
+                                        <td class="category-cell"
+                                            data-original-text="<%= (adv.categories || []).join(', ') %>"
+                                            data-sort="<%= (adv.categories || []).join(', ').toLowerCase() %>">
+                                            <%= (adv.categories || []).join(', ') %>
+
+                                </td>
+                                <td>
+
+
+                                    <div class="dropdown">
+
+                                        <button class="action-btn" onclick="toggleDropdown(this)" style="
+                                        background: var(--surface);
+                                        border: 1px solid var(--border);
+                                        padding: 0.25rem 0.5rem;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        color: var(--text-primary);
+                                        display: inline-flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                    ">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                        </svg>
+                                    </button>
+    
+                                    <div class="dropdown-content" style="
+                                        display: none;
+                                        position: absolute;
+                                        right: 0;
+                                        background-color: var(--surface);
+                                        min-width: 140px;
+                                        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                                        z-index: 100;
+                                        border: 1px solid var(--border);
+                                        border-radius: 4px;
+                                        text-align: left;
+                                    ">
+                                        <div style="padding: 0.5rem; font-size: 0.7rem; font-weight: bold; background: #f3f4f6; color: #6b7280; border-bottom: 1px solid var(--border);">
+                                            HOME LINK
+                                        </div>
+
+
+
+                                        <a href="javascript:void(0)" onclick="openHomeLinkModal(' <%=adv.id%>', '
+                                                <%=adv.manualHomeUrl || "" %>')" style="
+                                                    color: var(--primary);
+                                                    padding: 8px 12px;
+                                                    text-decoration: none;
+                                                    display: block;
+                                                    font-size: 0.8rem;
+                                                    border-bottom: 1px solid var(--border);
+                                                    ">Update</a>
+
+                                                    <div
+                                                        style="padding: 0.5rem; font-size: 0.7rem; font-weight: bold; background: #f3f4f6; color: #6b7280; border-bottom: 1px solid var(--border);">
+                                                        LOGO
+                                                    </div>
+                                                    <a href="javascript:void(0)"
+                                                        onclick="triggerUpload('<%= adv.id %>')" style="
+                                            color: var(--text-primary);
+                                            padding: 8px 12px;
+                                            text-decoration: none;
+                                            display: block;
+                                            font-size: 0.8rem;
+                                        ">Upload</a>
+            </div>
+            <input type="file" id="upload-<%= adv.id %>" style="display: none;" accept="image/*"
+                onchange="handleFileUpload(this, '<%= adv.id %>')">
+            </td>
+            </tr>
+
+            <!-- Placeholder for Offers Row (Lazy Loaded) -->
+            <tr id="offers-row-<%= adv.id %>" style="display: none;">
+                <td colspan="8" style="padding: 0; background: #f8fafc;">
+                    <div id="offers-content-<%= adv.id %>"
+                        style="padding: 1rem 2rem; border-bottom: 1px solid var(--border);">
+                        <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+                            Loading offers...
+                        </div>
+                    </div>
+                </td>
+            </tr>
+
+            <!-- Placeholder for Products Row (Lazy Loaded) -->
+            <tr id="products-row-<%= adv.id %>" style="display: none;">
+                <td colspan="8" style="padding: 0; background: #f8fafc;">
+                    <div id="products-content-<%= adv.id %>"
+                        style="padding: 1rem 2rem; border-bottom: 1px solid var(--border);">
+                        <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+                            Loading products...
+                        </div>
+                    </div>
+                </td>
+            </tr>
+
+            <% }); %>
+                </tbody>
+                </table>
+        </div>
+        </div>
+
+        <script>
+            // Debug log
+            console.log(' Dashboard Script Loaded');
+
+            // Helper to proxy affiliate images to avoid ad-blockers
+            const getProxiedUrl = (url) => {
+                if (!url) return '';
+                if (url.startsWith('http')) {
+                    return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+                }
+                return url;
+            };
+
+            // Toggle Dropdown
+            window.toggleDropdown = (btn) => {
+                const content = btn.nextElementSibling;
+                // Close all other dropdowns
+                document.querySelectorAll('.dropdown-content').forEach(d => {
+                    if (d !== content) d.style.display = 'none';
+                });
+                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+            };
+
+            // Close dropdowns when clicking outside
+            // Close dropdowns when clicking outside
+            window.onclick = function (event) {
+                if (!event.target.closest('.action-btn')) {
+                    document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
+                }
+            }
+
+
+            // Trigger hidden file input
+            window.triggerUpload = (advId) => {
+                // Trim just in case
+                const input = document.getElementById(`upload-${advId.trim()}`);
+                if (input) input.click();
+            };
+
+            // Table Sorting Logic
+            let sortDirection = {}; // Store sort direction for each column
+
+            window.sortTable = (n, type = 'string') => {
+                const table = document.querySelector('table tbody');
+                let rows = Array.from(table.querySelectorAll('tr.brand-row'));
+
+                // Toggle direction
+                sortDirection[n] = !sortDirection[n];
+                const isAsc = sortDirection[n];
+
+                rows.sort((rowA, rowB) => {
+                    const cellA = rowA.querySelectorAll('td')[n];
+                    const cellB = rowB.querySelectorAll('td')[n];
+
+                    let valA = cellA.getAttribute('data-sort') || '';
+                    let valB = cellB.getAttribute('data-sort') || '';
+
+                    if (type === 'number') {
+                        valA = parseFloat(valA) || 0;
+                        valB = parseFloat(valB) || 0;
+                        return isAsc ? valA - valB : valB - valA;
+                    } else {
+                        // String sorting
+                        valA = valA.toLowerCase();
+                        valB = valB.toLowerCase();
+                        if (valA < valB) return isAsc ? -1 : 1;
+                        if (valA > valB) return isAsc ? 1 : -1;
+                        return 0;
+                    }
+                });
+
+                // Reorder rows in the DOM
+                // Note: We need to move the associated hidden rows (lazy loaded ones) as well
+                rows.forEach(row => {
+                    table.appendChild(row); // Moves the brand row
+
+                    // Move potential lazy load rows if they exist and are associated
+                    const advId = row.querySelector('.logo-cell').dataset.advId;
+                    const offersRow = document.getElementById(`offers-row-${advId}`);
+                    const productsRow = document.getElementById(`products-row-${advId}`);
+
+                    if (offersRow) table.appendChild(offersRow);
+                    if (productsRow) table.appendChild(productsRow);
+                });
+            };
+
+            // Handle File Upload
+            window.handleFileUpload = async (input, advId) => {
+                const file = input.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('logo', file);
+
+                try {
+                    // Show loading state?
+                    const uploadBtn = input.previousElementSibling.querySelector('a[onclick*="triggerUpload"]');
+                    if (uploadBtn) uploadBtn.textContent = 'Uploading...';
+
+                    const res = await fetch(`/api/advertiser/${advId}/logo/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        // alert('Logo updated!');
+                        location.reload(); // Simple reload to see changes
+                    } else {
+                        alert('Upload failed: ' + data.error);
+                        if (uploadBtn) uploadBtn.textContent = 'Upload';
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error uploading logo');
+                    const uploadBtn = input.previousElementSibling.querySelector('a[onclick*="triggerUpload"]');
+                    if (uploadBtn) uploadBtn.textContent = 'Upload';
+                }
+            };
+
+            // Handle Reset
+            window.resetLogo = async (advId) => {
+                if (!confirm('Are you sure you want to reset the logo?')) return;
+
+                try {
+                    const res = await fetch(`/api/advertiser/${advId}/logo/reset`, {
+                        method: 'POST'
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Reset failed: ' + data.error);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error resetting logo');
+                }
+            };
+
+
+
+
+            // Handle Home Link Modal
+            let currentAdvId = null;
+
+
+            window.openHomeLinkModal = (advId, currentUrl) => {
+                const modal = document.getElementById('homeLinkModal');
+                const input = document.getElementById('modalHomeLinkInput');
+                if (!modal || !input) return;
+
+                currentAdvId = advId.trim();
+                input.value = currentUrl;
+                modal.style.display = 'flex';
+                input.focus();
+            };
+
+            window.closeHomeLinkModal = () => {
+                const modal = document.getElementById('homeLinkModal');
+                if (modal) modal.style.display = 'none';
+                currentAdvId = null;
+            };
+
+            window.submitHomeLink = async () => {
+                if (!currentAdvId) return;
+                const input = document.getElementById('modalHomeLinkInput');
+                const btn = document.getElementById('modalSubmitBtn');
+
+                const homeLink = input.value.trim();
+
+                try {
+                    btn.textContent = 'Saving...';
+                    btn.disabled = true;
+
+                    const res = await fetch(`/api/advertiser/${currentAdvId}/homelink`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ homeLink })
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Save failed: ' + data.error);
+                        btn.textContent = 'Save';
+                        btn.disabled = false;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error saving home link');
+                    btn.textContent = 'Save';
+                    btn.disabled = false;
+                }
+            };
+
+            // Network Refresh Logic
+            document.querySelectorAll('.refresh-icon').forEach(icon => {
+                icon.addEventListener('click', async (e) => {
+                    const network = icon.dataset.network;
+                    if (!network || icon.classList.contains('spin')) return;
+
+                    if (!confirm(`Sync ${network} data now? This may take a minute.`)) return;
+
+                    try {
+                        icon.classList.add('spin');
+                        // Use lowercase for route e.g. /update/rakuten-sync
+                        const res = await fetch(`/update/${network.toLowerCase()}-sync`);
+                        const text = await res.text();
+                        console.log(text);
+                        // alert(`${network} Sync initiated!`);
+                        // Polling will pick up the animation/status
+                    } catch (err) {
+                        console.error(err);
+                        alert(`Error syncing ${network}: ` + err.message);
+                        icon.classList.remove('spin');
+                    }
+                });
+
+                // Load history immediately
+                fetchHistory(icon.dataset.network);
+            });
+
+            async function fetchHistory(network) {
+                try {
+                    const res = await fetch(`/api/sync-history/${network}`);
+                    const history = await res.json();
+                    const container = document.getElementById(`${network}-history`);
+                    if (container && history.length > 0) {
+                        // Latest one
+                        const latest = history[0];
+                        const dateStr = new Date(latest.completedAt).toLocaleString('en-US', {
+                            month: 'short', day: '2-digit', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+                        container.innerHTML = `<div>Sync complete - ${dateStr}</div>`;
+
+                        // If we want more, toggle?
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            // Sync Polling
+            // Sync Polling - Simple Spinner Only
+            setInterval(async () => {
+                try {
+                    const res = await fetch('/api/sync-status');
+                    const state = await res.json();
+
+                    Object.keys(state).forEach(network => {
+                        const netState = state[network];
+                        const icon = document.querySelector(`.refresh-icon[data-network="${network}"]`);
+
+                        if (!icon) return;
+
+                        if (netState.status === 'running') {
+                            if (!icon.classList.contains('spin')) icon.classList.add('spin');
+                        } else {
+                            if (icon.classList.contains('spin')) {
+                                icon.classList.remove('spin');
+                                // Optional: reload page or update history implicitly if we kept it
+                                // location.reload(); // Might be too aggressive
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.error('Polling error', e);
+                }
+            }, 2000);
+
+            // Helper functions
+            const renderOffersTable = (container, offers, advId) => {
+
+                if (offers.length === 0) {
+                    container.innerHTML = `<div style="padding:1rem;">No offers found.</div>`;
+                    return;
+                }
+
+                let html = `
+                                        <div
+                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                            <strong style="color: var(--text-primary);">Offers
+                                                (${offers.length})</strong>
+                                            <input type="text" class="offer-search-input" placeholder="Search offers..."
+                                                style="padding: 0.25rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; width: 200px;">
+                                        </div>
+                                        <table style="width: 100%; font-size: 0.8rem;">
+                                            <thead>
+                                                <tr>
+                                                    <th style="background: transparent; padding: 0.5rem;">Image</th>
+                                                    <th style="background: transparent; padding: 0.5rem;">Code</th>
+                                                    <th style="background: transparent; padding: 0.5rem;">Description
+                                                    </th>
+                                                    <th style="background: transparent; padding: 0.5rem;">Start Date
+                                                    </th>
+                                                    <th style="background: transparent; padding: 0.5rem;">End Date</th>
+                                                    <th style="background: transparent; padding: 0.5rem;">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>`;
+
+                // SORTING LOGIC
+                const getPriority = (o) => {
+                    // Promo Codes FIRST
+                    if (o.code && o.code !== 'N/A') return 2;
+                    return 1;
+                };
+
+                offers.sort((a, b) => {
+                    const pA = getPriority(a);
+                    const pB = getPriority(b);
+                    if (pA !== pB) return pB - pA;
+
+                    // Date Sort: Expiring Soonest First (Ascending)
+                    // "No Date" should be LAST (infinity)
+                    const dateA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
+                    const dateB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
+
+                    if (dateA === Infinity && dateB === Infinity) return 0;
+                    return dateA - dateB;
+                });
+
+                let lastPriority = null;
+
+                offers.forEach((coupon, i) => {
+                    const currentPriority = getPriority(coupon);
+                    let rowStyle = '';
+                    if (lastPriority !== null && currentPriority !== lastPriority) {
+                        rowStyle = 'border-top: 4px solid #cbd5e1;';
+                    }
+                    lastPriority = currentPriority;
+
+                    const imgBtn = coupon.imageUrl ?
+                        `<img src="${getProxiedUrl(coupon.imageUrl)}" class="toggle-image-thumb"
+                                                    data-target="img-${advId}-${i}"
+                                                    style="height: 30px; width: auto; max-width: 50px; object-fit: contain; cursor: pointer; border-radius: 4px; border: 1px solid #e2e8f0; vertical-align: middle; background: white;"
+                                                    alt="Show" title="Click to view full image"
+                                                    onload="if(this.naturalWidth<=1&&this.naturalHeight<=1){this.style.display='none'; this.parentElement.innerHTML='';}">`
+                        : '';
+
+                    const codeDisplay = (coupon.code && coupon.code !== 'N/A') ? `<span
+                                                    class="status-badge status-active"
+                                                    style="font-family: monospace; text-transform: uppercase;">${coupon.code}</span>` : `<span
+                                                    style="color: var(--text-secondary);">-</span>`;
+
+                    const startDate = coupon.startDate ? new
+                        Date(coupon.startDate).toLocaleDateString() : '-';
+                    const endDate = coupon.endDate ? new
+                        Date(coupon.endDate).toLocaleDateString() : '-';
+
+                    html += `
+                                                <tr style="${rowStyle}">
+                                                    <td style="padding: 0.5rem; height: 32px; white-space: nowrap;">${imgBtn}</td>
+                                                    <td style="padding: 0.5rem; white-space: nowrap;">${codeDisplay}</td>
+                                                    <td style="padding: 0.5rem; white-space: nowrap;">${coupon.description || '-'}</td>
+                                                    <td style="padding: 0.5rem; color: green; white-space: nowrap;">
+                                                        ${startDate}</td>
+                                                    <td style="padding: 0.5rem; color: red; white-space: nowrap;">
+                                                        ${endDate}</td>
+                                                    <td style="padding: 0.5rem; white-space: nowrap;"><a href="${coupon.link}"
+                                                            target="_blank" class="action-link">Link</a></td>
+                                                </tr>`;
+
+                    if (coupon.imageUrl) {
+                        html += `
+                                                <tr id="img-${advId}-${i}" style="display: none;">
+                                                    <td colspan="6"
+                                                        style="padding: 1rem; background-color: #f8fafc; text-align: center;">
+                                                        <img src="${getProxiedUrl(coupon.imageUrl)}" alt="Offer Image"
+                                                            onload="if(this.naturalWidth<=1&&this.naturalHeight<=1){this.parentElement.parentElement.remove();}"
+                                                            onerror="this.style.display='none'; this.parentElement.parentElement.style.display='none';"
+                                                            style="max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-height: 50px; background: white;">
+                                                    </td>
+                                                </tr>`;
+                    }
+                });
+
+                html += `
+                                            </tbody>
+                                        </table>`;
+                container.innerHTML = html;
+
+                // Re-attach listeners for dynamically created elements
+                const searchInput = container.querySelector('.offer-search-input');
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const rows = container.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        // Skip explicit image rows (IDs starting with img-)
+                        if (row.id && row.id.startsWith('img-')) return;
+
+                        const code = row.cells[1].textContent.toLowerCase();
+                        const desc = row.cells[2].textContent.toLowerCase();
+                        const match = code.includes(term) || desc.includes(term);
+                        row.style.display = match ? '' : 'none';
+
+                        const nextRow = row.nextElementSibling;
+                        if (nextRow && nextRow.id && nextRow.id.startsWith('img-')) {
+                            if (!match) nextRow.style.display = 'none';
+                        }
+                    });
+                });
+
+                container.querySelectorAll('.toggle-image-thumb').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        const targetId = e.target.dataset.target;
+                        const targetRow = document.getElementById(targetId);
+                        if (targetRow) {
+                            const isHidden = targetRow.style.display === 'none';
+                            targetRow.style.display = isHidden ? 'table-row' : 'none';
+                        }
+                    });
+                });
+            };
+
+            const renderProductsTable = (container, products) => {
+                if (products.length === 0) {
+                    container.innerHTML = `<div style="padding:1rem;">No products found.</div>`;
+                    return;
+                }
+
+                let html = `
+                                        <div
+                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                            <strong style="color: var(--text-primary);">Products
+                                                (${products.length})</strong>
+                                            <input type="text" class="product-search-input"
+                                                placeholder="Search products..."
+                                                style="padding: 0.25rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; width: 200px;">
+                                        </div>
+                                        <table style="width: 100%; font-size: 0.8rem;">
+                                            <thead>
+                                                <tr>
+                                                    <th style="background: transparent; padding: 0.5rem;">Image</th>
+                                                    <th style="background: transparent; padding: 0.5rem;">Name</th>
+                                                    <th style="background: transparent; padding: 0.5rem;">SKU</th>
+                                                    <th style="background: transparent; padding: 0.5rem;">
+                                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                                            Description
+                                                            <span class="toggle-desc-btn" style="cursor: pointer; display: flex; align-items: center; color: var(--text-secondary);" title="Expand All">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                                                            </span>
+                                                        </div>
+                                                    </th>
+                                                    <th style="background: transparent; padding: 0.5rem;">Price</th>
+                                                    <th style="background: transparent; padding: 0.5rem;">Sale Price
+                                                    </th>
+                                                    <th style="background: transparent; padding: 0.5rem;">Link</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>`;
+
+                products.forEach(p => {
+                    const img = p.imageUrl ? `<img src="${getProxiedUrl(p.imageUrl)}"
+                                                    style="width: 50px; height: 50px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;">`
+                        : `<div
+                                                    style="width: 50px; height: 50px; background: #eee; border-radius: 4px;">
+                                                </div>`;
+                    const priceDisplay = p.price ? `${p.price} ${p.currency || ''}` : '-';
+                    const isSalePayloadValid = p.salePrice && parseFloat(p.salePrice) !== 0;
+                    const salePriceDisplay = isSalePayloadValid ? `<span
+                                                    style="color: var(--danger); font-weight: bold;">${p.salePrice}
+                                                    ${p.currency || ''}</span>` : '-';
+
+                    html += `
+                                                <tr>
+                                                    <td style="padding: 0.5rem; width: 60px;">${img}</td>
+                                                    <td style="padding: 0.5rem;">${p.name || '-'}</td>
+                                                    <td style="padding: 0.5rem;">${p.sku || '-'}</td>
+                                                    <td class="desc-cell" style="padding: 0.5rem; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.description || ''}">${p.description || '-'}</td>
+                                                    <td style="padding: 0.5rem;">${priceDisplay}</td>
+                                                    <td style="padding: 0.5rem;">${salePriceDisplay}</td>
+
+                                                    <td style="padding: 0.5rem;"><a href="${p.link}" target="_blank"
+                                                            class="action-link">Link</a></td>
+                                                </tr>`;
+                });
+
+                html += `
+                                            </tbody>
+                                        </table>`;
+                container.innerHTML = html;
+
+                // Description Expand/Collapse Logic
+                const toggleBtn = container.querySelector('.toggle-desc-btn');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', () => {
+                        const isExpanded = toggleBtn.dataset.expanded === 'true';
+                        const cells = container.querySelectorAll('.desc-cell');
+
+                        cells.forEach(cell => {
+                            if (!isExpanded) {
+                                cell.style.whiteSpace = 'normal';
+                                cell.style.overflow = 'visible';
+                                cell.style.textOverflow = 'clip';
+                            } else {
+                                cell.style.whiteSpace = 'nowrap';
+                                cell.style.overflow = 'hidden';
+                                cell.style.textOverflow = 'ellipsis';
+                            }
+                        });
+
+                        toggleBtn.dataset.expanded = !isExpanded;
+                        if (!isExpanded) {
+                            toggleBtn.title = "Collapse All";
+                            toggleBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`;
+                        } else {
+                            toggleBtn.title = "Expand All";
+                            toggleBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`;
+                        }
+                    });
+                }
+
+                const searchInput = container.querySelector('.product-search-input');
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const rows = container.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const name = row.cells[1].textContent.toLowerCase();
+                        const sku = row.cells[2].textContent.toLowerCase();
+                        const match = name.includes(term) || sku.includes(term);
+                        row.style.display = match ? '' : 'none';
+                    });
+                });
+            };
+
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('DOM Content Loaded');
+                const searchInput = document.getElementById('search-input');
+                const networkFilter = document.getElementById('network-filter');
+                const categoryFilter = document.getElementById('category-filter');
+                const rows = document.querySelectorAll('.brand-row');
+                console.log(`Found ${rows.length} rows`);
+
+                // LAZY LOAD OFFERS
+                document.querySelectorAll('.toggle-offers-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        console.log('Offer click');
+                        const advId = btn.dataset.advId;
+                        const rowId = `offers-row-${advId}`;
+                        const contentId = `offers-content-${advId}`;
+                        const offersRow = document.getElementById(rowId);
+                        const contentDiv = document.getElementById(contentId);
+                        const isLoaded = btn.dataset.loaded === 'true';
+
+                        if (!offersRow) return;
+
+                        if (isLoaded) {
+                            const isHidden = offersRow.style.display === 'none';
+                            offersRow.style.display = isHidden ? 'table-row' : 'none';
+                            btn.textContent = isHidden ? btn.textContent.replace('Show', 'Hide') :
+                                btn.textContent.replace('Hide', 'Show');
+                            return;
+                        }
+
+                        offersRow.style.display = 'table-row';
+                        btn.textContent = btn.textContent.replace('Show', 'Hide');
+
+                        try {
+                            const res = await fetch(`/api/advertiser/${advId}/offers`);
+                            const data = await res.json();
+
+                            if (data.success && data.offers) {
+                                renderOffersTable(contentDiv, data.offers, advId);
+                                btn.dataset.loaded = 'true';
+                            } else {
+                                contentDiv.innerHTML = `<div style="color:red; padding:1rem;">Failed to load
+                                            offers.</div>`;
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            contentDiv.innerHTML = `<div style="color:red; padding:1rem;">Error loading
+                                            offers.</div>`;
+                        }
+                    });
+                });
+
+                // LAZY LOAD PRODUCTS
+                document.querySelectorAll('.toggle-products-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        console.log('Product click');
+                        const advId = btn.dataset.advId;
+                        const rowId = `products-row-${advId}`;
+                        const contentId = `products-content-${advId}`;
+                        const productRow = document.getElementById(rowId);
+                        const contentDiv = document.getElementById(contentId);
+                        const isLoaded = btn.dataset.loaded === 'true';
+
+                        if (!productRow) return;
+
+                        if (isLoaded) {
+                            const isHidden = productRow.style.display === 'none';
+                            productRow.style.display = isHidden ? 'table-row' : 'none';
+                            btn.textContent = isHidden ? btn.textContent.replace('Show', 'Hide') :
+                                btn.textContent.replace('Hide', 'Show');
+                            return;
+                        }
+
+                        productRow.style.display = 'table-row';
+                        btn.textContent = btn.textContent.replace('Show', 'Hide');
+
+                        try {
+                            const res = await fetch(`/api/advertiser/${advId}/products`);
+                            const data = await res.json();
+
+                            if (data.success && data.products) {
+                                renderProductsTable(contentDiv, data.products);
+                                btn.dataset.loaded = 'true';
+                            } else {
+                                contentDiv.innerHTML = `<div style="color:red; padding:1rem;">Failed to load
+                                            products.</div>`;
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            contentDiv.innerHTML = `<div style="color:red; padding:1rem;">Error loading
+                                            products.</div>`;
+                        }
+                    });
+                });
+
+                // MAIN FILTER LOGIC
+                // Stats elements
+                const totalEl = document.getElementById('total-count');
+                const rakutenEl = document.getElementById('rakuten-count');
+                const cjEl = document.getElementById('cj-count');
+                const awinEl = document.getElementById('awin-count');
+
+
+                const closeAllSubTables = () => {
+                    // Close Offer Rows
+                    document.querySelectorAll('[id^="offers-row-"]').forEach(row => {
+                        row.style.display = 'none';
+                    });
+                    // Reset Offer Buttons
+                    document.querySelectorAll('.toggle-offers-btn').forEach(btn => {
+                        btn.textContent = btn.textContent.replace('Hide', 'Show');
+                    });
+
+                    // Close Product Rows
+                    document.querySelectorAll('[id^="products-row-"]').forEach(row => {
+                        row.style.display = 'none';
+                    });
+                    // Reset Product Buttons
+                    document.querySelectorAll('.toggle-products-btn').forEach(btn => {
+                        btn.textContent = btn.textContent.replace('Hide', 'Show');
+                    });
+                };
+
+                // Escape Regex Helper
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+                }
+
+                const filterTable = () => {
+                    closeAllSubTables(); // Close logic here
+                    const searchTerm = searchInput.value.toLowerCase();
+                    const network = networkFilter.value;
+                    const category = categoryFilter.value;
+
+                    let visibleCount = 0;
+                    let rakutenCount = 0;
+                    let cjCount = 0;
+                    let awinCount = 0;
+
+                    rows.forEach(row => {
+                        const rowName = row.dataset.name;
+                        const rowNetwork = row.dataset.network;
+                        const rowCategories = row.dataset.categories;
+                        const categoryCell = row.querySelector('.category-cell');
+
+                        const matchesSearch = rowName.includes(searchTerm);
+                        const matchesNetwork = network === 'all' || rowNetwork === network;
+                        const matchesCategory = category === 'all' ||
+                            rowCategories.includes(category.toLowerCase());
+
+                        if (matchesSearch && matchesNetwork && matchesCategory) {
+                            row.style.display = '';
+                            visibleCount++;
+                            if (rowNetwork === 'Rakuten') rakutenCount++;
+                            if (rowNetwork === 'CJ') cjCount++;
+                            if (rowNetwork === 'AWIN') awinCount++;
+
+                            // HIGHLIGHTING LOGIC
+                            if (categoryCell) {
+                                const originalText = categoryCell.getAttribute('data-original-text') || categoryCell.innerText;
+
+                                if (category !== 'all') {
+                                    // Highlight the specific category
+                                    // We need to match case-insensitive but preserve original text case
+                                    // This simple replace might replace partial words too (e.g. "Cat" in "Category")
+                                    // But typically categories are distinct terms. 
+                                    // For exact word matching we'd need \b but categories often contain spaces/symbols.
+                                    // Let's stick to simple literal match for now as requested.
+
+                                    const safeCategory = escapeRegExp(category);
+                                    const regex = new RegExp(`(${safeCategory})`, 'gi');
+                                    const highlightedHtml = originalText.replace(regex, '<span style="background-color: yellow;">$1</span>');
+                                    categoryCell.innerHTML = highlightedHtml;
+                                } else {
+                                    // Reset to original plain text
+                                    categoryCell.textContent = originalText;
+                                }
+                            }
+
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+
+                    totalEl.textContent = visibleCount;
+                    rakutenEl.textContent = rakutenCount;
+                    cjEl.textContent = cjCount;
+                    awinEl.textContent = awinCount;
+                };
+
+                searchInput.addEventListener('input', filterTable);
+                networkFilter.addEventListener('change', filterTable);
+                categoryFilter.addEventListener('change', filterTable);
+                console.log('Listeners attached');
+            });
+        </script>
+
+        <!-- Home Link Modal -->
+        <div id="homeLinkModal" style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    ">
+            <div style="
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        ">
+                <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--text-primary);">Enter Homepage Affiliate URL
+                </h3>
+                <input type="text" id="modalHomeLinkInput" placeholder="https://..." style="
+                width: 100%;
+                padding: 0.5rem;
+                margin-bottom: 1rem;
+                border: 1px solid var(--border);
+                border-radius: 4px;
+            ">
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button onclick="closeHomeLinkModal()" style="
+                    background: transparent;
+                    border: 1px solid var(--border);
+                    padding: 0.5rem 1rem;
+                    border-radius: 4px;
+                    cursor: pointer;
+                ">Cancel</button>
+                    <button id="modalSubmitBtn" onclick="submitHomeLink()" style="
+                    background: var(--primary);
+                    color: white;
+                    border: none;
+                    padding: 0.5rem 1rem;
+                    border-radius: 4px;
+                    cursor: pointer;
+                ">Save</button>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>

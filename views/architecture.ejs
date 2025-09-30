@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture | OfferBae</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --primary-color: #4f46e5;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-weight: 700;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .tech-box {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        code {
+            font-family: 'Roboto Mono', monospace;
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.875em;
+            color: #db2777;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .mermaid {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem;">
+            <h1 style="margin: 0; border: none; padding: 0; font-size: 1.5rem;">Architecture & Tech Docs</h1>
+            <div style="display: flex; gap: 1.5rem;">
+                <a href="/mission-control/style"
+                    style="text-decoration: none; color: var(--text-secondary); font-weight: 500;">Style</a>
+                <a href="/mission-control/architecture"
+                    style="text-decoration: none; color: var(--primary-color); font-weight: 600;">Architecture</a>
+                <a href="/mission-control"
+                    style="text-decoration: none; color: var(--text-primary); font-weight: 500;">← Dashboard</a>
+            </div>
+        </div>
+
+        <h1 style="border: none; margin-top: 0;">System Architecture Documentation</h1>
+
+        <div class="tech-box">
+            <h2>High-Level Overview</h2>
+            <div class="mermaid">
+                graph TD
+                %% Use slightly different colors for clarity
+                classDef client fill:#f9f,stroke:#333,stroke-width:2px;
+                classDef app fill:#ccf,stroke:#333,stroke-width:2px;
+                classDef controller fill:#9cf,stroke:#333,stroke-width:2px;
+                classDef service fill:#bfb,stroke:#333,stroke-width:2px;
+                classDef db fill:#ff9,stroke:#333,stroke-width:2px;
+                classDef external fill:#f96,stroke:#333,stroke-width:2px;
+
+                %% --- Actors / Triggers ---
+                User((User / Browser)):::client
+                Cron((Cron Job\nEvery 2 hrs)):::client
+
+                %% --- Application Layer ---
+                subgraph "Application Server (Express)"
+                App[src/app.js\nExpress Server]:::app
+
+                %% Routes
+                subgraph "Routes"
+                RouteHome["GET /"]:::app
+                RouteAPI["GET /api/..."]:::app
+                RouteSync["GET /update/..."]:::app
+                end
+
+                %% Controllers
+                subgraph "Controllers"
+                DashCtrl[dashboardController.js]:::controller
+                end
+                end
+
+                %% --- Service Layer ---
+                subgraph "Services"
+                DataSync[dataSync.js\nOrchestrator]:::service
+
+                subgraph "Network Clients"
+                CJ[cj.js\nCJ Affiliate]:::service
+                Rakuten[rakuten.js\nRakuten]:::service
+                AWIN[awin.js\nAWIN]:::service
+                end
+
+                Brandfetch[brandfetch.js\nLogo Enrichment]:::service
+                ImageStore[imageStore.js\nImage Handling]:::service
+                DBService[db.js\nDatabase Wrapper]:::service
+                end
+
+                %% --- Data Layer ---
+                subgraph "Data Persistence"
+                Firebase[(Firestore DB)]:::db
+                GStorage[Google Cloud Storage\n/logos]:::db
+                end
+
+                %% --- External Ecosystem ---
+                subgraph "External APIs & Cloud"
+                API_CJ[CJ API]:::external
+                API_Rakuten[Rakuten API]:::external
+                API_AWIN[AWIN API]:::external
+                API_Brand[Brandfetch API]:::external
+                GCP_Secret[GCP Secret Manager]:::external
+                end
+
+                %% --- Relationships & Flow ---
+
+                %% Initialization
+                App -- "Load Config" --> GCP_Secret
+                App -- "Init" --> Firebase
+
+                %% User Interaction (Dashboard)
+                User -- "View Dashboard" --> RouteHome
+                RouteHome --> DashCtrl
+                DashCtrl -- "Query Data" --> Firebase
+                DashCtrl -- "Render" --> User
+
+                %% User Interaction (API / Lazy Load)
+                User -- "Fetch Products/Offers" --> RouteAPI
+                RouteAPI --> DashCtrl
+                DashCtrl -- "Read Data" --> Firebase
+
+                %% Manual & Cron Sync Trigger
+                User -- "Trigger Manual Sync" --> RouteSync
+                RouteSync --> DataSync
+                Cron -- "Trigger Auto Sync" --> DataSync
+
+                %% Data Sync Process
+                DataSync -- "Sync CJ" --> CJ
+                DataSync -- "Sync Rakuten" --> Rakuten
+                DataSync -- "Sync AWIN" --> AWIN
+
+                %% API Calls
+                CJ -- "Fetch Advertisers/Links" --> API_CJ
+                Rakuten -- "Fetch Advertisers/Coupons" --> API_Rakuten
+                AWIN -- "Fetch Advertisers/Promos" --> API_AWIN
+
+                %% Data Enrichment
+                DataSync -- "Fetch Logos" --> Brandfetch
+                Brandfetch -- "Lookup" --> API_Brand
+
+                %% Data Storage from Sync
+                CJ -- "Upsert Data" --> Firebase
+                Rakuten -- "Upsert Data" --> Firebase
+                AWIN -- "Upsert Data" --> Firebase
+                Brandfetch -- "Store URL" --> Firebase
+
+                %% Image Handling
+                DashCtrl -- "Upload Logo" --> ImageStore
+                ImageStore -- "Save File" --> GStorage
+                ImageStore -- "Update DB" --> Firebase
+            </div>
+        </div>
+
+        <div class="tech-box">
+            <h2>Component Matrix</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>File Path</th>
+                        <th>Type</th>
+                        <th>Responsibility</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>App Entry</strong></td>
+                        <td><code>src/app.js</code></td>
+                        <td>Server</td>
+                        <td>Express setup, middleware, route definitions, cron scheduling, GCP/Firebase init.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dashboard Controller</strong></td>
+                        <td><code>src/controllers/dashboardController.js</code></td>
+                        <td>Controller</td>
+                        <td>Handles UI rendering, data fetching from Firestore, lazy loading APIs.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Sync Service</strong></td>
+                        <td><code>src/services/dataSync.js</code></td>
+                        <td>Service</td>
+                        <td>Orchestrates data fetching from all networks and updates Firestore.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CJ Service</strong></td>
+                        <td><code>src/services/cj.js</code></td>
+                        <td>Service</td>
+                        <td>Handles CJ Affiliate API authentication and data normalization.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rakuten Service</strong></td>
+                        <td><code>src/services/rakuten.js</code></td>
+                        <td>Service</td>
+                        <td>Handles Rakuten Marketing API authentication (XML parsing) and normalization.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AWIN Service</strong></td>
+                        <td><code>src/services/awin.js</code></td>
+                        <td>Service</td>
+                        <td>Handles AWIN API authentication and normalization.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Brandfetch Service</strong></td>
+                        <td><code>src/services/brandfetch.js</code></td>
+                        <td>Service</td>
+                        <td>Fetches high-quality logos for advertisers using Brandfetch API.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DB Service</strong></td>
+                        <td><code>src/services/db.js</code></td>
+                        <td>Service Layer</td>
+                        <td>Wrapper for Firestore operations (Upsert logic).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tech-box">
+            <h2>Data Flow & Lifecycle</h2>
+            <ul>
+                <li><strong>Ingestion:</strong> Data is fetched via <code>dataSync.js</code> (triggered by Cron or
+                    Manual endpoint).</li>
+                <li><strong>Normalization:</strong> Network-specific services convert raw API responses into a unified
+                    schema (Advertisers, Offers, Products).</li>
+                <li><strong>Persistence:</strong> Normalized data is stored in the <code>database.sqlite</code>
+                    (previously Firestore/GCP, now migrating to SQLite for local caching). <em>Note: Chart reflects
+                        legacy/migration state.</em></li>
+                <li><strong>Presentation:</strong> <code>dashboardController.js</code> reads directly from the database
+                    to render views.</li>
+                <li><strong>Enrichment:</strong> Missing logos are automatically fetched via Brandfetch during sync.
+                </li>
+            </ul>
+        </div>
+
+        <div class="tech-box">
+            <h2>Technology Stack</h2>
+            <ul>
+                <li><strong>Runtime:</strong> Node.js</li>
+                <li><strong>Framework:</strong> Express.js</li>
+                <li><strong>Template Engine:</strong> EJS</li>
+                <li><strong>Database:</strong> SQLite / Firebase (Transitioning)</li>
+                <li><strong>Cloud:</strong> Google Cloud Platform (Secret Manager, Storage)</li>
+                <li><strong>Styling:</strong> Vanilla CSS + Inline Styles</li>
+            </ul>
+        </div>
+        <div class="tech-box">
+            <h2>Affiliate Network Integrations</h2>
+            <div class="mermaid">
+                graph TD
+                %% Component Styles
+                classDef orchestrator fill:#f9f,stroke:#333,stroke-width:2px;
+                classDef network fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+                classDef protocol fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
+                classDef process fill:#e0f2f1,stroke:#00897b,stroke-width:2px;
+
+                %% Core Service
+                Sync["DataSync Service\nOrchestrator"]:::orchestrator
+
+                %% CJ Affiliate Flow
+                subgraph "CJ Affiliate Integration"
+                CJ_Service["CJ Service\ncj.js"]:::network
+                CJ_Auth["Auth: Bearer Token"]:::protocol
+                CJ_API["API: GraphQL & REST"]:::protocol
+
+                Sync -- "Calls" --> CJ_Service
+                CJ_Service -- "1. Lookup Joined" --> CJ_API
+                CJ_Service -- "2. Fetch Products" --> CJ_GRAPHQL["GraphQL Query\n(Page via Cursor)"]:::process
+                CJ_Service -- "3. Normalization" --> CJ_Norm["Map Fields\nSKU=ID, Currency"]:::process
+                end
+
+                %% Rakuten Flow
+                subgraph "Rakuten Integration"
+                Rak_Service["Rakuten Service\nrakuten.js"]:::network
+                Rak_Auth["Auth: OAuth2\n(Client Creds)"]:::protocol
+                Rak_API["API: XML Feeds"]:::protocol
+
+                Sync -- "Calls" --> Rak_Service
+                Rak_Service --> Rak_Auth
+                Rak_Auth -- "Get Access Token" --> Rak_API
+                Rak_Service -- "1. Fetch Coupons" --> Rak_XML_C["XML Feed Parse\nxml2js"]:::process
+                Rak_Service -- "2. Fetch Products" --> Rak_XML_P["Product Search API\nRecursive Paging"]:::process
+                Rak_Service -- "3. Deep Linking" --> Rak_Link["Generate Deep Link\n(Per Advertiser)"]:::process
+                end
+
+                %% AWIN Flow
+                subgraph "AWIN Integration"
+                AWIN_Service["AWIN Service\nawin.js"]:::network
+                AWIN_Auth["Auth: Bearer Token"]:::protocol
+                AWIN_API["API: REST & Feed"]:::protocol
+
+                Sync -- "Calls" --> AWIN_Service
+                AWIN_Service -- "1. Fetch Programmes" --> AWIN_API
+                AWIN_Service -- "2. Fetch Products" --> AWIN_Feed["Download Feed\n.jsonl.gz"]:::process
+                AWIN_Feed -- "Stream & Unzip" --> AWIN_Parse["Line-by-Line Parse\nJSONL Stream"]:::process
+                AWIN_Parse -- "Normalization" --> AWIN_Norm["Clean Price/Currency"]:::process
+                end
+
+                %% Trigger Points
+                Cron["Cron Job"] -- "Triggers" --> Sync
+                Manual["Manual API\n/update/..."] -- "Triggers" --> Sync
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,20 @@
+# .gitignore
+
+# Environment variables
+.env
+
+# Google Cloud service account key (but allow package.json and package-lock.json)
+*-firebase-adminsdk-*.json
+serviceAccountKey.json
+firebase-adminsdk.json
+
+# Node modules
+node_modules/
+*.log
+*.html
+*.sqlite
+verify_*.js
+sync_*.js
+debug_*.js
+current_served_*.html
+
