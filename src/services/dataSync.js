@@ -165,6 +165,7 @@ const syncRakutenCoupons = async () => {
         // Dedupe coupons based on link (or other uniqueness criteria)
         const coupons = [...new Map(rawCoupons.map(c => [c.link, c])).values()];
         const offerCountsMap = {};
+        const hasCodesMap = {};
         for (const coupon of coupons) {
             const result = await upsertOffer({
                 ...coupon,
@@ -175,6 +176,9 @@ const syncRakutenCoupons = async () => {
 
             const aid = String(coupon.advertiserId);
             offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
+            if (coupon.code && coupon.code !== 'N/A') {
+                hasCodesMap[aid] = true;
+            }
 
             if (result.status === 'created') {
                 syncState.Rakuten.offers.new++;
@@ -189,7 +193,8 @@ const syncRakutenCoupons = async () => {
             await upsertAdvertiser({
                 id: aid,
                 network: 'Rakuten',
-                offerCount: count
+                offerCount: count,
+                hasPromoCodes: hasCodesMap[aid] || false
             });
         }
 
@@ -366,6 +371,7 @@ const syncCJLinks = async () => {
         const links = [...new Map(rawOffers.map(o => [o.link, o])).values()]; // Renamed 'offers' to 'links'
         const activeIds = new Set();
         const offerCountsMap = {};
+        const hasCodesMap = {};
 
         for (const link of links) {
             const result = await upsertOffer({
@@ -377,6 +383,9 @@ const syncCJLinks = async () => {
 
             const aid = String(link.advertiserId);
             offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
+            if (link.code && link.code !== 'N/A') {
+                hasCodesMap[aid] = true;
+            }
 
             if (result.status === 'created') {
                 syncState.CJ.offers.new++;
@@ -391,7 +400,8 @@ const syncCJLinks = async () => {
             await upsertAdvertiser({
                 id: aid,
                 network: 'CJ',
-                offerCount: count
+                offerCount: count,
+                hasPromoCodes: hasCodesMap[aid] || false
             });
         }
 
@@ -573,6 +583,8 @@ const syncAWINOffers = async () => {
     const rawOffers = await awinService.fetchOffers();
     const offers = [...new Map(rawOffers.map(o => [o.link, o])).values()];
     const activeIds = new Set();
+    const offerCountsMap = {};
+    const hasCodesMap = {};
 
     for (const offer of offers) {
         try {
@@ -584,6 +596,12 @@ const syncAWINOffers = async () => {
             });
             activeIds.add(result.id);
 
+            const aid = String(offer.advertiserId);
+            offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
+            if (offer.code && offer.code !== 'N/A') {
+                hasCodesMap[aid] = true;
+            }
+
             if (result.status === 'created') {
                 syncState.AWIN.offers.new++;
             } else {
@@ -592,6 +610,17 @@ const syncAWINOffers = async () => {
         } catch (err) {
             console.error(`SYNC: Failed to save AWIN offer:`, err.message);
         }
+    }
+
+    // Update Advertiser Offer Counts
+    console.log('SYNC: Updating AWIN Advertiser Offer Counts...');
+    for (const [aid, count] of Object.entries(offerCountsMap)) {
+        await upsertAdvertiser({
+            id: aid,
+            network: 'AWIN',
+            offerCount: count,
+            hasPromoCodes: hasCodesMap[aid] || false
+        });
     }
     await pruneStaleRecords('AWIN', 'offers', Array.from(activeIds));
 };
