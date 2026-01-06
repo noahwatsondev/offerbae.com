@@ -21,7 +21,19 @@ if (!fs.existsSync(UPLOADS_DIR)) {
  * @returns {Promise<string|null>} - The public URL of the stored image or null if failed
  */
 const cacheImage = async (imageUrl, folder = 'misc') => {
-    if (!imageUrl) return null;
+    if (!imageUrl || typeof imageUrl !== 'string') return null;
+
+    // Clean URL: common fixes for malformed URLs
+    let cleanUrl = imageUrl.trim();
+
+    // Fix specific malformed pattern: ?%20-1600.jpg or similar junk
+    if (cleanUrl.includes('?%20')) {
+        // If it looks like a junk query string intended to be a suffix, strip it
+        cleanUrl = cleanUrl.split('?%20')[0];
+    }
+
+    const originalUrl = imageUrl;
+    imageUrl = cleanUrl;
 
     try {
         // Fetch image stream
@@ -37,6 +49,13 @@ const cacheImage = async (imageUrl, folder = 'misc') => {
         });
 
         const contentType = response.headers['content-type'] || '';
+
+        // Validation: skip if not an image
+        if (!contentType.startsWith('image/')) {
+            console.warn(`[SYNC] Skipping non-image content for ${imageUrl} (Type: ${contentType})`);
+            return null;
+        }
+
         const isSvg = contentType.includes('svg');
 
         // Determine file extension and destination
@@ -77,7 +96,12 @@ const cacheImage = async (imageUrl, folder = 'misc') => {
                 })
                 .webp({ quality: 80 });
 
-            await streamPipeline(response.data, transform, uploadStream);
+            try {
+                await streamPipeline(response.data, transform, uploadStream);
+            } catch (pErr) {
+                console.error(`Error during stream pipeline for ${imageUrl} (Type: ${contentType}):`, pErr.message);
+                return null;
+            }
         }
 
         return `https://storage.googleapis.com/${firebase.bucket.name}/${destination}`;
@@ -88,7 +112,7 @@ const cacheImage = async (imageUrl, folder = 'misc') => {
             // console.warn(`Failed to cache image (HTTP ${error.response.status}): ${imageUrl}`);
             return null;
         }
-        console.error(`Error caching image ${imageUrl}:`, error.message);
+        console.error(`Error fetching image ${imageUrl}:`, error.message);
         return null;
     }
 };
