@@ -6,6 +6,8 @@ const { upsertAdvertiser, upsertOffer, upsertProduct, getAdvertiser, getProduct,
 const imageStore = require('./imageStore');
 
 // Global Sync State
+let isGlobalSyncRunning = false;
+
 const syncState = {
     Rakuten: { status: 'idle', advertisers: { checked: 0, new: 0 }, offers: { checked: 0, new: 0 }, products: { checked: 0, new: 0 } },
     CJ: { status: 'idle', advertisers: { checked: 0, new: 0 }, offers: { checked: 0, new: 0 }, products: { checked: 0, new: 0 } },
@@ -36,10 +38,15 @@ const cacheImage = async (url, folder) => {
 
 // Generic Sync Wrapper
 const syncWithLog = async (network, syncFn) => {
+    if (isGlobalSyncRunning) {
+        console.log(`SYNC: A sync is already in progress. Skipping ${network} sync.`);
+        return;
+    }
     if (syncState[network].status === 'running') {
         console.log('SYNC: ' + network + ' already running. Skipping.');
         return;
     }
+    isGlobalSyncRunning = true;
     resetState(network);
     const startTime = Date.now();
     try {
@@ -59,6 +66,8 @@ const syncWithLog = async (network, syncFn) => {
         console.error('SYNC: ' + network + ' Failed', e);
         syncState[network].status = 'error';
         syncState[network].error = e.message;
+    } finally {
+        isGlobalSyncRunning = false;
     }
 };
 
@@ -681,13 +690,24 @@ const syncProducts = async () => {
 };
 
 const syncAll = async () => {
+    if (isGlobalSyncRunning) {
+        console.log('SYNC: A sync is already in progress. Skipping syncAll.');
+        return;
+    }
+    isGlobalSyncRunning = true;
     console.log('SYNC: Starting Full Sync...');
     const startTime = Date.now();
-    await syncAdvertisers();
-    await syncOffers();
-    await syncProducts();
-    const duration = (Date.now() - startTime) / 1000;
-    console.log(`SYNC: Full Sync Complete in ${duration}s.`);
+    try {
+        await syncAdvertisers();
+        await syncOffers();
+        await syncProducts();
+        const duration = (Date.now() - startTime) / 1000;
+        console.log(`SYNC: Full Sync Complete in ${duration}s.`);
+    } catch (e) {
+        console.error('SYNC: Full Sync Failed:', e.message);
+    } finally {
+        isGlobalSyncRunning = false;
+    }
 };
 
 module.exports = {
