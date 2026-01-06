@@ -171,12 +171,23 @@ const getDashboardData = async (req, res) => {
             }
         });
 
+        // Populate counts maps for the view (it still expects them)
+        const productCountsMap = {};
+        const offerCountsMap = {};
+        const saleProductCountsMap = {};
+
+        enrichedAdvertisers.forEach(adv => {
+            productCountsMap[adv.id] = adv.productCount || 0;
+            offerCountsMap[adv.id] = adv.offerCount || 0;
+            saleProductCountsMap[adv.id] = adv.saleProductCount || 0;
+        });
+
         console.log('Rendering dashboard...');
         res.render('dashboard', {
             advertisers: enrichedAdvertisers,
-            productCounts: {}, // Empty maps, using denormalized data
-            saleProductCounts: {},
-            offerCounts: {},
+            productCounts: productCountsMap,
+            saleProductCounts: saleProductCountsMap,
+            offerCounts: offerCountsMap,
             stats: {
                 rakuten: networkStats.Rakuten.advertisers,
                 cj: networkStats.CJ.advertisers,

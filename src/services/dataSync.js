@@ -164,8 +164,7 @@ const syncRakutenCoupons = async () => {
         const rawCoupons = await rakutenService.fetchCoupons();
         // Dedupe coupons based on link (or other uniqueness criteria)
         const coupons = [...new Map(rawCoupons.map(c => [c.link, c])).values()];
-        const activeIds = new Set();
-
+        const offerCountsMap = {};
         for (const coupon of coupons) {
             const result = await upsertOffer({
                 ...coupon,
@@ -174,12 +173,26 @@ const syncRakutenCoupons = async () => {
             });
             activeIds.add(result.id);
 
+            const aid = String(coupon.advertiserId);
+            offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
+
             if (result.status === 'created') {
                 syncState.Rakuten.offers.new++;
             } else {
                 syncState.Rakuten.offers.checked++;
             }
         }
+
+        // Update Advertiser Offer Counts
+        console.log('SYNC: Updating Rakuten Advertiser Offer Counts...');
+        for (const [aid, count] of Object.entries(offerCountsMap)) {
+            await upsertAdvertiser({
+                id: aid,
+                network: 'Rakuten',
+                offerCount: count
+            });
+        }
+
         await pruneStaleRecords('Rakuten', 'offers', Array.from(activeIds));
     } catch (error) {
         console.error('SYNC: Error syncing Rakuten coupons:', error.message);
@@ -265,6 +278,7 @@ const syncRakutenProducts = async (inputAdvs = null) => {
             await upsertAdvertiser({
                 id: adv.id,
                 network: 'Rakuten',
+                productCount: products.length,
                 saleProductCount: saleCount,
                 hasSaleItems: saleCount > 0
             });
@@ -349,17 +363,20 @@ const syncCJLinks = async () => {
     console.log('SYNC: Fetching CJ Links/Offers...');
     try {
         const rawOffers = await cjService.fetchOffers();
-        const offers = [...new Map(rawOffers.map(o => [o.link, o])).values()];
+        const links = [...new Map(rawOffers.map(o => [o.link, o])).values()]; // Renamed 'offers' to 'links'
         const activeIds = new Set();
+        const offerCountsMap = {};
 
-        for (const offer of offers) {
-            const cleanOffer = JSON.parse(JSON.stringify(offer));
+        for (const link of links) {
             const result = await upsertOffer({
-                ...cleanOffer,
-                advertiserId: String(cleanOffer.advertiserId), // Enforce String type
+                ...link,
+                advertiserId: String(link.advertiserId), // Enforce String type
                 network: 'CJ'
             });
             activeIds.add(result.id);
+
+            const aid = String(link.advertiserId);
+            offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
 
             if (result.status === 'created') {
                 syncState.CJ.offers.new++;
@@ -367,6 +384,17 @@ const syncCJLinks = async () => {
                 syncState.CJ.offers.checked++;
             }
         }
+
+        // Update Advertiser Offer Counts
+        console.log('SYNC: Updating CJ Advertiser Offer Counts...');
+        for (const [aid, count] of Object.entries(offerCountsMap)) {
+            await upsertAdvertiser({
+                id: aid,
+                network: 'CJ',
+                offerCount: count
+            });
+        }
+
         await pruneStaleRecords('CJ', 'offers', Array.from(activeIds));
     } catch (error) {
         console.error('SYNC: Error syncing CJ links:', error.message);
@@ -379,6 +407,7 @@ const syncCJProducts = async () => {
         const advs = await cjService.fetchAdvertisers();
         const activeIds = new Set();
         const salesStats = {}; // advertiserId -> saleCount
+        const productCounts = {}; // advertiserId -> totalCount
 
         // Define the callback to process each page of CJ products
         const onPage = async (products, pageNum) => {
@@ -388,6 +417,9 @@ const syncCJProducts = async () => {
                     const network = 'CJ';
                     const sku = p.sku;
                     if (!sku) continue;
+
+                    const aid = String(p.advertiserId);
+                    productCounts[aid] = (productCounts[aid] || 0) + 1;
 
                     const existingData = await getProduct(network, sku);
 
@@ -448,11 +480,14 @@ const syncCJProducts = async () => {
         // Update Advertiser Stats
         console.log('SYNC: Updating CJ Advertiser Stats...');
         for (const adv of advs) {
-            const saleCount = salesStats[String(adv.id)] || 0;
+            const aid = String(adv.id);
+            const saleCount = salesStats[aid] || 0;
+            const pCount = productCounts[aid] || 0;
             try {
                 await upsertAdvertiser({
                     id: adv.id,
                     network: 'CJ',
+                    productCount: pCount,
                     saleProductCount: saleCount,
                     hasSaleItems: saleCount > 0
                 });
@@ -649,6 +684,7 @@ const syncAWINProducts = async (inputAdvs = null) => {
                 await upsertAdvertiser({
                     id: adv.id,
                     network: 'AWIN',
+                    productCount: products.length,
                     saleProductCount: saleCount,
                     hasSaleItems: saleCount > 0
                 });
