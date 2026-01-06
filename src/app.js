@@ -45,15 +45,24 @@ const initializeApp = async () => {
             console.log('[DEBUG] GOOGLE_APPLICATION_CREDENTIALS is NOT set. Firebase might fail if not on GCP.');
         }
 
+        // Helper to strip quotes if present
+        const cleanStr = (s) => s ? s.replace(/^["']|["']$/g, '').trim() : s;
+
+        const projectId = cleanStr(process.env.GCP_PROJECT_ID);
+        const storageBucket = cleanStr(process.env.FIREBASE_STORAGE_BUCKET) || 'offerbae-com.firebasestorage.app';
+
         const initOptions = {
-            projectId: process.env.GCP_PROJECT_ID || 'offerbae-com',
-            storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'offerbae-com.firebasestorage.app'
+            storageBucket: storageBucket
         };
 
+        if (projectId) {
+            initOptions.projectId = projectId;
+        }
+
         if (!firebaseAdmin.apps.length) {
-            console.log("[DEBUG] Initializing Firebase Admin SDK...");
-            // If GOOGLE_APPLICATION_CREDENTIALS is set, initializeApp() uses it automatically.
-            firebaseAdmin.initializeApp(initOptions);
+            console.log(`[DEBUG] Initializing Firebase Admin SDK with options:`, JSON.stringify(initOptions));
+            const app = firebaseAdmin.initializeApp(initOptions);
+            console.log(`[DEBUG] Firebase initialized. Project ID from Options: ${app.options.projectId || 'Auto-Detected'}`);
             console.log("Firebase Admin SDK initialized successfully.");
         }
 
@@ -174,7 +183,6 @@ app.post('/mission-control/style', (req, res, next) => {
     next();
 }, dashboardController.uploadStyleMiddleware, dashboardController.updateStyle);
 app.post('/refresh', dashboardController.refreshData);
-app.get('/api/advertiser/:id/products', dashboardController.getAdvertiserProducts);
 app.get('/api/advertiser/:id/products', dashboardController.getAdvertiserProducts);
 app.get('/api/advertiser/:id/offers', dashboardController.getAdvertiserOffers);
 // Logo Upload & Reset Routes
