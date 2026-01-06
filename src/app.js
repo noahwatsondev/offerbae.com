@@ -7,7 +7,22 @@ const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
 const firebaseAdmin = require('firebase-admin');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
+const fs = require('fs');
 require('dotenv').config();
+
+// --- CRITICAL DEPLOYMENT FIX ---
+// If running on Render (or anywhere without a file), write the JSON env var to a temp file
+// so that BOTH Google Secret Manager AND Firebase Admin can use standard ADC.
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+    try {
+        const tempPath = '/tmp/service-account.json';
+        fs.writeFileSync(tempPath, process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+        process.env.GOOGLE_APPLICATION_CREDENTIALS = tempPath;
+        console.log(`[DEPLOY] Wrote identity to ${tempPath} and set GOOGLE_APPLICATION_CREDENTIALS`);
+    } catch (e) {
+        console.error('[DEPLOY] Failed to write temp service account file:', e);
+    }
+}
 
 const app = express();
 
