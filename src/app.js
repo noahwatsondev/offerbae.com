@@ -6,7 +6,6 @@ const productController = require('./controllers/productController');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
 const firebaseAdmin = require('firebase-admin');
-const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 const fs = require('fs');
 require('dotenv').config();
 
@@ -19,63 +18,14 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- Google Cloud Secret Manager Client (Lazy Loaded) ---
-let secretManagerClient;
-
-const getSecretClient = () => {
-    if (!secretManagerClient) {
-        // Ensure env var is set before instantiation if we just wrote the file
-        if (process.env.GOOGLE_APPLICATION_CREDENTIALS && !fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
-            console.warn('[WARN] GOOGLE_APPLICATION_CREDENTIALS set but file missing!');
-        }
-
-        const clientOptions = process.env.GCP_PROJECT_ID ? { projectId: process.env.GCP_PROJECT_ID } : {};
-
-        // Explicitly pass keyFiilename for Render support
-        if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-            clientOptions.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-        }
-
-        secretManagerClient = new SecretManagerServiceClient(clientOptions);
-    }
-    return secretManagerClient;
-};
-
-// --- Helper function to get a secret from Secret Manager ---
-const getSecret = async (name) => {
-    // 1. Prefer Env Var (Fastest, avoids API calls, fixes Render crash)
+// --- Helper function to get a secret (Env Var Only) ---
+// We have removed Google Secret Manager to strictly rely on Environment Variables
+// which provides better stability on platforms like Render.
+const getSecret = (name) => {
     if (process.env[name]) {
         return process.env[name];
     }
-
-    // 2. FORCE DISABLE Secret Manager Fallback for Render Stability
-    // We are relying 100% on Environment Variables. 
-    // If the env var above was missing, we return undefined immediately.
-    // This removes the crash risk from Google Auth entirely.
     return undefined;
-
-    /* REPLACED LOGIC:
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON || process.env.RAKUTEN_CLIENT_ID) {
-        return undefined;
-    }
-    */
-
-    // 3. Fallback to Secret Manager (Only for GCP environments)
-    const projectId = process.env.GCP_PROJECT_ID;
-    if (!projectId) {
-        return undefined;
-    }
-    try {
-        const client = getSecretClient();
-        const [version] = await client.accessSecretVersion({
-            name: `projects/${projectId}/secrets/${name}/versions/latest`,
-        });
-        return version.payload.data.toString('utf8').trim();
-    } catch (e) {
-        console.warn(`[WARN] Secret '${name}' not found or access denied. Using env var if available.`);
-        if (process.env[name]) return process.env[name];
-        return undefined;
-    }
 };
 
 // --- App Initialization ---
