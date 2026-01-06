@@ -12,21 +12,6 @@ require('dotenv').config();
 
 console.log('[DEBUG-ENV] Available Env Vars:', Object.keys(process.env).join(', '));
 
-// --- CRITICAL DEPLOYMENT FIX ---
-// If running on Render (or anywhere without a file), write the JSON env var to a temp file
-// so that BOTH Google Secret Manager AND Firebase Admin can use standard ADC.
-if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-    console.log('[DEBUG-ENV] GOOGLE_APPLICATION_CREDENTIALS_JSON found.');
-    try {
-        const tempPath = '/tmp/service-account.json';
-        fs.writeFileSync(tempPath, process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-        process.env.GOOGLE_APPLICATION_CREDENTIALS = tempPath;
-        console.log(`[DEPLOY] Wrote identity to ${tempPath} and set GOOGLE_APPLICATION_CREDENTIALS`);
-    } catch (e) {
-        console.error('[DEPLOY] Failed to write temp service account file:', e);
-    }
-}
-
 const app = express();
 
 app.use((req, res, next) => {
@@ -99,56 +84,28 @@ const initializeApp = async () => {
         console.log("Attempting to load configuration...");
 
         // --- STEP 1: Load Firebase Creds ---
-        let serviceAccount;
+        // We rely on standard GOOGLE_APPLICATION_CREDENTIALS env var pointing to a file.
+        // On Render, this points to /etc/secrets/service-account.json
+        // On Local, it might point to ./service-account.json or be undefined.
 
-        // Try local file first (for local dev environments)
-        const fs = require('fs');
-        const localKeyPath = path.join(__dirname, '../service-account.json'); // Adjusted path to root
-
-        if (fs.existsSync(localKeyPath)) {
-            console.log('[DEBUG] Found local service-account.json, using it.');
-            serviceAccount = require(localKeyPath);
-        } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-            // Support raw JSON in Env Var for Render/Heroku
-            console.log('[DEBUG] Found GOOGLE_APPLICATION_CREDENTIALS_JSON env var.');
-            try {
-                serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-            } catch (e) {
-                console.error('[ERROR] Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON', e);
-            }
+        // Debug logging
+        if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+            console.log(`[DEBUG] GOOGLE_APPLICATION_CREDENTIALS is set to: ${process.env.GOOGLE_APPLICATION_CREDENTIALS}`);
         } else {
-            // Try Secret Manager
-            try {
-                const firebaseKey = await getSecret('FIREBASE_SERVICE_ACCOUNT_KEY');
-                if (firebaseKey && firebaseKey.length > 100) {
-                    serviceAccount = JSON.parse(firebaseKey);
-                }
-            } catch (e) {
-                console.log("No FIREBASE_SERVICE_ACCOUNT_KEY secret found or accessible, using ADC or existing env.");
-            }
+            console.log('[DEBUG] GOOGLE_APPLICATION_CREDENTIALS is NOT set. Firebase might fail if not on GCP.');
         }
 
         const initOptions = {
-            projectId: 'offerbae-com', // Hardcoded for debugging
+            projectId: process.env.GCP_PROJECT_ID || 'offerbae-com',
             storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'offerbae-com.firebasestorage.app'
         };
 
-        console.log('[DEBUG] initOptions:', JSON.stringify({ ...initOptions, credential: '...redacted...' }));
-
-        if (serviceAccount) {
-            console.log(`[DEBUG] Initializing Firebase with Service Account: ${serviceAccount.client_email}`);
-            initOptions.credential = firebaseAdmin.credential.cert(serviceAccount);
-            if (!firebaseAdmin.apps.length) {
-                firebaseAdmin.initializeApp(initOptions);
-            }
-        } else {
-            if (!firebaseAdmin.apps.length) {
-                console.log("[DEBUG] Initializing Firebase with Application Default Credentials/Env");
-                firebaseAdmin.initializeApp(initOptions);
-            }
+        if (!firebaseAdmin.apps.length) {
+            console.log("[DEBUG] Initializing Firebase Admin SDK...");
+            // If GOOGLE_APPLICATION_CREDENTIALS is set, initializeApp() uses it automatically.
+            firebaseAdmin.initializeApp(initOptions);
+            console.log("Firebase Admin SDK initialized successfully.");
         }
-
-        console.log("Firebase Admin SDK initialized successfully.");
 
         // --- STEP 2: Load API credentials ---
         const secretsMap = {
