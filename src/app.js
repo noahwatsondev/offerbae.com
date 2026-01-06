@@ -42,6 +42,12 @@ const getSecretClient = () => {
         }
 
         const clientOptions = process.env.GCP_PROJECT_ID ? { projectId: process.env.GCP_PROJECT_ID } : {};
+
+        // Explicitly pass keyFiilename for Render support
+        if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+            clientOptions.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+        }
+
         secretManagerClient = new SecretManagerServiceClient(clientOptions);
     }
     return secretManagerClient;
