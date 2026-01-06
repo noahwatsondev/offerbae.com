@@ -63,9 +63,9 @@ const getSecret = async (name) => {
         return process.env[name];
     }
 
-    // 2. If on Render (detected by JSON creds), DO NOT try Secret Manager fallback.
-    // We expect all secrets to be Env Vars here. If missing, just return undefined.
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+    // 2. If on Render (detected by JSON creds OR any other standard Env Var), 
+    // DO NOT try Secret Manager fallback. We expect all secrets to be Env Vars here.
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON || process.env.RAKUTEN_CLIENT_ID) {
         return undefined;
     }
 
