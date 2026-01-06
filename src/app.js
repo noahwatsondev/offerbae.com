@@ -31,9 +31,21 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- Google Cloud Secret Manager Client ---
-const clientOptions = process.env.GCP_PROJECT_ID ? { projectId: process.env.GCP_PROJECT_ID } : {};
-const client = new SecretManagerServiceClient(clientOptions);
+// --- Google Cloud Secret Manager Client (Lazy Loaded) ---
+let secretManagerClient;
+
+const getSecretClient = () => {
+    if (!secretManagerClient) {
+        // Ensure env var is set before instantiation if we just wrote the file
+        if (process.env.GOOGLE_APPLICATION_CREDENTIALS && !fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+            console.warn('[WARN] GOOGLE_APPLICATION_CREDENTIALS set but file missing!');
+        }
+
+        const clientOptions = process.env.GCP_PROJECT_ID ? { projectId: process.env.GCP_PROJECT_ID } : {};
+        secretManagerClient = new SecretManagerServiceClient(clientOptions);
+    }
+    return secretManagerClient;
+};
 
 // --- Helper function to get a secret from Secret Manager ---
 const getSecret = async (name) => {
@@ -43,6 +55,7 @@ const getSecret = async (name) => {
         return undefined;
     }
     try {
+        const client = getSecretClient();
         const [version] = await client.accessSecretVersion({
             name: `projects/${projectId}/secrets/${name}/versions/latest`,
         });
