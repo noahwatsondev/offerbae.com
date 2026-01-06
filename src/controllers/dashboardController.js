@@ -185,9 +185,9 @@ const getDashboardData = async (req, res) => {
         console.log('Rendering dashboard...');
         res.render('dashboard', {
             advertisers: enrichedAdvertisers,
-            productCounts: productCountsMap,
-            saleProductCounts: saleProductCountsMap,
-            offerCounts: offerCountsMap,
+            offerCounts: {},
+            productCounts: {},
+            saleProductCounts: {},
             stats: {
                 rakuten: networkStats.Rakuten.advertisers,
                 cj: networkStats.CJ.advertisers,
@@ -195,11 +195,10 @@ const getDashboardData = async (req, res) => {
                 totalProducts: totalProducts,
                 totalAdvertisers: enrichedAdvertisers.length,
                 totalCoupons: totalOffers,
-                networkDetailed: networkStats // Pass full stats object
+                networkDetailed: networkStats
             }
         });
         console.log('Dashboard rendered.');
-
     } catch (error) {
         console.error('Error loading dashboard:', error);
         res.status(500).send('Error loading dashboard: ' + error.message);
@@ -286,9 +285,9 @@ const getHomepage = async (req, res) => {
 
         res.render('index', { // RENDER INDEX
             advertisers: enrichedAdvertisers,
-            productCounts: productCounts,
-            saleProductCounts: saleProductCounts,
-            offerCounts: offerCounts,
+            offerCounts: {},
+            productCounts: {},
+            saleProductCounts: {},
             settings: settings, // Pass settings to view
             stats: {
                 rakuten: networkStats.Rakuten.advertisers,

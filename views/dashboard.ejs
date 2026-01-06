@@ -508,7 +508,7 @@
                                         <%= adv.status %>
                                     </span>
                                 </td>
-                                <% var offCount=offerCounts[adv.id] || 0; %>
+                                <% var offCount=adv.offerCount || 0; %>
                                     <td data-sort="<%= offCount %>">
                                         <% if (offCount> 0) { %>
                                             <!-- Lazy Load Button for Offers -->
@@ -531,7 +531,7 @@
                                                 <span style="color: var(--text-secondary); font-size: 0.75rem;">-</span>
                                                 <% } %>
                                     </td>
-                                    <% var pCount=productCounts[adv.id] || 0; %>
+                                    <% var pCount=adv.productCount || 0; %>
                                         <td data-sort="<%= pCount %>">
                                             <% if (pCount> 0) { %>
                                                 <button class="toggle-products-btn" data-adv-id="<%= adv.id %>"
