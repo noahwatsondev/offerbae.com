@@ -55,9 +55,14 @@ const getSecretClient = () => {
 
 // --- Helper function to get a secret from Secret Manager ---
 const getSecret = async (name) => {
+    // 1. Prefer Env Var (Fastest, avoids API calls, fixes Render crash)
+    if (process.env[name]) {
+        return process.env[name];
+    }
+
+    // 2. Fallback to Secret Manager
     const projectId = process.env.GCP_PROJECT_ID;
     if (!projectId) {
-        if (process.env[name]) return process.env[name];
         return undefined;
     }
     try {
