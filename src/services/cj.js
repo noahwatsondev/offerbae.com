@@ -201,7 +201,7 @@ const fetchOffers = async (advertisers = []) => {
     }
 };
 
-const fetchProducts = async () => {
+const fetchProducts = async (onPage = null) => {
     if (!config.cj.personalAccessToken || !config.cj.companyId || !config.cj.websiteId) {
         console.error('CJ API credentials (token, companyId, websiteId) are missing.');
         return [];
@@ -293,7 +293,11 @@ const fetchProducts = async () => {
                 network: 'CJ'
             }));
 
-            allProducts.push(...mappedProducts);
+            if (onPage) {
+                await onPage(mappedProducts, pageCount + 1);
+            } else {
+                allProducts.push(...mappedProducts);
+            }
 
             if (!data.nextPage) {
                 break;
@@ -301,10 +305,14 @@ const fetchProducts = async () => {
 
             pageToken = data.nextPage;
             pageCount++;
+
+            // Rate limit protection
+            if (onPage) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
         }
 
-        console.log(`Total CJ products fetched: ${allProducts.length}`);
-        return allProducts;
+        return onPage ? [] : allProducts;
 
     } catch (error) {
         console.error('Error fetching CJ products:', error.message);

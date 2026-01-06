@@ -178,80 +178,98 @@ const syncRakutenCoupons = async () => {
 };
 
 const syncRakutenProducts = async (inputAdvs = null) => {
-    console.log('SYNC: Fetching/Saving Rakuten Products...');
+    console.log('SYNC: Fetching/Saving Rakuten Products (Sequential Mode)...');
     const advs = inputAdvs || await rakutenService.fetchAdvertisers();
-    const productsMap = await rakutenService.fetchProductsForAll(advs);
 
+    // We process advertisers sequentially to save memory and avoid OOM
+    let processedCount = 0;
     const activeIds = new Set();
-    for (const [advId, products] of Object.entries(productsMap)) {
-        for (const p of products) {
-            try {
-                // ... (existing logic)
-                const sku = p.sku || `${advId}-${p.name.substring(0, 20)}`;
-                const network = 'Rakuten';
+    const delayMs = 2000; // Rate limit delay
 
-                const existingData = await getProduct(network, sku);
-
-                let storageImageUrl = existingData ? existingData.storageImageUrl : null;
-                const imageChanged = !existingData || existingData.imageUrl !== p.imageUrl;
-
-                if (p.imageUrl && (imageChanged || !storageImageUrl)) {
-                    storageImageUrl = await cacheImage(p.imageUrl, 'products/rakuten');
-                }
-
-                const productData = {
-                    sku: sku,
-                    network: network,
-                    advertiserId: advId,
-                    name: p.name || 'Unknown Product',
-                    price: p.price !== undefined ? p.price : null,
-                    salePrice: p.salePrice !== undefined ? p.salePrice : null,
-                    currency: p.currency || 'USD',
-                    link: p.link || '',
-                    imageUrl: p.imageUrl || null,
-                    storageImageUrl: storageImageUrl,
-                    description: p.description || '',
-                    raw_data: JSON.parse(JSON.stringify(p))
-                };
-                Object.keys(productData).forEach(key => productData[key] === undefined && delete productData[key]);
-
-                const result = await upsertProduct(productData, existingData);
-                activeIds.add(result.id);
-
-                if (result.status === 'created') {
-                    syncState.Rakuten.products.new++;
-                } else {
-                    syncState.Rakuten.products.checked++;
-                }
-            } catch (err) {
-                console.error(`SYNC: Failed to save Rakuten product ${p.sku}:`, err.message);
-            }
-        }
-    }
-    // Update Advertiser Stats (Sale Counts)
-    console.log('SYNC: Updating Rakuten Advertiser Stats...');
     for (const adv of advs) {
-        const advId = adv.mid || adv.id;
-        const products = productsMap[advId] || [];
-        const saleCount = products.reduce((acc, p) => {
-            const s = parseFloat(String(p.salePrice).replace(/[^0-9.-]+/g, "")) || 0;
-            const pr = parseFloat(String(p.price).replace(/[^0-9.-]+/g, "")) || 0;
-            return (s > 0 && pr > s) ? acc + 1 : acc;
-        }, 0);
+        processedCount++;
+        console.log(`[Rakuten] Processing products for advertiser ${processedCount}/${advs.length}: ${adv.name} (${adv.id})...`);
 
         try {
+            // Fetch directly for this single advertiser
+            const products = await rakutenService.fetchProducts(adv.id);
+
+            if (!products || products.length === 0) {
+                // console.log(`[Rakuten] No products found for ${adv.name}.`);
+                continue;
+            }
+
+            // Save immediately
+            for (const p of products) {
+                try {
+                    const sku = p.sku || `${adv.id}-${p.name.substring(0, 20)}`;
+                    const network = 'Rakuten';
+                    const existingData = await getProduct(network, sku);
+
+                    let storageImageUrl = existingData ? existingData.storageImageUrl : null;
+                    const imageChanged = !existingData || existingData.imageUrl !== p.imageUrl;
+
+                    if (p.imageUrl && (imageChanged || !storageImageUrl)) {
+                        try {
+                            storageImageUrl = await cacheImage(p.imageUrl, 'products/rakuten');
+                        } catch (imgErr) {
+                            // ignore image error
+                        }
+                    }
+
+                    const productData = {
+                        sku: sku,
+                        network: network,
+                        advertiserId: String(adv.id), // Ensure string
+                        name: p.name || 'Unknown Product',
+                        price: p.price !== undefined ? p.price : null,
+                        salePrice: p.salePrice !== undefined ? p.salePrice : null,
+                        currency: p.currency || 'USD',
+                        link: p.link || '',
+                        imageUrl: p.imageUrl || null,
+                        storageImageUrl: storageImageUrl,
+                        description: p.description || '',
+                        raw_data: JSON.parse(JSON.stringify(p))
+                    };
+                    Object.keys(productData).forEach(key => productData[key] === undefined && delete productData[key]);
+
+                    const result = await upsertProduct(productData, existingData);
+                    activeIds.add(result.id);
+
+                    if (result.status === 'created') {
+                        syncState.Rakuten.products.new++;
+                    } else {
+                        syncState.Rakuten.products.checked++;
+                    }
+                } catch (err) {
+                    console.error(`[Rakuten] Failed to save product ${p.sku}:`, err.message);
+                }
+            }
+
+            // Update Advertiser Stats immediately
+            const saleCount = products.reduce((acc, p) => {
+                const s = parseFloat(String(p.salePrice).replace(/[^0-9.-]+/g, "")) || 0;
+                const pr = parseFloat(String(p.price).replace(/[^0-9.-]+/g, "")) || 0;
+                return (s > 0 && pr > s) ? acc + 1 : acc;
+            }, 0);
+
             await upsertAdvertiser({
-                id: advId,
+                id: adv.id,
                 network: 'Rakuten',
                 saleProductCount: saleCount,
                 hasSaleItems: saleCount > 0
             });
-        } catch (err) {
-            console.error(`SYNC: Failed to update stats for Rakuten adv ${advId}:`, err.message);
+
+        } catch (e) {
+            console.error(`[Rakuten] Error fetching/saving for ${adv.name}:`, e.message);
         }
+
+        // Rate limit delay between advertisers
+        await new Promise(resolve => setTimeout(resolve, delayMs));
     }
 
     await pruneStaleRecords('Rakuten', 'products', Array.from(activeIds));
+    console.log('[Rakuten] Product sync complete.');
 };
 
 
@@ -347,76 +365,81 @@ const syncCJLinks = async () => {
 };
 
 const syncCJProducts = async () => {
-    console.log('SYNC: Fetching/Saving CJ Products...');
+    console.log('SYNC: Fetching/Saving CJ Products (Incremental Mode)...');
     try {
         const advs = await cjService.fetchAdvertisers();
-        const products = await cjService.fetchProducts();
-        console.log(`SYNC: processing ${products.length} CJ products...`);
-
         const activeIds = new Set();
-        for (const p of products) {
-            try {
-                const network = 'CJ';
-                const existingData = await getProduct(network, p.sku);
+        const salesStats = {}; // advertiserId -> saleCount
 
-                let storageImageUrl = existingData ? existingData.storageImageUrl : null;
-                const imageChanged = !existingData || existingData.imageUrl !== p.imageUrl;
+        // Define the callback to process each page of CJ products
+        const onPage = async (products, pageNum) => {
+            // console.log(`[CJ] Page ${pageNum}: Processing ${products.length} products...`);
+            for (const p of products) {
+                try {
+                    const network = 'CJ';
+                    const sku = p.sku;
+                    if (!sku) continue;
 
-                if (p.imageUrl && (imageChanged || !storageImageUrl)) {
-                    try {
-                        storageImageUrl = await cacheImage(p.imageUrl, 'products/cj');
-                    } catch (imgErr) {
-                        // Suppress
+                    const existingData = await getProduct(network, sku);
+
+                    let storageImageUrl = existingData ? existingData.storageImageUrl : null;
+                    const imageChanged = !existingData || existingData.imageUrl !== p.imageUrl;
+
+                    if (p.imageUrl && (imageChanged || !storageImageUrl)) {
+                        try {
+                            storageImageUrl = await cacheImage(p.imageUrl, 'products/cj');
+                        } catch (imgErr) {
+                            // Suppress
+                        }
                     }
+
+                    const productData = {
+                        sku: sku,
+                        network: 'CJ',
+                        advertiserId: String(p.advertiserId),
+                        name: p.name || 'Unknown Product',
+                        price: p.price !== undefined ? p.price : null,
+                        salePrice: p.salePrice !== undefined ? p.salePrice : null,
+                        currency: p.currency || 'USD',
+                        link: p.link || '',
+                        imageUrl: p.imageUrl || null,
+                        storageImageUrl: storageImageUrl,
+                        description: p.description || '',
+                        raw_data: JSON.parse(JSON.stringify(p))
+                    };
+
+                    Object.keys(productData).forEach(key => productData[key] === undefined && delete productData[key]);
+
+                    const result = await upsertProduct(productData, existingData);
+                    activeIds.add(result.id);
+
+                    if (result.status === 'created') {
+                        syncState.CJ.products.new++;
+                    } else {
+                        syncState.CJ.products.checked++;
+                    }
+
+                    // Track sales count for stats
+                    const s = parseFloat(String(p.salePrice).replace(/[^0-9.-]+/g, "")) || 0;
+                    const pr = parseFloat(String(p.price).replace(/[^0-9.-]+/g, "")) || 0;
+                    if (s > 0 && pr > s) {
+                        const aid = String(p.advertiserId);
+                        salesStats[aid] = (salesStats[aid] || 0) + 1;
+                    }
+
+                } catch (err) {
+                    console.error(`[CJ] Failed to save product ${p.sku}:`, err.message);
                 }
-
-                const productData = {
-                    sku: p.sku,
-                    network: 'CJ',
-                    advertiserId: String(p.advertiserId), // Enforce String
-                    name: p.name || 'Unknown Product',
-                    price: p.price !== undefined ? p.price : null,
-                    salePrice: p.salePrice !== undefined ? p.salePrice : null,
-                    currency: p.currency || 'USD',
-                    link: p.link || '',
-                    imageUrl: p.imageUrl || null,
-                    storageImageUrl: storageImageUrl,
-                    description: p.description || '',
-                    raw_data: JSON.parse(JSON.stringify(p))
-                };
-
-                Object.keys(productData).forEach(key => productData[key] === undefined && delete productData[key]);
-
-                const result = await upsertProduct(productData, existingData);
-                activeIds.add(result.id);
-
-                if (result.status === 'created') {
-                    syncState.CJ.products.new++;
-                } else {
-                    syncState.CJ.products.checked++;
-                }
-            } catch (err) {
-                console.error(`SYNC: Failed to save CJ product ${p.sku}:`, err.message);
             }
-        }
+        };
+
+        // Run the fetch with the callback
+        await cjService.fetchProducts(onPage);
+
         // Update Advertiser Stats
         console.log('SYNC: Updating CJ Advertiser Stats...');
-        // Group products by advertiser
-        const productsByAdv = {};
-        products.forEach(p => {
-            const aid = String(p.advertiserId);
-            if (!productsByAdv[aid]) productsByAdv[aid] = [];
-            productsByAdv[aid].push(p);
-        });
-
         for (const adv of advs) {
-            const products = productsByAdv[String(adv.id)] || [];
-            const saleCount = products.reduce((acc, p) => {
-                const s = parseFloat(String(p.salePrice).replace(/[^0-9.-]+/g, "")) || 0;
-                const pr = parseFloat(String(p.price).replace(/[^0-9.-]+/g, "")) || 0;
-                return (s > 0 && pr > s) ? acc + 1 : acc;
-            }, 0);
-
+            const saleCount = salesStats[String(adv.id)] || 0;
             try {
                 await upsertAdvertiser({
                     id: adv.id,
@@ -430,6 +453,8 @@ const syncCJProducts = async () => {
         }
 
         await pruneStaleRecords('CJ', 'products', Array.from(activeIds));
+        console.log('[CJ] Product sync complete.');
+
     } catch (error) {
         console.error('SYNC: Error syncing CJ products:', error.message);
     }
@@ -528,107 +553,131 @@ const syncAWINOffers = async () => {
 };
 
 const syncAWINProducts = async (inputAdvs = null) => {
-    console.log('SYNC: Fetching/Saving AWIN Products...');
+    console.log('SYNC: Fetching/Saving AWIN Products (Sequential Mode)...');
     const advs = inputAdvs || await awinService.fetchAdvertisers();
-    const productsMap = await awinService.fetchProductsForAll(advs);
 
+    // We process sequentially to prevent OOM
+    let processedCount = 0;
     const activeIds = new Set();
-    for (const [advId, products] of Object.entries(productsMap)) {
-        for (const p of products) {
-            try {
-                // ... (fields)
-                const sku = p.sku;
-                const network = 'AWIN';
-                let existingData = null;
-                if (p.sku) {
-                    existingData = await getProduct(network, p.sku);
-                }
+    const delayMs = 1500; // Rate limit delay
 
-                let storageImageUrl = existingData ? existingData.storageImageUrl : null;
-                const imageChanged = !existingData || existingData.imageUrl !== p.imageUrl;
-
-                if (p.imageUrl && (imageChanged || !storageImageUrl)) {
-                    storageImageUrl = await cacheImage(p.imageUrl, 'products/awin');
-                }
-
-                const productData = {
-                    sku: p.sku || `AWIN-${advId}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-                    network: 'AWIN',
-                    advertiserId: advId,
-                    name: p.name || 'Unknown Product',
-                    price: p.price !== undefined ? p.price : null,
-                    salePrice: p.salePrice !== undefined ? p.salePrice : null,
-                    currency: p.currency || 'USD',
-                    link: p.link || '',
-                    imageUrl: p.imageUrl || null,
-                    storageImageUrl: storageImageUrl,
-                    description: p.description || '',
-                    raw_data: JSON.parse(JSON.stringify(p))
-                };
-                Object.keys(productData).forEach(key => productData[key] === undefined && delete productData[key]);
-
-                const result = await upsertProduct(productData, existingData);
-                activeIds.add(result.id);
-                // Stats: Check if new
-                if (result.isNew) {
-                    syncState.AWIN.products.new++;
-                }
-                syncState.AWIN.products.checked++;
-            } catch (err) {
-                console.error(`SYNC: Failed to save AWIN product ${p.sku}:`, err.message);
-            }
-        }
-    }
-    // Update Advertiser Stats
-    console.log('SYNC: Updating AWIN Advertiser Stats...');
     for (const adv of advs) {
-        const products = productsMap[adv.id] || [];
-        const saleCount = products.reduce((acc, p) => {
-            const s = parseFloat(String(p.salePrice).replace(/[^0-9.-]+/g, "")) || 0;
-            const pr = parseFloat(String(p.price).replace(/[^0-9.-]+/g, "")) || 0;
-            return (s > 0 && pr > s) ? acc + 1 : acc;
-        }, 0);
+        processedCount++;
+        console.log(`[AWIN] Processing products for advertiser ${processedCount}/${advs.length}: ${adv.name} (${adv.id})...`);
 
         try {
-            await upsertAdvertiser({
-                id: adv.id,
-                network: 'AWIN',
-                saleProductCount: saleCount,
-                hasSaleItems: saleCount > 0
-            });
-        } catch (err) {
-            console.error(`SYNC: Failed to update stats for AWIN adv ${adv.id}:`, err.message);
+            // Fetch directly for this single advertiser
+            // Note: AWIN fetchProducts returns products for that advertiser
+            const products = await awinService.fetchProducts(adv.id);
+
+            if (!products || products.length === 0) {
+                continue;
+            }
+
+            console.log(`[AWIN] Saving ${products.length} products for ${adv.name}...`);
+
+            // Save immediately
+            for (const p of products) {
+                try {
+                    const sku = p.sku;
+                    const network = 'AWIN';
+                    // We need to determine if it exists. 
+                    // p.sku is standard from AWIN service.
+
+                    if (!sku) continue;
+
+                    let existingData = await getProduct(network, sku);
+
+                    let storageImageUrl = existingData ? existingData.storageImageUrl : null;
+                    const imageChanged = !existingData || existingData.imageUrl !== p.imageUrl;
+
+                    if (p.imageUrl && (imageChanged || !storageImageUrl)) {
+                        try {
+                            storageImageUrl = await cacheImage(p.imageUrl, 'products/awin');
+                        } catch (imgErr) {
+                            // ignore
+                        }
+                    }
+
+                    const productData = {
+                        sku: sku,
+                        network: 'AWIN',
+                        advertiserId: String(adv.id), // Ensure string
+                        name: p.name || 'Unknown Product',
+                        price: p.price !== undefined ? p.price : null,
+                        salePrice: p.salePrice !== undefined ? p.salePrice : null,
+                        currency: p.currency || 'USD',
+                        link: p.link || '',
+                        imageUrl: p.imageUrl || null,
+                        storageImageUrl: storageImageUrl,
+                        description: p.description || '',
+                        raw_data: JSON.parse(JSON.stringify(p))
+                    };
+                    Object.keys(productData).forEach(key => productData[key] === undefined && delete productData[key]);
+
+                    const result = await upsertProduct(productData, existingData);
+                    activeIds.add(result.id);
+
+                    if (result.status === 'created') {
+                        syncState.AWIN.products.new++;
+                    } else {
+                        syncState.AWIN.products.checked++;
+                    }
+
+                } catch (err) {
+                    console.error(`[AWIN] Failed to save product ${p.sku}:`, err.message);
+                }
+            }
+
+            // Update Advertiser Stats
+            const saleCount = products.reduce((acc, p) => {
+                const s = parseFloat(String(p.salePrice).replace(/[^0-9.-]+/g, "")) || 0;
+                const pr = parseFloat(String(p.price).replace(/[^0-9.-]+/g, "")) || 0;
+                return (s > 0 && pr > s) ? acc + 1 : acc;
+            }, 0);
+
+            try {
+                await upsertAdvertiser({
+                    id: adv.id,
+                    network: 'AWIN',
+                    saleProductCount: saleCount,
+                    hasSaleItems: saleCount > 0
+                });
+            } catch (err) {
+                // Ignore
+            }
+
+        } catch (e) {
+            console.error(`[AWIN] Error fetching/saving for ${adv.name}:`, e.message);
         }
+
+        // Rate limit delay
+        await new Promise(resolve => setTimeout(resolve, delayMs));
     }
 
     await pruneStaleRecords('AWIN', 'products', Array.from(activeIds));
+    console.log('[AWIN] Product sync complete.');
 };
 
 const syncAdvertisers = async () => {
-    console.log('SYNC: Starting Advertiser Sync (Parallel)...');
-    await Promise.allSettled([
-        syncRakutenAdvertisers().catch(e => console.error('Rakuten Advertiser Sync Failed:', e.message)),
-        syncCJAdvertisers().catch(e => console.error('CJ Advertiser Sync Failed:', e.message)),
-        syncAWINAdvertisers().catch(e => console.error('AWIN Advertiser Sync Failed:', e.message))
-    ]);
+    console.log('SYNC: Starting Advertiser Sync (Sequential Mode)...');
+    await syncRakutenAdvertisers().catch(e => console.error('Rakuten Advertiser Sync Failed:', e.message));
+    await syncCJAdvertisers().catch(e => console.error('CJ Advertiser Sync Failed:', e.message));
+    await syncAWINAdvertisers().catch(e => console.error('AWIN Advertiser Sync Failed:', e.message));
 };
 
 const syncOffers = async () => {
-    console.log('SYNC: Starting Offer/Link Sync (Parallel)...');
-    await Promise.allSettled([
-        syncRakutenCoupons().catch(e => console.error('Rakuten Coupon Sync Failed:', e.message)),
-        syncCJLinks().catch(e => console.error('CJ Link Sync Failed:', e.message)),
-        syncAWINOffers().catch(e => console.error('AWIN Offer Sync Failed:', e.message))
-    ]);
+    console.log('SYNC: Starting Offer/Link Sync (Sequential Mode)...');
+    await syncRakutenCoupons().catch(e => console.error('Rakuten Coupon Sync Failed:', e.message));
+    await syncCJLinks().catch(e => console.error('CJ Link Sync Failed:', e.message));
+    await syncAWINOffers().catch(e => console.error('AWIN Offer Sync Failed:', e.message));
 };
 
 const syncProducts = async () => {
-    console.log('SYNC: Starting Product Sync (Parallel)...');
-    await Promise.allSettled([
-        syncRakutenProducts().catch(e => console.error('Rakuten Product Sync Failed:', e.message)),
-        syncCJProducts().catch(e => console.error('CJ Product Sync Failed:', e.message)),
-        syncAWINProducts().catch(e => console.error('AWIN Product Sync Failed:', e.message))
-    ]);
+    console.log('SYNC: Starting Product Sync (Sequential Mode)...');
+    await syncRakutenProducts().catch(e => console.error('Rakuten Product Sync Failed:', e.message));
+    await syncCJProducts().catch(e => console.error('CJ Product Sync Failed:', e.message));
+    await syncAWINProducts().catch(e => console.error('AWIN Product Sync Failed:', e.message));
 };
 
 const syncAll = async () => {
