@@ -10,10 +10,13 @@ const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 const fs = require('fs');
 require('dotenv').config();
 
+console.log('[DEBUG-ENV] Available Env Vars:', Object.keys(process.env).join(', '));
+
 // --- CRITICAL DEPLOYMENT FIX ---
 // If running on Render (or anywhere without a file), write the JSON env var to a temp file
 // so that BOTH Google Secret Manager AND Firebase Admin can use standard ADC.
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+    console.log('[DEBUG-ENV] GOOGLE_APPLICATION_CREDENTIALS_JSON found.');
     try {
         const tempPath = '/tmp/service-account.json';
         fs.writeFileSync(tempPath, process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
