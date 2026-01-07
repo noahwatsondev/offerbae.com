@@ -329,24 +329,29 @@ const getArchitecture = async (req, res) => {
 const getAdvertiserProducts = async (req, res) => {
     try {
         const { id } = req.params;
+        const q = req.query.q ? req.query.q.toLowerCase() : null;
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        const limit = parseInt(req.query.limit) || 100;
         const offset = (page - 1) * limit;
 
         const db = firebaseConfig.db;
-        let query = db.collection('products').where('advertiserId', '==', id);
-        let snapshot = await query.get();
+        let baseQuery = db.collection('products').where('advertiserId', '==', id);
 
-        if (snapshot.empty) {
-            query = db.collection('products').where('advertiserId', '==', Number(id));
-            snapshot = await query.get();
+        // Check if string ID has results, if not switch to number
+        let checkSnap = await baseQuery.limit(1).get();
+        if (checkSnap.empty) {
+            baseQuery = db.collection('products').where('advertiserId', '==', Number(id));
         }
 
-        const total = snapshot.size;
+        // Apply search if provided
+        let query = baseQuery;
+        if (q && q.length >= 2) {
+            query = query.where('searchKeywords', 'array-contains', q);
+        }
 
-        // Firestore doesn't support offset directly in a performant way for large sets, 
-        // but for < 1000 items it's usually fine. 
-        // For production scale, we'd use startAfter(doc).
+        const countSnapshot = await query.get();
+        const total = countSnapshot.size;
+
         const paginatedQuery = query.limit(limit).offset(offset);
         const paginatedSnapshot = await paginatedQuery.get();
 
