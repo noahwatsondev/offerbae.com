@@ -50,6 +50,24 @@ const extractCodeFromDescription = (desc) => {
     return null;
 };
 
+const generateSearchKeywords = (text) => {
+    if (!text) return [];
+    // Lowercase and strip special characters
+    const clean = String(text).toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    const words = clean.split(/\s+/).filter(w => w.length > 2); // Only words > 2 chars for quality
+    const keywords = new Set();
+
+    // Add individual words
+    words.forEach(w => keywords.add(w));
+
+    // Add bigrams (e.g. "pet rock" -> "pet rock")
+    for (let i = 0; i < words.length - 1; i++) {
+        keywords.add(`${words[i]} ${words[i + 1]}`);
+    }
+
+    return Array.from(keywords).slice(0, 100); // Firestore limit is 100
+};
+
 const cacheImage = async (url, folder) => {
     try {
         if (!url) return null;
@@ -292,6 +310,7 @@ const syncRakutenProducts = async (inputAdvs = null) => {
                         network: network,
                         advertiserId: String(adv.id), // Ensure string
                         name: p.name || 'Unknown Product',
+                        searchKeywords: generateSearchKeywords(p.name),
                         price: p.price !== undefined ? p.price : null,
                         salePrice: p.salePrice !== undefined ? p.salePrice : null,
                         currency: p.currency || 'USD',
@@ -502,6 +521,7 @@ const syncCJProducts = async () => {
                         network: 'CJ',
                         advertiserId: String(p.advertiserId),
                         name: p.name || 'Unknown Product',
+                        searchKeywords: generateSearchKeywords(p.name),
                         price: p.price !== undefined ? p.price : null,
                         salePrice: p.salePrice !== undefined ? p.salePrice : null,
                         currency: p.currency || 'USD',
@@ -740,6 +760,7 @@ const syncAWINProducts = async (inputAdvs = null) => {
                         network: 'AWIN',
                         advertiserId: String(adv.id), // Ensure string
                         name: p.name || 'Unknown Product',
+                        searchKeywords: generateSearchKeywords(p.name),
                         price: p.price !== undefined ? p.price : null,
                         salePrice: p.salePrice !== undefined ? p.salePrice : null,
                         currency: p.currency || 'USD',

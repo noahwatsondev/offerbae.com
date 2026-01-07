@@ -371,29 +371,53 @@ const getAdvertiserProducts = async (req, res) => {
 const globalProductSearch = async (req, res) => {
     try {
         const q = req.query.q;
+        console.log(`[DEBUG] Global search query: "${q}"`);
+
         if (!q || q.length < 2) {
             return res.json({ success: true, products: [] });
         }
 
         const db = firebaseConfig.db;
-        // Firestore is case-sensitive and doesn't support 'contains'.
-        // We'll do a prefix search on the title. 
-        // Note: For 'contains' search, an external index like Algolia is recommended.
+
         const queryText = q.toLowerCase();
 
-        // We hope the product names are stored with a searchable lowercase version or we filter in memory
-        // for small sets. Since we have no search index, we'll try a basic prefix search.
-        const snapshot = await db.collection('products')
-            .where('name', '>=', q)
-            .where('name', '<=', q + '\uf8ff')
+        // 1. Keyword search (Powerful 'contains' behavior)
+        const kwSnapshot = await db.collection('products')
+            .where('searchKeywords', 'array-contains', queryText)
             .limit(10)
             .get();
 
         const products = [];
-        snapshot.forEach(doc => products.push(doc.data()));
+        const seenIds = new Set();
 
+        const addProducts = (snapshot) => {
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const id = doc.id || doc.ref.id;
+                if (!seenIds.has(id)) {
+                    products.push(data);
+                    seenIds.add(id);
+                }
+            });
+        };
+
+        addProducts(kwSnapshot);
+
+        // 2. Fallback prefix search (Immediate results while re-syncing)
+        if (products.length < 5) {
+            const capitalizedQ = q.charAt(0).toUpperCase() + q.slice(1);
+            const prefixSnapshot = await db.collection('products')
+                .where('name', '>=', capitalizedQ)
+                .where('name', '<=', capitalizedQ + '\uf8ff')
+                .limit(5)
+                .get();
+            addProducts(prefixSnapshot);
+        }
+
+        console.log(`[DEBUG] Found ${products.length} products for query "${q}"`);
         res.json({ success: true, products });
     } catch (e) {
+        console.error('[ERROR] Global search failed:', e);
         res.status(500).json({ success: false, error: e.message });
     }
 };
