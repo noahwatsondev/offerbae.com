@@ -261,9 +261,9 @@
             font-size: 0.75rem;
             font-weight: 500;
             color: var(--primary);
-            background: rgba(79, 70, 229, 0.05);
-            padding: 0.125rem 0.5rem;
-            border-radius: 0.5rem;
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
         }
 
         .brand-actions {
@@ -837,7 +837,9 @@
                     card.querySelectorAll('.category-pill').forEach(pill => {
                         const pillText = pill.innerText.toLowerCase();
                         const isActive = currentCategory !== 'all' && pillText.includes(currentCategory.toLowerCase());
-                        pill.style.background = isActive ? '#FFD15C' : 'rgba(79, 70, 229, 0.05)';
+                        pill.style.background = isActive ? '#FFD15C' : 'transparent';
+                        pill.style.padding = isActive ? '0.125rem 0.375rem' : '0';
+                        pill.style.borderRadius = isActive ? '0.25rem' : '0';
                         pill.style.color = isActive ? '#000' : 'var(--primary)';
                     });
                 });
