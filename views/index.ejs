@@ -23,7 +23,7 @@
         }
 
         body {
-            font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background-color: var(--bg);
 
             <% if (typeof settings !=='undefined' && settings.bgImageUrl) {
@@ -40,7 +40,6 @@
             line-height: 1.5;
         }
 
-        /* Header */
         header {
             background: var(--surface);
             border-bottom: 1px solid var(--border);
@@ -69,46 +68,27 @@
         }
 
         .container {
-            max-width: 1280px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 2rem 1.5rem;
-        }
-
-        /* Filter Bar Styles */
-        .filter-bar {
-            margin-bottom: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        .filter-input {
-            width: 200px;
-            padding: 0.25rem 0.5rem;
-            font-size: 0.8rem;
-            border-radius: 0.25rem;
-            border: 1px solid var(--border);
-            background-color: var(--surface);
-            transition: all 0.2s;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            font-weight: normal;
-        }
-
-        .filter-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        /* Retail Categories */
-        #category-links {
-            display: flex;
-            gap: .5rem;
-            flex-wrap: wrap;
             padding: 0.5rem;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .category-links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
             justify-content: center;
-            width: 100%;
         }
 
         .category-link {
@@ -117,15 +97,16 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 0.875rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 9999px;
+            font-size: 0.813rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 1rem;
             background-color: #f3f4f6;
+            border: 1px solid transparent;
         }
 
         .category-link:hover {
-            color: var(--text-main);
             background-color: #e5e7eb;
+            color: var(--text-main);
         }
 
         .category-link.active-category {
@@ -134,105 +115,229 @@
             <%- (typeof settings !=='undefined' && settings.categorySelectedStyles) ? settings.categorySelectedStyles: '' %>
         }
 
-        /* Custom User Search Styles */
-        .filter-input {
-            <%- (typeof settings !=='undefined' && settings.filterInputStyles) ? settings.filterInputStyles: '' %>
+        .controls-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        /* Custom User Category Styles */
-        .category-link {
-            <%- (typeof settings !=='undefined' && settings.categoryLinkStyles) ? settings.categoryLinkStyles: '' %>
+        .search-wrapper {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
         }
 
-        .category-link:hover {
-            <%- (typeof settings !=='undefined' && settings.categoryHoverStyles) ? settings.categoryHoverStyles: '' %>
-        }
-
-
-
-        /* Table */
-        .table-container {
-            background: rgba(255, 255, 255, .9);
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-
-        table {
+        .search-wrapper input {
             width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
+            padding: 0.75rem 1rem;
+            padding-left: 2.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            font-size: 0.938rem;
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
         }
 
-        th,
-        td {
-            padding: 1rem 1.5rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
+        .search-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
-        th {
-            background-color: #f9fafb;
-            font-weight: 600;
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
             color: var(--text-secondary);
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            padding-bottom: 2rem !important;
-            border-bottom: 0;
-            padding-top: 2rem !important;
+            pointer-events: none;
         }
 
-        tr:last-child td {
-            border-bottom: none;
+        .sort-wrapper {
+            min-width: 180px;
         }
 
-        .logo-cell {
+        .sort-wrapper select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            font-size: 0.938rem;
+            background: #fff;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+            padding-right: 2.5rem;
+        }
+
+        /* Brand Cards */
+        .brands-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .brand-card {
+            background: #ffffff;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .brand-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand-header {
+            padding: 1.25rem 1.5rem;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            grid-template-areas:
+                "logo info"
+                "categories categories";
+            gap: 0.5rem 1.5rem;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .brand-logo {
             width: 80px;
             height: 80px;
-            display: inline-flex;
+            flex-shrink: 0;
+            background: #f9fafb;
+            border-radius: 0.75rem;
+            display: flex;
             align-items: center;
             justify-content: center;
-            background: #f3f4f6;
-            border-radius: 0.375rem;
             overflow: hidden;
-            box-shadow: 0 1px 1px rgba(0, 0, 0, .1);
-            margin-right: 0.75rem;
-            flex-shrink: 0;
+            border: 1px solid #f3f4f6;
+            box-shadow: 0 2px 1px rgba(0, 0, 0, .25);
         }
 
-        .logo-cell img {
-            width: 100%;
-            height: 100%;
+        .brand-logo img {
+            max-width: 100%;
+            max-height: 100%;
             object-fit: contain;
         }
 
-        /* Buttons */
-        .toggle-btn {
-            background: transparent;
-            border: 1px solid var(--border);
+        .brand-logo {
+            grid-area: logo;
+        }
+
+        .brand-info {
+            grid-area: info;
+            min-width: 0;
+        }
+
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
             color: var(--text-main);
-            padding: 0.375rem 0.75rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
+            margin: 0;
+            line-height: 1.2;
+            text-decoration: none;
+        }
+
+        .brand-name:hover {
+            color: var(--primary);
+        }
+
+        .brand-categories {
+            grid-area: categories;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .category-pill {
             font-size: 0.75rem;
             font-weight: 500;
-            transition: all 0.15s;
+            color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.5rem;
         }
 
-        .toggle-btn:hover {
-            background-color: #f9fafb;
-            border-color: var(--text-secondary);
+        .brand-actions {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0 1.5rem 1.5rem;
+            flex-wrap: wrap;
         }
 
-        .toggle-btn.active {
-            background-color: #eff6ff;
+        .action-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 0.625rem 1rem;
+            border-radius: 0.625rem;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text-main);
+            font-size: 0.813rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(79, 70, 229, 0.02);
+        }
+
+        .action-btn.active {
+            background: rgba(79, 70, 229, 0.06);
             border-color: var(--primary);
             color: var(--primary);
         }
 
-        /* Footer */
+        .badge-sale,
+        .badge-code {
+            position: absolute;
+            top: -6px;
+            right: -8px;
+            font-size: 0.625rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-weight: 800;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge-sale {
+            background: var(--danger);
+            color: white;
+        }
+
+        .badge-code {
+            background: #22c55e;
+            color: white;
+        }
+
+        /* Expanded Sections */
+        .expanded-section {
+            display: none;
+            background: #f9fafb;
+            border-top: 1px solid var(--border);
+            padding: 0.5rem;
+        }
+
+        .expanded-row-content {
+            max-width: 100%;
+        }
+
         footer {
             border-top: 1px solid var(--border);
             padding: 3rem 0;
@@ -246,78 +351,36 @@
         footer a {
             color: var(--text-secondary);
             text-decoration: none;
-            transition: color 0.2s;
+            margin: 0 0.5rem;
         }
 
         footer a:hover {
-            color: var(--text-main);
             text-decoration: underline;
         }
 
-        /* Custom Offers CTA Styles - Moved to end for specificity */
-        .toggle-offers-btn {
-            <%- (typeof settings !=='undefined' && settings.offersCtaStyles) ? settings.offersCtaStyles: '' %>
-        }
-
-        .toggle-offers-btn .count {
-            <%- (typeof settings !=='undefined' && settings.offersCtaCountStyles) ? settings.offersCtaCountStyles: '' %>
-        }
-
-        /* Custom Products CTA Styles */
-        .toggle-products-btn {
-            <%- (typeof settings !=='undefined' && settings.productsCtaStyles) ? settings.productsCtaStyles: '' %>
-        }
-
-        .toggle-products-btn .count {
-            <%- (typeof settings !=='undefined' && settings.productsCtaCountStyles) ? settings.productsCtaCountStyles: '' %>
-        }
-
-        /* Clickable Rows */
-        .clickable-row {
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .clickable-row:hover {
-            background-color: rgba(216, 180, 254, .2) !important;
-        }
-
-        /* Mobile specific adjustments */
         @media (max-width: 640px) {
-            .container {
-                padding: 1rem 0.5rem;
+            .brand-header {
+                gap: 0.5rem 1rem;
             }
 
-            .expanded-row-content {
-                padding: 1rem 0.75rem !important;
+            .brand-logo {
+                width: 64px;
+                height: 64px;
             }
 
-            .expanded-row-header {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 1rem;
+            .brand-name {
+                font-size: 1.25rem;
             }
 
-            .expanded-row-header>div {
-                width: 100%;
-                justify-content: space-between;
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
             }
+        }
 
-            .offer-search-input,
-            .product-search-input {
-                width: 100% !important;
-                max-width: none !important;
-            }
-
-            th,
-            td {
-                padding: 0.75rem 0.5rem;
-            }
-
-            .logo-cell {
-                width: 60px;
-                height: 60px;
-            }
+        .offer-row:hover,
+        .prod-card:hover {
+            background-color: #f0f9ff !important;
         }
     </style>
 </head>
@@ -325,216 +388,154 @@
 <body data-style-settings="<%= JSON.stringify(settings || {}) %>">
     <% var networks=[...new Set(advertisers.map(a=> a.network))].sort();
         var allCategories = advertisers.flatMap(a => a.categories).filter(c => c).map(c => c.trim());
-        var categories = [...new Set(allCategories)].sort((a, b) => {
-        const listEnd = ['Other Products/Services', 'Other'];
-        const listStart = ['Accessories'];
-
-        const aStart = listStart.indexOf(a);
-        const bStart = listStart.indexOf(b);
-        if (aStart !== -1 && bStart !== -1) return aStart - bStart;
-        if (aStart !== -1) return -1;
-        if (bStart !== -1) return 1;
-
-        const aEnd = listEnd.indexOf(a);
-        const bEnd = listEnd.indexOf(b);
-        if (aEnd !== -1 && bEnd !== -1) return aEnd - bEnd;
-        if (aEnd !== -1) return 1;
-        if (bEnd !== -1) return -1;
-
-        return a.localeCompare(b);
-        });
-
-        // Create a map of coupons by advertiser ID for easy lookup
-        var couponsByAdvertiser = {};
-        if (typeof coupons !== 'undefined' && coupons) {
-        coupons.forEach(c => {
-        if (!couponsByAdvertiser[c.advertiserId]) {
-        couponsByAdvertiser[c.advertiserId] = [];
-        }
-        couponsByAdvertiser[c.advertiserId].push(c);
-        });
-        }
+        var categories = [...new Set(allCategories)].sort((a, b) => a.localeCompare(b));
         %>
 
         <header style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles : '' %>">
-            <div class="header-container"
-                style="display: flex; align-items: center; gap: 0.75rem; justify-content: flex-start;">
-                <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
-                    <img src="<%= settings.logoUrl %>" alt="Logo" style="height: 40px; object-fit: contain;">
-                    <% } %>
-                        <h1
-                            style="margin: 0; font-size: 1.5rem; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
-                            <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae'
-                                %>
-                        </h1>
+            <div class="header-container">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
+                        <img src="<%= settings.logoUrl %>" alt="Logo" style="height: 40px; object-fit: contain;">
+                        <% } %>
+                            <h1
+                                style="<%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
+                                <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText
+                                    : 'OfferBae' %>
+                            </h1>
+                </div>
             </div>
         </header>
 
         <div class="container">
-            <!-- Filter Bar -->
-            <div class="filter-bar">
-                <% if (typeof settings !=='undefined' && settings.categoriesHeading) { %>
-                    <h3 style="<%= settings.categoriesHeadingStyles || '' %>">
-                        <%= settings.categoriesHeading %>
-                    </h3>
-                    <% } %>
-                        <!-- Category Links -->
-                        <div id="category-links">
-                            <a href="javascript:void(0)" class="category-link active-category" data-category="all"
-                                onclick="selectCategory('all')">All</a>
-                            <% categories.forEach(c=> { %>
-                                <a href="javascript:void(0)" class="category-link" data-category="<%= c %>"
-                                    onclick="selectCategory('<%= c %>')">
-                                    <%= c %>
-                                </a>
-                                <% }); %>
-                        </div>
+            <!-- Filter & Search Section -->
+            <div class="filter-section">
+                <div class="category-links" id="category-links">
+                    <a href="javascript:void(0)" class="category-link active-category" data-category="all"
+                        onclick="selectCategory('all')">All Brands</a>
+                    <% categories.forEach(c=> { %>
+                        <a href="javascript:void(0)" class="category-link" data-category="<%= c %>"
+                            onclick="selectCategory('<%= c %>')">
+                            <%= c %>
+                        </a>
+                        <% }); %>
+                </div>
+
+                <div class="controls-row">
+                    <div class="search-wrapper">
+                        <span class="search-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </span>
+                        <input type="text" id="brand-search" placeholder="Search brands and items..."
+                            oninput="applyFiltersAndSort()">
+                    </div>
+
+                    <div class="sort-wrapper">
+                        <select id="sort-order" onchange="applyFiltersAndSort()">
+                            <option value="name-asc">Brand (A-Z)</option>
+                            <option value="name-desc">Brand (Z-A)</option>
+                            <option value="offers-desc">Top Offers</option>
+                            <option value="products-desc">Most Products</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            <!-- Table -->
-            <div class="table-container">
-                <table id="brands-table">
-                    <thead>
-                        <tr>
+            <!-- Brands List -->
+            <div class="brands-list" id="brands-container">
+                <% advertisers.forEach(adv=> { %>
+                    <div class="brand-card" data-id="<%= adv.id %>" data-name="<%= adv.name.toLowerCase() %>"
+                        data-categories='<%= JSON.stringify(adv.categories || []).toLowerCase() %>'
+                        data-offers="<%= adv.offerCount || 0 %>" data-products="<%= adv.productCount || 0 %>">
 
-                            <th onclick="sortTable(0)" style="cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span>Brand ↕</span>
-                                    <input type="text" id="search-input" class="filter-input"
-                                        placeholder="Search Brands..." onclick="event.stopPropagation()">
-                                </div>
-                            </th>
-                            <th onclick="sortTable(1, 'number')" style="cursor: pointer;">Offers ↕</th>
-                            <th onclick="sortTable(2, 'number')" style="cursor: pointer;">Products ↕</th>
-                        </tr>
-                    </thead>
+                        <div class="brand-header" onclick="toggleDetails('<%= adv.id %>', 'offers')">
+                            <div class="brand-logo">
+                                <% if (adv.logoUrl) { %>
+                                    <img src="<%= adv.logoUrl %>" alt="<%= adv.name %>">
+                                    <% } else { %>
+                                        <span style="color: #9ca3af; font-size: 1.5rem;">?</span>
+                                        <% } %>
+                            </div>
 
-                    <tbody>
-                        <% advertisers.forEach(adv=> { %>
-                            <tr class="brand-row" data-network="<%= adv.network %>"
-                                data-categories='<%= JSON.stringify(adv.categories || []).toLowerCase() %>'
-                                data-name="<%= adv.name.toLowerCase() %>">
+                            <div class="brand-info">
+                                <% var brandLink=adv.manualHomeUrl || adv.affiliateHomeUrl || adv.url || '#' ; %>
+                                    <a href="<%= brandLink %>" target="_blank" class="brand-name"
+                                        onclick="event.stopPropagation()">
+                                        <%= adv.name %>
+                                    </a>
+                            </div>
 
+                            <div class="brand-categories">
+                                <% (adv.categories || []).sort().forEach(cat=> { %>
+                                    <span class="category-pill">
+                                        <%= cat %>
+                                    </span>
+                                    <% }); %>
+                            </div>
+                        </div>
 
-                                <td data-sort="<%= adv.name.toLowerCase() %>">
-                                    <div style="display: flex; align-items: flex-start; gap: 1rem;">
-                                        <!-- Logo Column -->
-                                        <div class="logo-cell" data-adv-id="<%= adv.id %>">
-                                            <% if (adv.logoUrl) { %>
-                                                <img src="<%= adv.logoUrl %>" alt="<%= adv.name %>">
-                                                <% } else { %>
-                                                    <span style="color: #9ca3af; font-size: 1.5rem;">?</span>
-                                                    <% } %>
-                                        </div>
+                        <div class="brand-actions">
+                            <% if (adv.offerCount> 0) { %>
+                                <button class="action-btn toggle-offers-btn" data-adv-id="<%= adv.id %>"
+                                    onclick="toggleDetails('<%= adv.id %>', 'offers')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                                    </svg>
+                                    <span>
+                                        <%= adv.offerCount.toLocaleString() %> Offers
+                                    </span>
+                                    <% if (adv.hasPromoCodes) { %>
+                                        <span class="badge-code">CODE</span>
+                                        <% } %>
+                                </button>
+                                <% } %>
 
-                                        <!-- Info Column -->
-                                        <div
-                                            style="display: flex; flex-direction: column; gap: 0.5rem; justify-content: center; min-height: 80px;">
-                                            <!-- Brand Name & Links -->
-                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                <% var brandLink=adv.manualHomeUrl || adv.affiliateHomeUrl || adv.url
-                                                    || '#' ; %>
-                                                    <a href="<%= brandLink %>" target="_blank"
-                                                        style="font-weight: 600; color: var(--primary); font-size: 1.5rem; line-height: 1.2; text-decoration: none;">
-                                                        <%= adv.name %>
-                                                    </a>
-                                            </div>
-
-                                            <!-- Categories -->
-                                            <% const sortedCats=(adv.categories || []).sort((a, b)=>
-                                                a.localeCompare(b)); %>
-                                                <div class="category-cell"
-                                                    style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                                                    <% sortedCats.forEach(function(cat) { %>
-                                                        <span class="category-pill" style="
-                                                        white-space: nowrap; 
-                                                        display: inline-block; 
-                                                        color: var(--primary); 
-                                                        font-size: 0.75rem; 
-                                                        font-weight: 500;">
-                                                            <%= cat %>
-                                                        </span>
-                                                        <% }); %>
-                                                </div>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <% var offCount=adv.offerCount || 0; %>
-                                    <td data-sort="<%= offCount %>">
-                                        <% if (offCount> 0) { %>
-                                            <button class="toggle-offers-btn toggle-btn" data-adv-id="<%= adv.id %>"
-                                                data-loaded="false" style="position: relative;">
-                                                <span class="count">
-                                                    <%= offCount.toLocaleString() %>
-                                                </span> Offers
-                                                <% if (adv.hasPromoCodes) { %>
-                                                    <span
-                                                        style="position: absolute; top: -6px; right: -8px; background: #22c55e; color: palegreen; font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; font-weight: bold; line-height: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">CODE</span>
-                                                    <% } %>
-                                            </button>
-                                            <% } else { %>
-                                                <span style="color: var(--text-secondary); font-size: 0.875rem;"></span>
+                                    <% if (adv.productCount> 0) { %>
+                                        <button class="action-btn toggle-products-btn" data-adv-id="<%= adv.id %>"
+                                            onclick="toggleDetails('<%= adv.id %>', 'products')">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                            </svg>
+                                            <span>
+                                                <%= adv.productCount.toLocaleString() %> Products
+                                            </span>
+                                            <% if (adv.saleProductCount> 0) { %>
+                                                <span class="badge-sale">SALE</span>
                                                 <% } %>
-                                    </td>
+                                        </button>
+                                        <% } %>
+                        </div>
 
-                                    <% var pCount=adv.productCount || 0; %>
-                                        <td data-sort="<%= pCount %>">
-                                            <% if (pCount> 0) { %>
-                                                <button class="toggle-products-btn toggle-btn"
-                                                    data-adv-id="<%= adv.id %>" data-loaded="false"
-                                                    style="position: relative;">
-                                                    <span class="count">
-                                                        <%= pCount.toLocaleString() %>
-                                                    </span> Products
-                                                    <% if (adv.saleProductCount> 0) { %>
-                                                        <span
-                                                            style="position: absolute; top: -6px; right: -8px; background: #ef4444; color: white; font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; font-weight: bold; line-height: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">SALE</span>
-                                                        <% } %>
-                                                </button>
-                                                <% } else { %>
-                                                    <span
-                                                        style="color: var(--text-secondary); font-size: 0.875rem;"></span>
-                                                    <% } %>
-                                        </td>
+                        <!-- Expanded Content -->
+                        <div id="offers-section-<%= adv.id %>" class="expanded-section offers-section">
+                            <div id="offers-content-<%= adv.id %>" class="expanded-row-content">
+                                <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">Loading
+                                    offers...</div>
+                            </div>
+                        </div>
 
-
-
-                                        <!-- Placeholder for Offers Row (Lazy Loaded) -->
-                            <tr id="offers-row-<%= adv.id %>" style="display: none;">
-                                <td colspan="3" style="padding: 0; background: #f9fafb;">
-                                    <div id="offers-content-<%= adv.id %>" class="expanded-row-content"
-                                        style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border);">
-                                        <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
-                                            Loading offers...
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <!-- Placeholder for Products Row (Lazy Loaded) -->
-                            <tr id="products-row-<%= adv.id %>" style="display: none;">
-                                <td colspan="3" style="padding: 0; background: #f9fafb;">
-                                    <div id="products-content-<%= adv.id %>" class="expanded-row-content"
-                                        style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border);">
-                                        <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
-                                            Loading products...
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <% }); %>
-                    </tbody>
-                </table>
+                        <div id="products-section-<%= adv.id %>" class="expanded-section products-section">
+                            <div id="products-content-<%= adv.id %>" class="expanded-row-content">
+                                <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">Loading
+                                    products...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <% }); %>
             </div>
         </div>
 
-        <!-- Footer -->
         <footer>
             <div class="header-container" style="display: block;">
                 <p>&copy; 2024 OfferBae. All rights reserved.</p>
-                <div style="margin-top: 0.5rem; display: flex; justify-content: center; gap: 1rem;">
+                <div>
                     <a href="#">Legal Statement</a>
                     <a href="#">Privacy Policy</a>
                     <a href="#">Terms of Use</a>
@@ -542,106 +543,31 @@
             </div>
         </footer>
 
+        <!-- Home Link Modal (Admin) -->
+        <div id="homeLinkModal"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px);">
+            <div
+                style="background: white; padding: 2rem; border-radius: 0.5rem; width: 400px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--text-main); font-size: 1.125rem;">Enter
+                    Homepage Affiliate URL</h3>
+                <input type="text" id="modalHomeLinkInput" placeholder="https://..."
+                    style="width: 100%; padding: 0.75rem; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 0.375rem; font-size: 0.95rem;">
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button onclick="closeHomeLinkModal()"
+                        style="background: transparent; border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: 500; color: var(--text-main);">Cancel</button>
+                    <button id="modalSubmitBtn" onclick="submitHomeLink()"
+                        style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: 500;">Save</button>
+                </div>
+            </div>
+        </div>
+
         <script>
-            console.log(' Dashboard Script Loaded'); let sortDirection = {}; window.sortTable = (n, type = 'string') => {
-                const table = document.querySelector('table tbody');
-                let rows = Array.from(table.querySelectorAll('tr.brand-row'));
-
-                sortDirection[n] = !sortDirection[n];
-                const isAsc = sortDirection[n];
-
-                rows.sort((rowA, rowB) => {
-                    const cellA = rowA.querySelectorAll('td')[n];
-                    const cellB = rowB.querySelectorAll('td')[n];
-
-                    let valA = cellA.getAttribute('data-sort') || '';
-                    let valB = cellB.getAttribute('data-sort') || '';
-
-                    if (type === 'number') {
-                        valA = parseFloat(valA) || 0;
-                        valB = parseFloat(valB) || 0;
-                        return isAsc ? valA - valB : valB - valA;
-                    } else {
-                        valA = valA.toLowerCase();
-                        valB = valB.toLowerCase();
-                        if (valA < valB) return isAsc ? -1 : 1; if (valA > valB) return isAsc ? 1
-                            : -1;
-                        return 0;
-                    }
-                });
-
-                rows.forEach(row => {
-                    table.appendChild(row);
-
-                    const advId = row.querySelector('.logo-cell')?.dataset.advId;
-                    if (!advId) return;
-
-                    const offersRow = document.getElementById(`offers-row-${advId}`);
-                    const productsRow =
-                        document.getElementById(`products-row-${advId}`);
-
-                    if (offersRow) table.appendChild(offersRow);
-                    if (productsRow) table.appendChild(productsRow);
-                });
-            };
-
-            window.handleFileUpload = async (input, advId) => {
-                const file = input.files[0];
-                if (!file) return;
-
-                const formData = new FormData();
-                formData.append('logo', file);
-
-                try {
-                    input.previousElementSibling.querySelector('button').textContent =
-                        'Uploading...';
-                    const res = await fetch(`/api/advertiser/${advId}/logo/upload`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Upload failed: ' + data.error);
-                        input.previousElementSibling.querySelector('button').textContent =
-                            'Update ▼';
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert('Error uploading logo');
-                    input.previousElementSibling.querySelector('button').textContent =
-                        'Update ▼';
-                }
-            };
-
-            window.resetLogo = async (advId) => {
-                if (!confirm('Are you sure you want to reset the logo?'))
-                    return;
-
-                try {
-                    const res = await fetch(`/api/advertiser/${advId}/logo/reset`, {
-                        method: 'POST'
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Reset failed: ' + data.error);
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert('Error resetting logo');
-                }
-            };
-
             let currentAdvId = null;
 
             window.openHomeLinkModal = (advId, currentUrl) => {
                 const modal = document.getElementById('homeLinkModal');
                 const input = document.getElementById('modalHomeLinkInput');
                 if (!modal || !input) return;
-
                 currentAdvId = advId.trim();
                 input.value = currentUrl;
                 modal.style.display = 'flex';
@@ -649,8 +575,7 @@
             };
 
             window.closeHomeLinkModal = () => {
-                const modal = document.getElementById('homeLinkModal');
-                if (modal) modal.style.display = 'none';
+                document.getElementById('homeLinkModal').style.display = 'none';
                 currentAdvId = null;
             };
 
@@ -658,605 +583,290 @@
                 if (!currentAdvId) return;
                 const input = document.getElementById('modalHomeLinkInput');
                 const btn = document.getElementById('modalSubmitBtn');
-
                 const homeLink = input.value.trim();
-
                 try {
                     btn.textContent = 'Saving...';
                     btn.disabled = true;
-
-                    const res = await
-                        fetch(`/api/advertiser/${currentAdvId}/homelink`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ homeLink })
-                        });
+                    const res = await fetch(`/api/advertiser/${currentAdvId}/homelink`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ homeLink })
+                    });
                     const data = await res.json();
-
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Save failed: ' + data.error);
-                        btn.textContent = 'Save';
-                        btn.disabled = false;
-                    }
+                    if (data.success) location.reload();
+                    else alert('Save failed: ' + data.error);
                 } catch (err) {
                     console.error(err);
                     alert('Error saving home link');
+                } finally {
                     btn.textContent = 'Save';
                     btn.disabled = false;
                 }
             };
 
-            // Global Style Settings
             const activeStyleSettings = JSON.parse(document.body.dataset.styleSettings || '{}');
+            let currentCategory = 'all';
 
+            // Lazy Loading and UI Toggling
+            // Helper functions for rendering
             const renderOffersTable = (container, offers, advId) => {
                 if (offers.length === 0) {
-                    container.innerHTML = `<div style="padding:1rem;">No offers found.
-                                                    </div>`;
+                    container.innerHTML = '<div style="padding:1rem;">No offers found.</div>';
                     return;
                 }
 
-                let html = `
-                    <div class="expanded-row-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <strong style="color: var(--text-main);">Offers (${offers.length})</strong>
-                        <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end; max-width: 300px;">
-                            <input type="text" class="offer-search-input"
-                                placeholder="Search offers..."
-                                style="padding: 0.375rem 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; font-size: 0.8rem; width: 100%;">
-                        </div>
-                    </div>
-                    <div class="offers-list" style="display: flex; flex-direction: column; gap: 4px;">`;
-
-                // TIME LEFT FORMATTER
                 const formatTimeLeft = (endDateStr) => {
                     if (!endDateStr) return '<span style="color: green;">Never</span>';
                     const end = new Date(endDateStr);
                     const now = new Date();
                     const diff = end - now;
-
                     if (diff <= 0) return `<span style="color: red;">Expired (${end.toLocaleDateString()})</span>`;
-
-                    const msPerDay = 1000 * 60 * 60 * 24;
-                    const msPerWeek = msPerDay * 7;
+                    const msPerDay = 86400000;
                     const msPerYear = msPerDay * 365.25;
-
                     const years = Math.floor(diff / msPerYear);
                     const days = Math.floor((diff % msPerYear) / msPerDay);
-                    const hours = Math.floor((diff % msPerDay) / (1000 * 60 * 60));
-
-                    let parts = [];
-                    if (years > 0) parts.push(`<b>${years}</b> year${years !== 1 ? 's' : ''}`);
-                    if (days > 0 || years > 0) parts.push(`<b>${days}</b> day${days !== 1 ? 's' : ''}`);
-                    parts.push(`<b>${hours}</b> hour${hours !== 1 ? 's' : ''}`);
-
-                    let timeStr = '';
-                    if (parts.length === 3) {
-                        timeStr = `${parts[0]}, ${parts[1]} & ${parts[2]}`;
-                    } else if (parts.length === 2) {
-                        timeStr = `${parts[0]} & ${parts[1]}`;
-                    } else {
-                        timeStr = parts[0];
-                    }
-
-                    const color = diff < msPerWeek ? 'red' : 'green';
-                    return `<span style="color: ${color};">${timeStr}</span>`;
-                };
-
-                const getPriority = (o) => {
-                    // Promo Codes FIRST
-                    if (o.code && o.code !== 'N/A') return 2;
-                    return 1;
+                    const hours = Math.floor((diff % msPerDay) / 3600000);
+                    let p = [];
+                    if (years > 0) p.push(`<b>${years}</b> year${years !== 1 ? 's' : ''}`);
+                    if (days > 0 || years > 0) p.push(`<b>${days}</b> day${days !== 1 ? 's' : ''}`);
+                    p.push(`<b>${hours}</b> hour${hours !== 1 ? 's' : ''}`);
+                    return `<span style="color: ${diff < msPerDay * 7 ? 'red' : 'green'};">${p.join(', ')}</span>`;
                 };
 
                 offers.sort((a, b) => {
-                    const pA = getPriority(a);
-                    const pB = getPriority(b);
-                    if (pA !== pB) return pB - pA;
-
-                    // Date Sort: Expiring Soonest First (Ascending)
-                    // "No Date" should be LAST (infinity)
-                    const dateA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
-                    const dateB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
-
-                    if (dateA === Infinity && dateB === Infinity) return 0;
-                    return dateA - dateB;
+                    const codeA = (a.code && a.code !== 'N/A') ? 1 : 0;
+                    const codeB = (b.code && b.code !== 'N/A') ? 1 : 0;
+                    if (codeA !== codeB) return codeB - codeA;
+                    return (a.endDate ? new Date(a.endDate).getTime() : Infinity) - (b.endDate ? new Date(b.endDate).getTime() : Infinity);
                 });
 
-                let lastPriority = null;
+                let html = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                <strong style="color: var(--text-main);">Active Offers (${offers.length})</strong>
+                <input type="text" placeholder="Filter offers..." class="offer-search-input" style="padding: 0.375rem 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); font-size: 0.813rem; width: 100%; max-width: 200px;">
+            </div>
+            <div class="offers-list" style="display: flex; flex-direction: column; gap: 0.75rem;">`;
 
-                offers.forEach((coupon, i) => {
-                    // Filter Expired Offers
-                    if (coupon.endDate) {
-                        const end = new Date(coupon.endDate);
-                        if (end < new Date()) return;
-                    }
-
-                    const currentPriority = getPriority(coupon);
-                    let rowStyle = '';
-                    if (lastPriority !== null && currentPriority !==
-                        lastPriority) {
-                        rowStyle = 'border-top: 20px solid white;';
-                    }
-                    lastPriority = currentPriority;
-
-                    const safeCode = (coupon.code || '').replace(/'/g, "\\'");
-                    const codeDisplay = (coupon.code && coupon.code !==
-                        'N/A') ? `<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;"><span class="status-badge status-active"
-                                                                style="font-family: monospace; text-transform: uppercase; ${activeStyleSettings.offerPromoCodeStyles || ''}">
-                                                                ${coupon.code}
-                                                                </span><span style="margin-left: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 0.875rem; color: var(--text-secondary); margin-top: 5px;" onclick="event.stopPropagation(); navigator.clipboard.writeText('${safeCode}'); this.style.color = '#10B981'; setTimeout(() => this.style.color = '', 1000);">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                                                    </svg> Copy/Claim
-                                                                </span></div>`
-                        : `<span style="color: var(--text-secondary);"></span>`;
-
-                    const startDate = coupon.startDate ? new
-                        Date(coupon.startDate).toLocaleDateString() : '';
-                    // End date logic moved to formatTimeLeft call below
-
-                    const isPromo = coupon.code && coupon.code !== 'N/A';
-                    const iconSvg = `<svg version="1.1" id="Icons" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32" xml:space="preserve" fill="#8b5cf6" style="width: 3rem; height: 3rem; padding: 4px; opacity: 0.75;"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <style type="text/css"> .st0{fill:none;stroke:#8b5cf6;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;} .st1{fill:none;stroke:#8b5cf6;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:3;} .st2{fill:none;stroke:#8b5cf6;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:10;} .st3{fill:none;} </style> <path class="st0" d="M6.5,9.9L7,9.5c0.8-0.6,1.4-1.6,1.5-2.6l0.1-0.4c0.4-2.6,3.2-4.2,5.8-3.2l0,0c1.1,0.4,2.2,0.4,3.3,0l0,0 c2.5-1.1,5.4,0.5,5.8,3.2l0.1,0.4c0.1,1,0.7,2,1.5,2.6l0.5,0.4c2.1,1.6,2.1,4.6,0,6.2L25,16.5c-0.8,0.6-1.4,1.6-1.5,2.6l-0.1,0.4 c-0.4,2.6-3.2,4.2-5.8,3.2l0,0c-1.1-0.4-2.2-0.4-3.3,0l0,0c-2.5,1.1-5.4-0.5-5.8-3.2l-0.1-0.4c-0.1-1-0.7-2-1.5-2.6l-0.5-0.4 C4.5,14.5,4.5,11.5,6.5,9.9z"></path> <polyline class="st0" points="22,22 22,29 16,26 10,29 10,22 "></polyline> <line class="st0" x1="16" y1="9" x2="16" y2="10"></line> <line class="st0" x1="16" y1="16" x2="16" y2="17"></line> <path class="st0" d="M17,10h-1.5c-0.8,0-1.5,0.7-1.5,1.5v0c0,0.8,0.7,1.5,1.5,1.5h1c0.8,0,1.5,0.7,1.5,1.5v0c0,0.8-0.7,1.5-1.5,1.5 H15"></path> <rect x="-72" y="-360" class="st3" width="536" height="680"></rect> </g></svg>`;
-
-                    const safeCodeForClipboard = (coupon.code || '').replace(/'/g, "\\'");
-                    const onclickHandler = isPromo
-                        ? `navigator.clipboard.writeText('${safeCodeForClipboard}').then(() => window.open('${coupon.link}', '_blank')).catch(() => window.open('${coupon.link}', '_blank'))`
-                        : `window.open('${coupon.link}', '_blank')`;
+                offers.forEach(o => {
+                    if (o.endDate && new Date(o.endDate) < new Date()) return;
+                    const safeCode = (o.code || '').replace(/'/g, "\\'");
+                    const codeDisplay = (o.code && o.code !== 'N/A') ? `
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <span style="font-family: monospace; padding: 0.375rem 0.75rem; background: #eef2ff; border: 2px dashed #818cf8; border-radius: 0.375rem; color: #4338ca; font-weight: 700; font-size: 1rem;">${o.code}</span>
+                    <span style="cursor: pointer; color: var(--text-secondary); font-size: 0.75rem; display: flex; align-items: center; gap: 4px;" onclick="event.stopPropagation(); navigator.clipboard.writeText('${safeCode}'); this.style.color='#10b981'; setTimeout(()=>this.style.color='', 1000)">
+                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2" /></svg> Copy Code
+                    </span>
+                </div>` : '';
 
                     html += `
-                    <div style="${rowStyle} ${activeStyleSettings.offerRowStyles || ''}; min-width: 0; cursor: pointer; border-bottom: 1px solid var(--border); transition: background-color 0.2s;" class="offer-row clickable-row" onclick="${onclickHandler}">
-                        <div style="padding: 1.25rem 1rem;">
-                            <div style="display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: flex-start;">
-                                <div style="flex-shrink: 0; opacity: 0.75;">${iconSvg}</div>
-                                <div style="flex: 1; min-width: 0;">
-                                    <div style="font-size: 1.15rem; font-weight: 600; line-height: 1.4; color: var(--text-main); word-break: break-word; overflow-wrap: break-word; ${activeStyleSettings.offerTitleStyles || ''}">${coupon.description || ''}</div>
-                                    <div style="display: block; font-style: italic; margin-top: 6px; font-size: 0.875rem; ${activeStyleSettings.offerTimeLeftStyles || ''}"><span style="font-size: 0.75rem; color: silver;">Expires </span>${formatTimeLeft(coupon.endDate)}</div>
-                                    <div style="margin-top: 14px;">${codeDisplay}</div>
-                                </div>
-                            </div>
+                <div class="offer-row" style="background: white; border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 1px 1px rgba(0, 0, 0, .25);" onclick="window.open('${o.link}', '_blank')">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <div style="flex-shrink: 0; opacity: 0.75;">
+                            <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#8b5cf6"><path stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
                         </div>
-                    </div>`;
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; font-size: 1.063rem; color: var(--text-main); word-break: break-word;">${o.description || ''}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Expires: ${formatTimeLeft(o.endDate)}</div>
+                            ${codeDisplay}
+                        </div>
+                    </div>
+                </div>`;
                 });
-
-                html += `</div>`;
+                html += '</div>';
                 container.innerHTML = html;
 
-                // Re-attach listeners for dynamically created elements
-                const searchInput =
-                    container.querySelector('.offer-search-input');
-                searchInput.addEventListener('input', (e) => {
-                    const term = e.target.value.toLowerCase();
-                    const rows = container.querySelectorAll('.offer-row');
-                    rows.forEach(row => {
-                        // Skip explicit image rows (IDs starting with img-)
-                        if (row.id && row.id.startsWith('img-')) return;
-
-                        const text = row.textContent.toLowerCase();
-                        const match = text.includes(term);
-                        row.style.display = match ? '' : 'none';
-
-                        const nextRow = row.nextElementSibling;
-                        if (nextRow && nextRow.id && nextRow.id.startsWith('img-')) {
-                            if (!match) nextRow.style.display = 'none';
-                        }
+                const input = container.querySelector('.offer-search-input');
+                input.oninput = (e) => {
+                    const t = e.target.value.toLowerCase();
+                    container.querySelectorAll('.offer-row').forEach(r => {
+                        r.style.display = r.innerText.toLowerCase().includes(t) ? 'block' : 'none';
                     });
-                });
-
-                container.querySelectorAll('.toggle-image-thumb').forEach(el => {
-                    el.addEventListener('click', (e) => {
-                        const targetId = e.target.dataset.target;
-                        const targetRow = document.getElementById(targetId);
-                        if (targetRow) {
-                            const isHidden = targetRow.style.display === 'none';
-                            targetRow.style.display = isHidden ? 'table-row' : 'none';
-                        }
-                    });
-                });
+                };
             };
 
             const renderProductsTable = (container, products) => {
                 if (products.length === 0) {
-                    container.innerHTML = `<div style="padding:1rem;">No products found.</div>`;
+                    container.innerHTML = '<div style="padding:1rem;">No products found.</div>';
                     return;
                 }
 
-                // 1. Sort Logic
-                const getNum = (val) => val ? parseFloat(String(val).replace(/[^0-9.-]+/g, "")) : 0;
-                const saleItems = [];
-                const msrpItems = [];
-
+                const getNum = (v) => v ? parseFloat(String(v).replace(/[^0-9.-]+/g, "")) : 0;
+                let hasSaleItems = false;
                 products.forEach(p => {
-                    const price = getNum(p.price);
-                    const salePrice = getNum(p.salePrice);
-                    const isSale = salePrice > 0 && price > salePrice;
-                    p._isSale = isSale;
-                    p._savings = isSale ? (price - salePrice) : 0;
-
-                    if (isSale) {
-                        saleItems.push(p);
-                    } else {
-                        msrpItems.push(p);
-                    }
+                    const pr = getNum(p.price); const s = getNum(p.salePrice);
+                    p._isSale = s > 0 && pr > s;
+                    p._savings = p._isSale ? (pr - s) : 0;
+                    if (p._isSale) hasSaleItems = true;
                 });
 
-                // Sort Group 1: Savings High to Low
-                saleItems.sort((a, b) => b._savings - a._savings);
-                // Sort Group 2: Newest to Oldest (using updatedAt if avail, else keeping order)
-                msrpItems.sort((a, b) => {
-                    const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-                    const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-                    return dateB - dateA;
-                });
-
-                const sortedProducts = [...saleItems, ...msrpItems];
-
-                // 2. Render UI
-                const showCheckbox = saleItems.length > 0;
-                const checkboxHtml = showCheckbox ? `
-                    <label style="margin-right: 20px; display: inline-flex; align-items: center; cursor: pointer; color: var(--danger); font-weight: 500;">
-                        <input type="checkbox" class="on-sale-toggle" checked style="margin-right: 6px;">
-                        On Sale
-                    </label>` : '';
+                products.sort((a, b) => b._savings - a._savings || (b.updatedAt || 0) - (a.updatedAt || 0));
 
                 let html = `
-                    <div class="expanded-row-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <strong style="color: var(--text-main);">Products (${products.length})</strong>
-                        <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end; max-width: 400px;">
-                            ${checkboxHtml}
-                            <input type="text" class="product-search-input"
-                                placeholder="Search products..."
-                                style="padding: 0.375rem 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; font-size: 0.8rem; width: 100%;">
-                        </div>
-                    </div>
-                    <div class="products-list" style="display: flex; flex-direction: column; gap: 4px;">`;
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                <strong style="color: var(--text-main);">Products (${products.length})</strong>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; justify-content: flex-end;">
+                    ${hasSaleItems ? `
+                    <label style="display: flex; align-items: center; font-size: 0.813rem; color: var(--danger); cursor: pointer; user-select: none;">
+                        <input type="checkbox" class="sale-toggle" checked style="margin-right: 4px;"> On Sale
+                    </label>` : ''}
+                    <input type="text" placeholder="Filter..." class="prod-search" style="padding: 0.375rem 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); font-size: 0.813rem; width: 100%; max-width: 150px;">
+                </div>
+            </div>
+            <div class="prod-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); grid-auto-rows: 1fr; gap: 1rem;">`;
 
-                sortedProducts.forEach(p => {
-                    const displayImgUrl = p.storageImageUrl || p.imageUrl;
-                    const img = displayImgUrl ? `<img src="${displayImgUrl}"
-                        style="width: 120px; height: 120px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;">`
-                        : `<div
-                            style="width: 120px; height: 120px; background: #eee; border-radius: 4px;">
-                        </div>`;
-
-                    const isSale = p._isSale;
-                    const savings = p._savings.toFixed(2);
-                    const numPrice = getNum(p.price);
-                    const numSalePrice = getNum(p.salePrice);
-
-                    let finalPriceHtml = '';
-                    if (isSale) {
-                        finalPriceHtml = `
-                            <span style="color: var(--danger); font-weight: bold; ${activeStyleSettings.productSalePriceStyles || ''}">${numSalePrice} ${p.currency || ''}</span>
-                            &nbsp;
-                            <span style="text-decoration: line-through; color: silver; font-size: 0.9em; ${activeStyleSettings.productPriceStyles || ''}">${numPrice} ${p.currency || ''}</span>
-                            &nbsp;
-                            <span style="color: var(--success); font-weight: 500; font-size: 0.9em; font-style: italic;">Save <strong>${savings} ${p.currency || ''}</strong>!</span>
-                        `;
-                    } else {
-                        finalPriceHtml = `<span style="${activeStyleSettings.productPriceStyles || ''}">${p.price ? p.price + ' ' + (p.currency || '') : '-'}</span>`;
-                    }
+                products.forEach(p => {
+                    const price = getNum(p.price); const sale = getNum(p.salePrice);
+                    const priceHtml = p._isSale ? `
+                <span style="color: var(--danger); font-weight: 700;">${sale} ${p.currency || ''}</span>
+                <span style="text-decoration: line-through; color: silver; font-size: 0.8em; margin: 0 4px;">${price}</span>
+                <div style="color: var(--success); font-size: 0.75em; font-style: italic; font-weight: 600; margin-top: 2px;">Save ${p._savings.toFixed(2)}!</div>
+            ` : `<span style="color: var(--text-main); font-weight: 600;">${p.price || '--'} ${p.currency || ''}</span>`;
 
                     html += `
-                        <div class="clickable-row product-row" data-is-sale="${isSale}" onclick="window.open('${p.link}', '_blank')" style="${activeStyleSettings.productRowStyles || ''}; min-width: 0; cursor: pointer; border-bottom: 1px solid var(--border); transition: background-color 0.2s;">
-                            <div style="padding: 1.25rem 1rem;">
-                                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start;">
-                                    <div style="flex-shrink: 0; ${activeStyleSettings.productImageStyles || ''}">${img}</div>
-                                    <div style="flex: 1; min-width: 0;">
-                                        <div style="font-size: 1.15rem; font-weight: 600; line-height: 1.4; color: var(--text-main); word-break: break-word; overflow-wrap: break-word; ${activeStyleSettings.productTitleStyles || ''}">${p.name || ''}</div>
-                                        ${p.sku ? `<div style="display: block; color: silver; font-style: italic; margin-top: 4px; font-size: 0.875rem;"><span style="font-size: 0.75rem;">SKU </span>${p.sku}</div>` : ''}
-                                        <div style="margin-top: 14px; font-size: 1rem;">${finalPriceHtml}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>`;
+                <div class="prod-card" data-sale="${p._isSale}" onclick="window.open('${p.link}', '_blank')" style="background: white; border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem; display: flex; gap: 1rem; cursor: pointer; transition: background 0.2s, transform 0.2s; box-shadow: 0 1px 1px rgba(0, 0, 0, .25); height: 100%; box-sizing: border-box;">
+                    <div style="width: 80px; height: 80px; flex-shrink: 0; background: #f9fafb; border-radius: 0.5rem; overflow: hidden; border: 1px solid #eee;">
+                        <img src="${p.storageImageUrl || p.imageUrl || ''}" style="width: 100%; height: 100%; object-fit: contain;">
+                    </div>
+                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                        <div style="font-weight: 600; font-size: 0.938rem; color: var(--text-main); line-height: 1.3; margin-bottom: 0.5rem;">${p.name || ''}</div>
+                        <div style="margin-top: auto; font-size: 0.875rem; text-align: right;">${priceHtml}</div>
+                    </div>
+                </div>`;
                 });
-
-                html += `</div>`;
+                html += '</div>';
                 container.innerHTML = html;
 
-                // 3. Logic Listeners
-                const searchInput = container.querySelector('.product-search-input');
-                const onSaleToggle = container.querySelector('.on-sale-toggle');
-                const rows = container.querySelectorAll('.product-row'); // helper class
+                const update = () => {
+                    const searchVal = container.querySelector('.prod-search').value.toLowerCase();
+                    const saleToggle = container.querySelector('.sale-toggle');
+                    const saleOn = saleToggle ? saleToggle.checked : true;
 
-                const updateVisibility = () => {
-                    const term = searchInput.value.toLowerCase();
-                    const showOnSale = onSaleToggle ? onSaleToggle.checked : true;
-
-                    rows.forEach(row => {
-                        const nameAndSku = row.textContent.toLowerCase();
-                        const matchesSearch = nameAndSku.includes(term);
-                        const isRowSale = row.dataset.isSale === 'true';
-
-                        // If uncheck "On Sale", hide sale rows.
-                        let isVisible = matchesSearch;
-
-                        if (isRowSale && !showOnSale) {
-                            isVisible = false;
-                        }
-
-                        row.style.display = isVisible ? '' : 'none';
+                    container.querySelectorAll('.prod-card').forEach(c => {
+                        const matchesSearch = c.innerText.toLowerCase().includes(searchVal);
+                        const isSaleItem = c.dataset.sale === 'true';
+                        // If On Sale is checked, show all items (sales are first due to sort). 
+                        // If unchecked, hide sale items (only show regular products).
+                        const matchesSale = saleOn || !isSaleItem;
+                        c.style.display = (matchesSearch && matchesSale) ? 'flex' : 'none';
                     });
                 };
 
-                searchInput.addEventListener('input', updateVisibility);
-                if (onSaleToggle) {
-                    onSaleToggle.addEventListener('change', updateVisibility);
+                const searchInput = container.querySelector('.prod-search');
+                if (searchInput) searchInput.oninput = update;
+
+                const saleToggleInput = container.querySelector('.sale-toggle');
+                if (saleToggleInput) saleToggleInput.onchange = update;
+
+                // Run initial update to sync state
+                update();
+            };
+
+            window.toggleDetails = async (advId, type) => {
+                const card = document.querySelector(`.brand-card[data-id="${advId}"]`);
+                if (!card) return;
+
+                const offersSection = document.getElementById(`offers-section-${advId}`);
+                const productsSection = document.getElementById(`products-section-${advId}`);
+                const offersBtn = card.querySelector('.toggle-offers-btn');
+                const productsBtn = card.querySelector('.toggle-products-btn');
+
+                const targetSection = type === 'offers' ? offersSection : productsSection;
+                const otherSection = type === 'offers' ? productsSection : offersSection;
+                const targetBtn = type === 'offers' ? offersBtn : productsBtn;
+                const otherBtn = type === 'offers' ? productsBtn : offersBtn;
+
+                // Close other
+                if (otherSection) {
+                    otherSection.style.display = 'none';
+                    if (otherBtn) otherBtn.classList.remove('active');
+                }
+
+                // Toggle
+                const isHidden = targetSection.style.display === 'none' || targetSection.style.display === '';
+                if (isHidden) {
+                    targetSection.style.display = 'block';
+                    targetBtn.classList.add('active');
+                } else {
+                    targetSection.style.display = 'none';
+                    targetBtn.classList.remove('active');
+                    return;
+                }
+
+                if (targetBtn.dataset.loaded !== 'true') {
+                    try {
+                        const contentDiv = document.getElementById(`${type}-content-${advId}`);
+                        const res = await fetch(`/api/advertiser/${advId}/${type}`);
+                        const data = await res.json();
+
+                        if (data.success) {
+                            if (type === 'offers') renderOffersTable(contentDiv, data.offers, advId);
+                            else renderProductsTable(contentDiv, data.products);
+                            targetBtn.dataset.loaded = 'true';
+                        }
+                    } catch (err) {
+                        console.error('Error loading data:', err);
+                    }
                 }
             };
 
-            document.addEventListener('DOMContentLoaded', () => {
-                console.log('DOM Content Loaded');
-                const rows = document.querySelectorAll('.brand-row');
-                console.log(`Found ${rows.length} rows`);
+            window.selectCategory = (cat) => {
+                currentCategory = cat;
+                document.querySelectorAll('.category-link').forEach(link => {
+                    link.classList.toggle('active-category', link.dataset.category === cat);
+                });
+                applyFiltersAndSort();
+            };
 
-                // LAZY LOAD OFFERS
-                document.querySelectorAll('.toggle-offers-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        console.log('Offer click');
-                        const advId = btn.dataset.advId;
-                        const rowId = `offers - row - ${advId} `;
-                        const contentId = `offers - content - ${advId} `;
-                        const offersRow = document.getElementById(rowId);
-                        const contentDiv = document.getElementById(contentId);
-                        const isLoaded = btn.dataset.loaded === 'true';
+            window.applyFiltersAndSort = () => {
+                const container = document.getElementById('brands-container');
+                const searchTerm = document.getElementById('brand-search').value.toLowerCase();
+                const sortOrder = document.getElementById('sort-order').value;
+                const cards = Array.from(document.querySelectorAll('.brand-card'));
 
-                        if (!offersRow) return;
+                // Filter
+                cards.forEach(card => {
+                    const name = card.dataset.name;
+                    const cats = JSON.parse(card.dataset.categories);
 
-                        if (isLoaded) {
-                            const isHidden = offersRow.style.display === 'none';
-                            offersRow.style.display = isHidden ? 'table-row' : 'none';
-                            btn.textContent = isHidden ? btn.textContent.replace('Show',
-                                'Hide') :
-                                btn.textContent.replace('Hide', 'Show');
-                            // Toggle active class
-                            btn.classList.toggle('active');
-                            return;
-                        }
+                    const matchesSearch = name.includes(searchTerm);
+                    const matchesCategory = currentCategory === 'all' || cats.includes(currentCategory.toLowerCase());
 
-                        offersRow.style.display = 'table-row';
-                        btn.textContent = btn.textContent.replace('Show', 'Hide');
-                        // Toggle active class
-                        btn.classList.add('active');
+                    card.style.display = (matchesSearch && matchesCategory) ? 'block' : 'none';
 
-                        try {
-                            const res = await fetch(`/ api / advertiser / ${advId}/offers`);
-                            const data = await res.json();
-
-                            if (data.success && data.offers) {
-                                renderOffersTable(contentDiv, data.offers, advId);
-                                btn.dataset.loaded = 'true';
-                            } else {
-                                contentDiv.innerHTML = `<div style="color:red; padding:1rem;">
-                                                        Failed to load
-                                                        offers.</div>`;
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            contentDiv.innerHTML = `<div style="color:red; padding:1rem;">
-                                                        Error loading
-                                                        offers.</div>`;
-                        }
+                    // Highlight pills
+                    card.querySelectorAll('.category-pill').forEach(pill => {
+                        const pillText = pill.innerText.toLowerCase();
+                        const isActive = currentCategory !== 'all' && pillText.includes(currentCategory.toLowerCase());
+                        pill.style.background = isActive ? '#FFD15C' : 'rgba(79, 70, 229, 0.05)';
+                        pill.style.color = isActive ? '#000' : 'var(--primary)';
                     });
                 });
 
-                // LAZY LOAD PRODUCTS
-                document.querySelectorAll('.toggle-products-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        console.log('Product click');
-                        const advId = btn.dataset.advId;
-                        const rowId = `products-row-${advId}`;
-                        const contentId = `products-content-${advId}`;
-                        const productRow = document.getElementById(rowId);
-                        const contentDiv = document.getElementById(contentId);
-                        const isLoaded = btn.dataset.loaded === 'true';
+                // Sort
+                cards.sort((a, b) => {
+                    const nameA = a.dataset.name;
+                    const nameB = b.dataset.name;
+                    const offersA = parseInt(a.dataset.offers);
+                    const offersB = parseInt(b.dataset.offers);
+                    const productsA = parseInt(a.dataset.products);
+                    const productsB = parseInt(b.dataset.products);
 
-                        if (!productRow) return;
-
-                        if (isLoaded) {
-                            const isHidden = productRow.style.display === 'none';
-                            productRow.style.display = isHidden ? 'table-row' : 'none';
-                            btn.textContent = isHidden ? btn.textContent.replace('Show',
-                                'Hide') :
-                                btn.textContent.replace('Hide', 'Show');
-                            // Toggle active class
-                            btn.classList.toggle('active');
-                            return;
-                        }
-
-                        productRow.style.display = 'table-row';
-                        btn.textContent = btn.textContent.replace('Show', 'Hide');
-                        // Toggle active class
-                        btn.classList.add('active');
-
-                        try {
-                            const res = await fetch(`/api/advertiser/${advId}/products`);
-                            const data = await res.json();
-
-                            if (data.success && data.products) {
-                                renderProductsTable(contentDiv, data.products);
-                                btn.dataset.loaded = 'true';
-                            } else {
-                                contentDiv.innerHTML = `<div style="color:red; padding:1rem;">
-                                                        Failed to load
-                                                        products.</div>`;
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            contentDiv.innerHTML = `<div style="color:red; padding:1rem;">
-                                                        Error loading
-                                                        products.</div>`;
-                        }
-                    });
-                });
-
-                // MAIN FILTER LOGIC
-                const closeAllSubTables = () => {
-                    // Close Offer Rows
-                    document.querySelectorAll('[id^="offers-row-"]').forEach(row => {
-                        row.style.display = 'none';
-                    });
-                    // Reset Offer Buttons
-                    document.querySelectorAll('.toggle-offers-btn').forEach(btn => {
-                        btn.textContent = btn.textContent.replace('Hide', 'Show');
-                        btn.classList.remove('active');
-                    });
-
-                    // Close Product Rows
-                    document.querySelectorAll('[id^="products-row-"]').forEach(row => {
-                        row.style.display = 'none';
-                    });
-                    // Reset Product Buttons
-                    document.querySelectorAll('.toggle-products-btn').forEach(btn => {
-                        btn.textContent = btn.textContent.replace('Hide', 'Show');
-                        btn.classList.remove('active');
-                    });
-                };
-
-                const searchInput = document.getElementById('search-input');
-                let currentCategory = 'all';
-
-                window.selectCategory = (cat) => {
-                    currentCategory = cat;
-                    // Update UI
-                    document.querySelectorAll('.category-link').forEach(link => {
-                        if (link.dataset.category === cat) {
-                            link.classList.add('active-category');
-                        } else {
-                            link.classList.remove('active-category');
-                        }
-                    });
-                    filterTable();
-                };
-
-                const filterTable = () => {
-                    closeAllSubTables();
-                    const searchTerm = searchInput.value.toLowerCase();
-                    const category = currentCategory;
-
-                    // Escape Regex Helper
-                    function escapeRegExp(string) {
-                        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    switch (sortOrder) {
+                        case 'name-asc': return nameA.localeCompare(nameB);
+                        case 'name-desc': return nameB.localeCompare(nameA);
+                        case 'offers-desc': return offersB - offersA || nameA.localeCompare(nameB);
+                        case 'products-desc': return productsB - productsA || nameA.localeCompare(nameB);
+                        default: return 0;
                     }
+                });
 
-                    let visibleCount = 0;
-                    let rakutenCount = 0;
-                    let cjCount = 0;
-                    let awinCount = 0;
+                cards.forEach(card => container.appendChild(card));
+            };
 
-                    const safeCategory = escapeRegExp(category);
-                    const regex = new RegExp(`(${safeCategory})`, 'gi');
 
-                    rows.forEach(row => {
-                        const rowName = row.dataset.name;
-                        const rowNetwork = row.dataset.network;
-                        const rowCategories = row.dataset.categories;
-                        const categoryCell = row.querySelector('.category-cell');
 
-                        const matchesSearch = rowName.includes(searchTerm);
-                        // Network filter removed (always true)
-                        const matchesNetwork = true;
-                        const matchesCategory = category === 'all' ||
-                            rowCategories.includes(category.toLowerCase());
-
-                        if (matchesSearch && matchesNetwork && matchesCategory) {
-                            row.style.display = '';
-                            visibleCount++;
-                            if (rowNetwork === 'Rakuten') rakutenCount++;
-                            if (rowNetwork === 'CJ') cjCount++;
-                            if (rowNetwork === 'AWIN') awinCount++;
-
-                            // HIGHLIGHTING LOGIC
-                            if (categoryCell) {
-                                const pills = categoryCell.querySelectorAll('.category-pill');
-                                pills.forEach(pill => {
-                                    const pillText = pill.innerText.trim();
-                                    // Reset first
-                                    pill.style.backgroundColor = '';
-                                    pill.style.color = 'var(--primary)';
-
-                                    if (category !== 'all') {
-                                        // Case-insensitive inclusion check
-                                        if (pillText.toLowerCase().includes(category.toLowerCase())) {
-                                            pill.style.backgroundColor = '#FFD15C';
-                                            pill.style.color = '#000000'; // Contrast
-                                            pill.style.borderRadius = '4px'; // Ensure rounded look if background applied
-                                            pill.style.padding = '0 4px'; // Add padding for background
-                                        }
-                                    }
-                                });
-                            }
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-
-                    // Don't update totalEl (keep showing total brands)
-                    // totalEl.textContent = visibleCount;
-                };
-
-                searchInput.addEventListener('input', filterTable);
-                console.log('Listeners attached');
-            });
+            window.applyFiltersAndSort();
         </script>
-
-        <!-- Home Link Modal -->
-        <div id="homeLinkModal" style="
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        backdrop-filter: blur(2px);
-    ">
-            <div style="
-            background: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            width: 400px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        ">
-                <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--text-main); font-size: 1.125rem;">
-                    Enter Homepage Affiliate URL
-                </h3>
-                <input type="text" id="modalHomeLinkInput" placeholder="https://..." style="
-                width: 100%;
-                padding: 0.75rem;
-                margin-bottom: 1.5rem;
-                border: 1px solid var(--border);
-                border-radius: 0.375rem;
-                font-size: 0.95rem;
-            ">
-                <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                    <button onclick="closeHomeLinkModal()" style="
-                    background: transparent;
-                    border: 1px solid var(--border);
-                    padding: 0.5rem 1rem;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-weight: 500;
-                    color: var(--text-main);
-                ">Cancel</button>
-                    <button id="modalSubmitBtn" onclick="submitHomeLink()" style="
-                    background: var(--primary);
-                    color: white;
-                    border: none;
-                    padding: 0.5rem 1rem;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-weight: 500;
-                ">Save</button>
-                </div>
-            </div>
-        </div>
 </body>
 
 </html>
