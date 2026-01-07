@@ -544,7 +544,7 @@
                                                     <% } %>
                                             </button>
                                             <% } else { %>
-                                                <span style="color: var(--text-secondary); font-size: 0.75rem;">-</span>
+                                                <span style="color: var(--text-secondary); font-size: 0.75rem;"></span>
                                                 <% } %>
                                     </td>
                                     <% var pCount=adv.productCount || 0; %>
@@ -581,7 +581,7 @@
                                                 </button>
                                                 <% } else { %>
                                                     <span
-                                                        style="color: var(--text-secondary); font-size: 0.75rem;">-</span>
+                                                        style="color: var(--text-secondary); font-size: 0.75rem;"></span>
                                                     <% } %>
                                         </td>
                                         <td class="category-cell"
@@ -1032,18 +1032,18 @@
                     const codeDisplay = (coupon.code && coupon.code !== 'N/A') ? `<span
                                                     class="status-badge status-active"
                                                     style="font-family: monospace; text-transform: uppercase;">${coupon.code}</span>` : `<span
-                                                    style="color: var(--text-secondary);">-</span>`;
+                                                    style="color: var(--text-secondary);"></span>`;
 
                     const startDate = coupon.startDate ? new
-                        Date(coupon.startDate).toLocaleDateString() : '-';
+                        Date(coupon.startDate).toLocaleDateString() : '';
                     const endDate = coupon.endDate ? new
-                        Date(coupon.endDate).toLocaleDateString() : '-';
+                        Date(coupon.endDate).toLocaleDateString() : '';
 
                     html += `
                                                 <tr style="${rowStyle}">
                                                     <td style="padding: 0.5rem; height: 32px; white-space: nowrap;">${imgBtn}</td>
                                                     <td style="padding: 0.5rem; white-space: nowrap;">${codeDisplay}</td>
-                                                    <td style="padding: 0.5rem; white-space: nowrap;">${coupon.description || '-'}</td>
+                                                    <td style="padding: 0.5rem; white-space: nowrap;">${coupon.description || ''}</td>
                                                     <td style="padding: 0.5rem; color: green; white-space: nowrap;">
                                                         ${startDate}</td>
                                                     <td style="padding: 0.5rem; color: red; white-space: nowrap;">
@@ -1156,9 +1156,9 @@
                     html += `
                                                 <tr>
                                                     <td style="padding: 0.5rem; width: 60px;">${img}</td>
-                                                    <td style="padding: 0.5rem;">${p.name || '-'}</td>
-                                                    <td style="padding: 0.5rem;">${p.sku || '-'}</td>
-                                                    <td class="desc-cell" style="padding: 0.5rem; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.description || ''}">${p.description || '-'}</td>
+                                                    <td style="padding: 0.5rem;">${p.name || ''}</td>
+                                                    <td style="padding: 0.5rem;">${p.sku || ''}</td>
+                                                    <td class="desc-cell" style="padding: 0.5rem; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.description || ''}">${p.description || ''}</td>
                                                     <td style="padding: 0.5rem;">${priceDisplay}</td>
                                                     <td style="padding: 0.5rem;">${salePriceDisplay}</td>
 
