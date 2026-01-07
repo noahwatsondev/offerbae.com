@@ -360,39 +360,78 @@ const getAdvertiserProducts = async (req, res) => {
 
         try {
             if (q && q.length >= 2) {
-                // Search Mode
-                const kwResults = await fetchAllMatches(qRef => qRef.where('searchKeywords', 'array-contains', q));
-                let results = kwResults;
+                // Search Mode: Optimized fetching
+                const qTokens = q.split(/\s+/).filter(t => t.length >= 2);
+                const mainToken = qTokens[0];
 
-                if (results.length === 0) {
-                    // Fallback to prefix
-                    const capitalizedQ = q.charAt(0).toUpperCase() + q.slice(1);
-                    results = await fetchAllMatches(qRef => qRef.where('name', '>=', capitalizedQ).where('name', '<=', capitalizedQ + '\uf8ff'));
+                // For search, we limit the initial pool to avoid OOM/Slowdowns 
+                // but still provide enough for relevant pages.
+                const searchLimit = 2000;
+
+                const fetchSubset = async (queryFn) => {
+                    const results = [];
+                    for (const typeId of idTypes) {
+                        const snap = await queryFn(db.collection('products')
+                            .where('advertiserId', '==', typeId))
+                            .limit(searchLimit)
+                            .get();
+                        snap.forEach(doc => results.push(doc.data()));
+                    }
+                    return results;
+                };
+
+                const kwResults = await fetchSubset(qRef => qRef.where('searchKeywords', 'array-contains', mainToken));
+
+                let filtered = kwResults;
+                if (qTokens.length > 1) {
+                    filtered = kwResults.filter(p => {
+                        const searchStr = (p.name || '').toLowerCase();
+                        return qTokens.every(token => searchStr.includes(token));
+                    });
                 }
 
-                total = results.length;
-                products = results.slice(offset, offset + limit);
+                total = filtered.length;
+                products = filtered.slice(offset, offset + limit);
             } else {
-                // Normal Mode (No search)
-                // Get totals first
-                const totalPromises = idTypes.map(typeId =>
-                    db.collection('products').where('advertiserId', '==', typeId).get().then(s => s.size)
-                );
-                const counts = await Promise.all(totalPromises);
-                total = counts.reduce((a, b) => a + b, 0);
+                // Normal Mode: ULTRA FAST
+                // 1. Get total from Advertiser record (denormalized)
+                const advDoc = await db.collection('advertisers').doc(`Rakuten-${id}`).get() ||
+                    await db.collection('advertisers').doc(`CJ-${id}`).get() ||
+                    await db.collection('advertisers').doc(`AWIN-${id}`).get();
 
-                // Fetch paginated (This is more complex with mixed types, but we'll prioritize the current string ID)
-                const stringSnap = await db.collection('products').where('advertiserId', '==', String(id)).offset(offset).limit(limit).get();
+                if (advDoc && advDoc.exists) {
+                    total = advDoc.data().productCount || 0;
+                } else {
+                    // Fallback to quick count if advertiser record missing
+                    const countPromises = idTypes.map(typeId =>
+                        db.collection('products').where('advertiserId', '==', typeId).count().get()
+                    );
+                    const snaps = await Promise.all(countPromises);
+                    total = snaps.reduce((acc, s) => acc + s.data().count, 0);
+                }
+
+                // 2. Paginated fetch (prioritize string ID)
+                const stringSnap = await db.collection('products')
+                    .where('advertiserId', '==', String(id))
+                    .orderBy('updatedAt', 'desc') // Ensure stable sort for pagination
+                    .offset(offset)
+                    .limit(limit)
+                    .get();
+
                 stringSnap.forEach(doc => products.push(doc.data()));
 
                 if (products.length < limit && idTypes.length > 1) {
                     const remainingLimit = limit - products.length;
-                    const numberSnap = await db.collection('products').where('advertiserId', '==', Number(id)).limit(remainingLimit).get();
+                    const numberSnap = await db.collection('products')
+                        .where('advertiserId', '==', Number(id))
+                        .orderBy('updatedAt', 'desc')
+                        .limit(remainingLimit)
+                        .get();
                     numberSnap.forEach(doc => products.push(doc.data()));
                 }
             }
         } catch (queryErr) {
-            console.error('[ERROR] Mixed-type product query failed:', queryErr);
+            console.error('[ERROR] Optimized product query failed:', queryErr);
             // Minimal fallback
             const fallbackSnap = await db.collection('products').where('advertiserId', '==', String(id)).limit(limit).get();
             fallbackSnap.forEach(doc => products.push(doc.data()));
@@ -418,39 +457,39 @@ const getAdvertiserProducts = async (req, res) => {
 const globalProductSearch = async (req, res) => {
     try {
         const q = req.query.q;
-        console.log(`[DEBUG] Global search query: "${q}"`);
-
-        if (!q || q.length < 2) {
-            return res.json({ success: true, products: [] });
-        }
+        if (!q || q.length < 2) return res.json({ success: true, products: [] });
 
         const db = firebaseConfig.db;
+        const qTokens = q.toLowerCase().split(/\s+/).filter(t => t.length >= 2);
+        const mainToken = qTokens[0];
 
-        const queryText = q.toLowerCase();
+        console.log(`[DEBUG] Global search tokens:`, qTokens);
 
-        // 1. Keyword search (Powerful 'contains' behavior)
-        const kwSnapshot = await db.collection('products')
-            .where('searchKeywords', 'array-contains', queryText)
-            .limit(10)
+        // 1. Broad fetch using the primary token
+        const snapshot = await db.collection('products')
+            .where('searchKeywords', 'array-contains', mainToken)
+            .limit(100)
             .get();
 
         const products = [];
         const seenIds = new Set();
 
-        const addProducts = (snapshot) => {
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const id = doc.id || doc.ref.id;
-                if (!seenIds.has(id)) {
-                    products.push(data);
-                    seenIds.add(id);
-                }
-            });
-        };
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const id = doc.id;
 
-        addProducts(kwSnapshot);
+            // Refine in memory: Ensure ALL tokens appear somewhere in the product name
+            const name = (data.name || '').toLowerCase();
+            const allMatch = qTokens.every(token => name.includes(token));
 
-        // 2. Fallback prefix search (Immediate results while re-syncing)
+            if (allMatch && !seenIds.has(id)) {
+                products.push(data);
+                seenIds.add(id);
+                if (products.length >= 15) return; // Cap at 15 high-quality matches
+            }
+        });
+
+        // 2. Fallback prefix search if low results (for legacy data)
         if (products.length < 5) {
             const capitalizedQ = q.charAt(0).toUpperCase() + q.slice(1);
             const prefixSnapshot = await db.collection('products')
@@ -458,11 +497,17 @@ const globalProductSearch = async (req, res) => {
                 .where('name', '<=', capitalizedQ + '\uf8ff')
                 .limit(5)
                 .get();
-            addProducts(prefixSnapshot);
+
+            prefixSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (!seenIds.has(doc.id)) {
+                    products.push(data);
+                    seenIds.add(doc.id);
+                }
+            });
         }
 
-        console.log(`[DEBUG] Found ${products.length} products for query "${q}"`);
-        res.json({ success: true, products });
+        res.json({ success: true, products: products.slice(0, 15) });
     } catch (e) {
         console.error('[ERROR] Global search failed:', e);
         res.status(500).json({ success: false, error: e.message });

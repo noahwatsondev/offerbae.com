@@ -52,15 +52,24 @@ const extractCodeFromDescription = (desc) => {
 
 const generateSearchKeywords = (text) => {
     if (!text) return [];
-    // Lowercase and strip special characters
-    const clean = String(text).toLowerCase().replace(/[^a-z0-9\s]/g, '');
-    const words = clean.split(/\s+/).filter(w => w.length > 2); // Only words > 2 chars for quality
     const keywords = new Set();
+    const clean = String(text).toLowerCase().replace(/[^a-z0-9]/g, ' ');
+    const words = clean.split(/\s+/).filter(w => w.length >= 2);
 
-    // Add individual words
-    words.forEach(w => keywords.add(w));
+    words.forEach(word => {
+        keywords.add(word);
+        // Generate n-grams (substrings) for true "contains" matching
+        if (word.length >= 3) {
+            for (let i = 0; i <= word.length - 3; i++) {
+                // Generate substrings of length 3 to 15
+                for (let len = 3; len <= 15 && i + len <= word.length; len++) {
+                    keywords.add(word.substring(i, i + len));
+                }
+            }
+        }
+    });
 
-    // Add bigrams (e.g. "pet rock" -> "pet rock")
+    // Add bigrams for phrase matching
     for (let i = 0; i < words.length - 1; i++) {
         keywords.add(`${words[i]} ${words[i + 1]}`);
     }
@@ -339,6 +348,7 @@ const syncRakutenProducts = async (inputAdvs = null) => {
                         sku: sku,
                         network: network,
                         advertiserId: String(adv.id), // Ensure string
+                        advertiserName: adv.name || '',
                         name: p.name || 'Unknown Product',
                         searchKeywords: generateSearchKeywords(p.name),
                         price: p.price !== undefined ? p.price : null,
@@ -557,6 +567,7 @@ const syncCJProducts = async () => {
                         sku: sku,
                         network: 'CJ',
                         advertiserId: String(p.advertiserId),
+                        advertiserName: p.advertiserName || '',
                         name: p.name || 'Unknown Product',
                         searchKeywords: generateSearchKeywords(p.name),
                         price: p.price !== undefined ? p.price : null,
@@ -803,6 +814,7 @@ const syncAWINProducts = async (inputAdvs = null) => {
                         sku: sku,
                         network: 'AWIN',
                         advertiserId: String(adv.id), // Ensure string
+                        advertiserName: adv.name || '',
                         name: p.name || 'Unknown Product',
                         searchKeywords: generateSearchKeywords(p.name),
                         price: p.price !== undefined ? p.price : null,

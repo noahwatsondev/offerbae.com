@@ -7,7 +7,7 @@ const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
 const firebaseAdmin = require('firebase-admin');
 const fs = require('fs');
-require('dotenv').config();
+require('dotenv').config({ override: true });
 
 console.log('[DEBUG-ENV] Available Env Vars:', Object.keys(process.env).join(', '));
 
