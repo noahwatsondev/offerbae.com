@@ -289,7 +289,24 @@
             }
 
             .expanded-row-content {
-                padding: 1rem 0.5rem !important;
+                padding: 1rem 0.75rem !important;
+            }
+
+            .expanded-row-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 1rem;
+            }
+
+            .expanded-row-header>div {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .offer-search-input,
+            .product-search-input {
+                width: 100% !important;
+                max-width: none !important;
             }
 
             th,
@@ -682,16 +699,15 @@
                 }
 
                 let html = `
-                                                    <div
-                                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                                        <strong style="color: var(--text-main);">Offers
-                                                            (${offers.length})</strong>
-                                                        <input type="text" class="offer-search-input"
-                                                            placeholder="Search offers..."
-                                                            style="padding: 0.375rem 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; font-size: 0.8rem; width: 200px;">
-                                                    </div>
-                                                    <table style="width: 100%; font-size: 0.8rem;">
-                                                        <tbody>`;
+                    <div class="expanded-row-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <strong style="color: var(--text-main);">Offers (${offers.length})</strong>
+                        <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end; max-width: 300px;">
+                            <input type="text" class="offer-search-input"
+                                placeholder="Search offers..."
+                                style="padding: 0.375rem 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; font-size: 0.8rem; width: 100%;">
+                        </div>
+                    </div>
+                    <div class="offers-list" style="display: flex; flex-direction: column; gap: 4px;">`;
 
                 // TIME LEFT FORMATTER
                 const formatTimeLeft = (endDateStr) => {
@@ -791,27 +807,21 @@
                         : `window.open('${coupon.link}', '_blank')`;
 
                     html += `
-                                                            <tr style="${rowStyle}; ${activeStyleSettings.offerRowStyles || ''}" class="clickable-row" onclick="${onclickHandler}">
-                                                                <td style="padding: 1rem; vertical-align: top;">
-                                                                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start;">
-                                                                        <div style="flex-shrink: 0;">${iconSvg}</div>
-                                                                        <div style="flex: 1; min-width: 0; word-break: break-word; overflow-wrap: break-word;">
-                                                                            <div style="font-size: 1.25rem; font-weight: 600; line-height: 1.3; ${activeStyleSettings.offerTitleStyles || ''}">${coupon.description || ''}</div>
-                                                                            <div style="display: block; font-style: italic; margin-top: 4px; font-size: 0.875rem; ${activeStyleSettings.offerTimeLeftStyles || ''}"><span style="font-size: 0.75rem; color: silver;">Expires </span>${formatTimeLeft(coupon.endDate)}</div>
-                                                                            <div style="margin-top: 12px;">${codeDisplay}</div>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>`;
+                    <div style="${rowStyle} ${activeStyleSettings.offerRowStyles || ''}; min-width: 0; cursor: pointer; border-bottom: 1px solid var(--border); transition: background-color 0.2s;" class="offer-row clickable-row" onclick="${onclickHandler}">
+                        <div style="padding: 1.25rem 1rem;">
+                            <div style="display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: flex-start;">
+                                <div style="flex-shrink: 0; opacity: 0.75;">${iconSvg}</div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-size: 1.15rem; font-weight: 600; line-height: 1.4; color: var(--text-main); word-break: break-word; overflow-wrap: break-word; ${activeStyleSettings.offerTitleStyles || ''}">${coupon.description || ''}</div>
+                                    <div style="display: block; font-style: italic; margin-top: 6px; font-size: 0.875rem; ${activeStyleSettings.offerTimeLeftStyles || ''}"><span style="font-size: 0.75rem; color: silver;">Expires </span>${formatTimeLeft(coupon.endDate)}</div>
+                                    <div style="margin-top: 14px;">${codeDisplay}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
                 });
 
-                if (html === '') {
-                    html = '<tr><td colspan="4" style="text-align:center; padding:1rem;">No active offers found.</td></tr>';
-                }
-
-                html += `
-                                                        </tbody >
-                                                    </table > `;
+                html += `</div>`;
                 container.innerHTML = html;
 
                 // Re-attach listeners for dynamically created elements
@@ -819,12 +829,12 @@
                     container.querySelector('.offer-search-input');
                 searchInput.addEventListener('input', (e) => {
                     const term = e.target.value.toLowerCase();
-                    const rows = container.querySelectorAll('tbody tr');
+                    const rows = container.querySelectorAll('.offer-row');
                     rows.forEach(row => {
                         // Skip explicit image rows (IDs starting with img-)
                         if (row.id && row.id.startsWith('img-')) return;
 
-                        const text = row.cells[0].textContent.toLowerCase();
+                        const text = row.textContent.toLowerCase();
                         const match = text.includes(term);
                         row.style.display = match ? '' : 'none';
 
@@ -886,31 +896,30 @@
                 // 2. Render UI
                 const showCheckbox = saleItems.length > 0;
                 const checkboxHtml = showCheckbox ? `
-                            <label style="margin-right: 20px; display: inline-flex; align-items: center; cursor: pointer; color: var(--danger); font-weight: 500;">
-                                <input type="checkbox" class="on-sale-toggle" checked style="margin-right: 6px;">
-                                On Sale
-                            </label>` : '';
+                    <label style="margin-right: 20px; display: inline-flex; align-items: center; cursor: pointer; color: var(--danger); font-weight: 500;">
+                        <input type="checkbox" class="on-sale-toggle" checked style="margin-right: 6px;">
+                        On Sale
+                    </label>` : '';
 
                 let html = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <div class="expanded-row-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <strong style="color: var(--text-main);">Products (${products.length})</strong>
-                        <div style="display: flex; align-items: center;">
+                        <div style="display: flex; align-items: center; flex: 1; justify-content: flex-end; max-width: 400px;">
                             ${checkboxHtml}
                             <input type="text" class="product-search-input"
                                 placeholder="Search products..."
-                                style="padding: 0.375rem 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; font-size: 0.8rem; width: 200px;">
+                                style="padding: 0.375rem 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; font-size: 0.8rem; width: 100%;">
                         </div>
                     </div>
-                    <table style="width: 100%; font-size: 0.8rem;">
-                        <tbody>`;
+                    <div class="products-list" style="display: flex; flex-direction: column; gap: 4px;">`;
 
                 sortedProducts.forEach(p => {
                     const displayImgUrl = p.storageImageUrl || p.imageUrl;
                     const img = displayImgUrl ? `<img src="${displayImgUrl}"
-                                                            style="width: 120px; height: 120px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;">`
+                        style="width: 120px; height: 120px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;">`
                         : `<div
-                                                            style="width: 120px; height: 120px; background: #eee; border-radius: 4px;">
-                                                        </div>`;
+                            style="width: 120px; height: 120px; background: #eee; border-radius: 4px;">
+                        </div>`;
 
                     const isSale = p._isSale;
                     const savings = p._savings.toFixed(2);
@@ -931,36 +940,34 @@
                     }
 
                     html += `
-                                                            <tr class="clickable-row product-row" data-is-sale="${isSale}" onclick="window.open('${p.link}', '_blank')" style="${activeStyleSettings.productRowStyles || ''}">
-                                                                <td style="padding: 1rem; vertical-align: top;">
-                                                                    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start;">
-                                                                        <div style="flex-shrink: 0; ${activeStyleSettings.productImageStyles || ''}">${img}</div>
-                                                                        <div style="flex: 1; min-width: 0; word-break: break-word; overflow-wrap: break-word;">
-                                                                            <div style="font-size: 1.25rem; font-weight: 600; line-height: 1.3; ${activeStyleSettings.productTitleStyles || ''}">${p.name || ''}</div>
-                                                                            ${p.sku ? `<div style="display: block; color: silver; font-style: italic; margin-top: 4px; font-size: 0.875rem;"><span style="font-size: 0.75rem;">SKU </span>${p.sku}</div>` : ''}
-                                                                            <div style="margin-top: 12px; font-size: 1rem;">${finalPriceHtml}</div>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>`;
+                        <div class="clickable-row product-row" data-is-sale="${isSale}" onclick="window.open('${p.link}', '_blank')" style="${activeStyleSettings.productRowStyles || ''}; min-width: 0; cursor: pointer; border-bottom: 1px solid var(--border); transition: background-color 0.2s;">
+                            <div style="padding: 1.25rem 1rem;">
+                                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start;">
+                                    <div style="flex-shrink: 0; ${activeStyleSettings.productImageStyles || ''}">${img}</div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 1.15rem; font-weight: 600; line-height: 1.4; color: var(--text-main); word-break: break-word; overflow-wrap: break-word; ${activeStyleSettings.productTitleStyles || ''}">${p.name || ''}</div>
+                                        ${p.sku ? `<div style="display: block; color: silver; font-style: italic; margin-top: 4px; font-size: 0.875rem;"><span style="font-size: 0.75rem;">SKU </span>${p.sku}</div>` : ''}
+                                        <div style="margin-top: 14px; font-size: 1rem;">${finalPriceHtml}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
                 });
 
-                html += `
-                                                        </tbody >
-                                                    </table > `;
+                html += `</div>`;
                 container.innerHTML = html;
 
                 // 3. Logic Listeners
                 const searchInput = container.querySelector('.product-search-input');
                 const onSaleToggle = container.querySelector('.on-sale-toggle');
-                const rows = container.querySelectorAll('tbody tr.product-row'); // helper class
+                const rows = container.querySelectorAll('.product-row'); // helper class
 
                 const updateVisibility = () => {
                     const term = searchInput.value.toLowerCase();
                     const showOnSale = onSaleToggle ? onSaleToggle.checked : true;
 
                     rows.forEach(row => {
-                        const nameAndSku = row.cells[0].textContent.toLowerCase();
+                        const nameAndSku = row.textContent.toLowerCase();
                         const matchesSearch = nameAndSku.includes(term);
                         const isRowSale = row.dataset.isSale === 'true';
 
@@ -991,8 +998,8 @@
                     btn.addEventListener('click', async (e) => {
                         console.log('Offer click');
                         const advId = btn.dataset.advId;
-                        const rowId = `offers-row-${advId}`;
-                        const contentId = `offers-content-${advId}`;
+                        const rowId = `offers - row - ${advId} `;
+                        const contentId = `offers - content - ${advId} `;
                         const offersRow = document.getElementById(rowId);
                         const contentDiv = document.getElementById(contentId);
                         const isLoaded = btn.dataset.loaded === 'true';
@@ -1016,7 +1023,7 @@
                         btn.classList.add('active');
 
                         try {
-                            const res = await fetch(`/api/advertiser/${advId}/offers`);
+                            const res = await fetch(`/ api / advertiser / ${advId}/offers`);
                             const data = await res.json();
 
                             if (data.success && data.offers) {
