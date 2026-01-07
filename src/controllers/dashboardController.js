@@ -337,42 +337,65 @@ const getAdvertiserProducts = async (req, res) => {
         console.log(`[DEBUG] getAdvertiserProducts - ID: ${id}, Query: "${q}"`);
 
         const db = firebaseConfig.db;
-        let baseQuery = db.collection('products').where('advertiserId', '==', id);
 
-        let checkSnap = await baseQuery.limit(1).get();
-        if (checkSnap.empty) {
-            baseQuery = db.collection('products').where('advertiserId', '==', Number(id));
-        }
+        // We need to check for products using both String and Number versions of the ID 
+        // because old data may still be stored as Numbers.
+        const idTypes = [String(id)];
+        if (!isNaN(id)) idTypes.push(Number(id));
 
-        let query = baseQuery;
-        if (q && q.length >= 2) {
-            query = baseQuery.where('searchKeywords', 'array-contains', q);
-        }
-
-        let total = 0;
         let products = [];
+        let total = 0;
+
+        // Fetch all matching products (limited to sensible amount for counting/fallback)
+        // Note: For very large sets with mixed types, we'd need a more complex pagination approach.
+        // But since we are migrating to Strings, this hybrid approach works for current data.
+        const fetchAllMatches = async (queryFn) => {
+            const results = [];
+            for (const typeId of idTypes) {
+                const snap = await queryFn(db.collection('products').where('advertiserId', '==', typeId)).get();
+                snap.forEach(doc => results.push(doc.data()));
+            }
+            return results;
+        };
 
         try {
-            let countSnapshot = await query.get();
-            total = countSnapshot.size;
+            if (q && q.length >= 2) {
+                // Search Mode
+                const kwResults = await fetchAllMatches(qRef => qRef.where('searchKeywords', 'array-contains', q));
+                let results = kwResults;
 
-            if (total === 0 && q && q.length >= 2) {
-                const capitalizedQ = q.charAt(0).toUpperCase() + q.slice(1);
-                query = baseQuery
-                    .where('name', '>=', capitalizedQ)
-                    .where('name', '<=', capitalizedQ + '\uf8ff');
-                countSnapshot = await query.get();
-                total = countSnapshot.size;
+                if (results.length === 0) {
+                    // Fallback to prefix
+                    const capitalizedQ = q.charAt(0).toUpperCase() + q.slice(1);
+                    results = await fetchAllMatches(qRef => qRef.where('name', '>=', capitalizedQ).where('name', '<=', capitalizedQ + '\uf8ff'));
+                }
+
+                total = results.length;
+                products = results.slice(offset, offset + limit);
+            } else {
+                // Normal Mode (No search)
+                // Get totals first
+                const totalPromises = idTypes.map(typeId =>
+                    db.collection('products').where('advertiserId', '==', typeId).get().then(s => s.size)
+                );
+                const counts = await Promise.all(totalPromises);
+                total = counts.reduce((a, b) => a + b, 0);
+
+                // Fetch paginated (This is more complex with mixed types, but we'll prioritize the current string ID)
+                const stringSnap = await db.collection('products').where('advertiserId', '==', String(id)).offset(offset).limit(limit).get();
+                stringSnap.forEach(doc => products.push(doc.data()));
+
+                if (products.length < limit && idTypes.length > 1) {
+                    const remainingLimit = limit - products.length;
+                    const numberSnap = await db.collection('products').where('advertiserId', '==', Number(id)).limit(remainingLimit).get();
+                    numberSnap.forEach(doc => products.push(doc.data()));
+                }
             }
-
-            const paginatedQuery = query.limit(limit).offset(offset);
-            const paginatedSnapshot = await paginatedQuery.get();
-            paginatedSnapshot.forEach(doc => products.push(doc.data()));
         } catch (queryErr) {
-            console.error('[ERROR] Firestore search failed:', queryErr);
-            // Safe fallback if the keyword/prefix query fails
-            const safeSnap = await baseQuery.limit(limit).get();
-            safeSnap.forEach(doc => products.push(doc.data()));
+            console.error('[ERROR] Mixed-type product query failed:', queryErr);
+            // Minimal fallback
+            const fallbackSnap = await db.collection('products').where('advertiserId', '==', String(id)).limit(limit).get();
+            fallbackSnap.forEach(doc => products.push(doc.data()));
             total = products.length;
         }
 

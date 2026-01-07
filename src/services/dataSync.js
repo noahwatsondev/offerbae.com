@@ -79,6 +79,36 @@ const cacheImage = async (url, folder) => {
     }
 };
 
+const recalculateAdvertiserCounts = async (network, advertiserId) => {
+    try {
+        const db = firebaseConfig.db;
+        const aid = String(advertiserId);
+
+        // Match both string and number IDs
+        const p1 = db.collection('products').where('advertiserId', '==', aid).get();
+        const p2 = db.collection('products').where('advertiserId', '==', Number(aid)).get();
+        const [ps1, ps2] = await Promise.all([p1, p2]);
+        const actualProductCount = ps1.size + ps2.size;
+
+        const o1 = db.collection('offers').where('advertiserId', '==', aid).get();
+        const o2 = db.collection('offers').where('advertiserId', '==', Number(aid)).get();
+        const [os1, os2] = await Promise.all([o1, o2]);
+        const actualOfferCount = os1.size + os2.size;
+
+        await upsertAdvertiser({
+            id: aid,
+            network: network,
+            productCount: actualProductCount,
+            offerCount: actualOfferCount
+        });
+
+        return { products: actualProductCount, offers: actualOfferCount };
+    } catch (e) {
+        console.error(`[SYNC] Failed to recalculate counts for ${advertiserId}:`, e.message);
+        return null;
+    }
+};
+
 // Generic Sync Wrapper
 const syncWithLog = async (network, syncFn) => {
     if (isGlobalSyncRunning) {
@@ -359,6 +389,13 @@ const syncRakutenProducts = async (inputAdvs = null) => {
     }
 
     await pruneStaleRecords('Rakuten', 'products', Array.from(activeIds));
+
+    // Final Audit of counts to ensure UI matches DB exactly
+    console.log('SYNC: Auditing final Rakuten counts...');
+    for (const adv of advs) {
+        await recalculateAdvertiserCounts('Rakuten', adv.id);
+    }
+
     console.log('[Rakuten] Product sync complete.');
 };
 
@@ -580,6 +617,13 @@ const syncCJProducts = async () => {
         }
 
         await pruneStaleRecords('CJ', 'products', Array.from(activeIds));
+
+        // Final Audit of counts
+        console.log('SYNC: Auditing final CJ counts...');
+        for (const adv of advs) {
+            await recalculateAdvertiserCounts('CJ', adv.id);
+        }
+
         console.log('[CJ] Product sync complete.');
 
     } catch (error) {
@@ -814,6 +858,13 @@ const syncAWINProducts = async (inputAdvs = null) => {
     }
 
     await pruneStaleRecords('AWIN', 'products', Array.from(activeIds));
+
+    // Final Audit of counts
+    console.log('SYNC: Auditing final AWIN counts...');
+    for (const adv of advs) {
+        await recalculateAdvertiserCounts('AWIN', adv.id);
+    }
+
     console.log('[AWIN] Product sync complete.');
 };
 
