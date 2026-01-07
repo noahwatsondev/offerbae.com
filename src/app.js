@@ -196,8 +196,8 @@ app.get('/mission-control', dashboardController.getDashboardData);
 
 // Initialize and Start Server
 initializeApp().then(() => {
-    // Schedule task to run every 2 hours
-    cron.schedule('0 */2 * * *', () => {
+    // Schedule task to run every 4 hours
+    cron.schedule('0 */4 * * *', () => {
         console.log('CRON: Starting scheduled data sync...');
         dataSync.syncAll();
     });
