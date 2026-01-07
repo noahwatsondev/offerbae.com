@@ -209,7 +209,7 @@ const pruneStaleRecords = async (network, collectionName, activeIds) => {
 
         const activeIdSet = new Set(activeIds);
         let deletedCount = 0;
-        const batch = firebase.db.batch();
+        let batch = firebase.db.batch();
         let batchCount = 0;
         const MAX_BATCH_SIZE = 400; // Firestore limit is 500
 
