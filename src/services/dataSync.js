@@ -25,6 +25,31 @@ const resetState = (network) => {
     };
 };
 
+// Helpers for Promo Code Detection
+const isRealCode = (code) => {
+    if (!code) return false;
+    const clean = String(code).trim().toUpperCase();
+    const nonCodes = ['N/A', 'NONE', 'NO CODE', '', 'NULL', 'UNDEFINED', 'SEE SITE', 'NO COUPON CODE'];
+    return !nonCodes.includes(clean);
+};
+
+const extractCodeFromDescription = (desc) => {
+    if (!desc) return null;
+    // Common patterns for codes: "Use code: PROMO20", "CODE: DISCOUNT", etc.
+    const patterns = [
+        /code:\s*([A-Za-z0-9_-]{3,})/i,
+        /promo code:\s*([A-Za-z0-9_-]{3,})/i,
+        /coupon code:\s*([A-Za-z0-9_-]{3,})/i,
+        /use code\s*([A-Za-z0-9_-]{3,})/i,
+        /enter code\s*([A-Za-z0-9_-]{3,})/i
+    ];
+    for (const p of patterns) {
+        const match = desc.match(p);
+        if (match && match[1]) return match[1].toUpperCase();
+    }
+    return null;
+};
+
 const cacheImage = async (url, folder) => {
     try {
         if (!url) return null;
@@ -162,8 +187,16 @@ const syncRakutenCoupons = async () => {
     console.log('SYNC: Fetching Rakuten Coupons...');
     try {
         const rawCoupons = await rakutenService.fetchCoupons();
-        // Dedupe coupons based on link (or other uniqueness criteria)
-        const coupons = [...new Map(rawCoupons.map(c => [c.link, c])).values()];
+        // Dedupe coupons based on link (Prioritize codes)
+        const deduped = new Map();
+        rawCoupons.forEach(c => {
+            const existing = deduped.get(c.link);
+            const hasCode = isRealCode(c.code) || !!extractCodeFromDescription(c.description);
+            if (!existing || (hasCode && !(isRealCode(existing.code) || !!extractCodeFromDescription(existing.description)))) {
+                deduped.set(c.link, c);
+            }
+        });
+        const coupons = [...deduped.values()];
         const offerCountsMap = {};
         const hasCodesMap = {};
         for (const coupon of coupons) {
@@ -177,9 +210,15 @@ const syncRakutenCoupons = async () => {
             const aid = String(coupon.advertiserId);
             const isExpired = coupon.endDate && new Date(coupon.endDate) < new Date();
 
+            // Aggressive code detection
+            let activeCode = coupon.code;
+            if (!isRealCode(activeCode)) {
+                activeCode = extractCodeFromDescription(coupon.description) || 'N/A';
+            }
+
             if (!isExpired) {
                 offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
-                if (coupon.code && coupon.code !== 'N/A') {
+                if (isRealCode(activeCode)) {
                     hasCodesMap[aid] = true;
                 }
             }
@@ -388,9 +427,15 @@ const syncCJLinks = async () => {
             const aid = String(link.advertiserId);
             const isExpired = link.endDate && new Date(link.endDate) < new Date();
 
+            // Aggressive code detection
+            let activeCode = link.code;
+            if (!isRealCode(activeCode)) {
+                activeCode = extractCodeFromDescription(link.description) || 'N/A';
+            }
+
             if (!isExpired) {
                 offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
-                if (link.code && link.code !== 'N/A') {
+                if (isRealCode(activeCode)) {
                     hasCodesMap[aid] = true;
                 }
             }
@@ -607,9 +652,15 @@ const syncAWINOffers = async () => {
             const aid = String(offer.advertiserId);
             const isExpired = offer.endDate && new Date(offer.endDate) < new Date();
 
+            // Aggressive code detection
+            let activeCode = offer.code;
+            if (!isRealCode(activeCode)) {
+                activeCode = extractCodeFromDescription(offer.description) || 'N/A';
+            }
+
             if (!isExpired) {
                 offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
-                if (offer.code && offer.code !== 'N/A') {
+                if (isRealCode(activeCode)) {
                     hasCodesMap[aid] = true;
                 }
             }

@@ -1239,13 +1239,19 @@
                         if (isLoaded) {
                             const isHidden = offersRow.style.display === 'none';
                             offersRow.style.display = isHidden ? 'table-row' : 'none';
-                            btn.textContent = isHidden ? btn.textContent.replace('Show', 'Hide') :
-                                btn.textContent.replace('Hide', 'Show');
+                            const textSpan = btn.querySelector('span:first-child');
+                            if (textSpan) {
+                                textSpan.textContent = isHidden ? textSpan.textContent.replace('Show', 'Hide') :
+                                    textSpan.textContent.replace('Hide', 'Show');
+                            }
                             return;
                         }
 
                         offersRow.style.display = 'table-row';
-                        btn.textContent = btn.textContent.replace('Show', 'Hide');
+                        const textSpan = btn.querySelector('span:first-child');
+                        if (textSpan) {
+                            textSpan.textContent = textSpan.textContent.replace('Show', 'Hide');
+                        }
 
                         try {
                             const res = await fetch(`/api/advertiser/${advId}/offers`);
@@ -1282,13 +1288,19 @@
                         if (isLoaded) {
                             const isHidden = productRow.style.display === 'none';
                             productRow.style.display = isHidden ? 'table-row' : 'none';
-                            btn.textContent = isHidden ? btn.textContent.replace('Show', 'Hide') :
-                                btn.textContent.replace('Hide', 'Show');
+                            const textSpan = btn.querySelector('span:first-child');
+                            if (textSpan) {
+                                textSpan.textContent = isHidden ? textSpan.textContent.replace('Show', 'Hide') :
+                                    textSpan.textContent.replace('Hide', 'Show');
+                            }
                             return;
                         }
 
                         productRow.style.display = 'table-row';
-                        btn.textContent = btn.textContent.replace('Show', 'Hide');
+                        const textSpan = btn.querySelector('span:first-child');
+                        if (textSpan) {
+                            textSpan.textContent = textSpan.textContent.replace('Show', 'Hide');
+                        }
 
                         try {
                             const res = await fetch(`/api/advertiser/${advId}/products`);
