@@ -281,6 +281,27 @@
         .clickable-row:hover {
             background-color: rgba(216, 180, 254, .2) !important;
         }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem 0.5rem;
+            }
+
+            .expanded-row-content {
+                padding: 1rem 0.5rem !important;
+            }
+
+            th,
+            td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .logo-cell {
+                width: 60px;
+                height: 60px;
+            }
+        }
     </style>
 </head>
 
@@ -465,7 +486,7 @@
                                         <!-- Placeholder for Offers Row (Lazy Loaded) -->
                             <tr id="offers-row-<%= adv.id %>" style="display: none;">
                                 <td colspan="3" style="padding: 0; background: #f9fafb;">
-                                    <div id="offers-content-<%= adv.id %>"
+                                    <div id="offers-content-<%= adv.id %>" class="expanded-row-content"
                                         style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border);">
                                         <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
                                             Loading offers...
@@ -477,7 +498,7 @@
                             <!-- Placeholder for Products Row (Lazy Loaded) -->
                             <tr id="products-row-<%= adv.id %>" style="display: none;">
                                 <td colspan="3" style="padding: 0; background: #f9fafb;">
-                                    <div id="products-content-<%= adv.id %>"
+                                    <div id="products-content-<%= adv.id %>" class="expanded-row-content"
                                         style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border);">
                                         <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
                                             Loading products...
@@ -746,7 +767,7 @@
 
                     const safeCode = (coupon.code || '').replace(/'/g, "\\'");
                     const codeDisplay = (coupon.code && coupon.code !==
-                        'N/A') ? `<div style="display: flex; align-items: center;"><span class="status-badge status-active"
+                        'N/A') ? `<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;"><span class="status-badge status-active"
                                                                 style="font-family: monospace; text-transform: uppercase; ${activeStyleSettings.offerPromoCodeStyles || ''}">
                                                                 ${coupon.code}
                                                                 </span><span style="margin-left: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 0.875rem; color: var(--text-secondary); margin-top: 5px;" onclick="event.stopPropagation(); navigator.clipboard.writeText('${safeCode}'); this.style.color = '#10B981'; setTimeout(() => this.style.color = '', 1000);">
@@ -774,10 +795,10 @@
                                                                 <td style="padding: 1rem; vertical-align: top;">
                                                                     <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start;">
                                                                         <div style="flex-shrink: 0;">${iconSvg}</div>
-                                                                        <div style="flex: 1; min-width: min(100%, 300px);">
-                                                                            <div style="font-size: 1.25rem; ${activeStyleSettings.offerTitleStyles || ''}">${coupon.description || ''}</div>
+                                                                        <div style="flex: 1; min-width: 0; word-break: break-word; overflow-wrap: break-word;">
+                                                                            <div style="font-size: 1.25rem; font-weight: 600; line-height: 1.3; ${activeStyleSettings.offerTitleStyles || ''}">${coupon.description || ''}</div>
                                                                             <div style="display: block; font-style: italic; margin-top: 4px; font-size: 0.875rem; ${activeStyleSettings.offerTimeLeftStyles || ''}"><span style="font-size: 0.75rem; color: silver;">Expires </span>${formatTimeLeft(coupon.endDate)}</div>
-                                                                            <div style="margin-top: 8px;">${codeDisplay}</div>
+                                                                            <div style="margin-top: 12px;">${codeDisplay}</div>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -914,10 +935,10 @@
                                                                 <td style="padding: 1rem; vertical-align: top;">
                                                                     <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start;">
                                                                         <div style="flex-shrink: 0; ${activeStyleSettings.productImageStyles || ''}">${img}</div>
-                                                                        <div style="flex: 1; min-width: min(100%, 300px);">
-                                                                            <div style="font-size: 1.25rem; font-weight: 500; ${activeStyleSettings.productTitleStyles || ''}">${p.name || ''}</div>
+                                                                        <div style="flex: 1; min-width: 0; word-break: break-word; overflow-wrap: break-word;">
+                                                                            <div style="font-size: 1.25rem; font-weight: 600; line-height: 1.3; ${activeStyleSettings.productTitleStyles || ''}">${p.name || ''}</div>
                                                                             ${p.sku ? `<div style="display: block; color: silver; font-style: italic; margin-top: 4px; font-size: 0.875rem;"><span style="font-size: 0.75rem;">SKU </span>${p.sku}</div>` : ''}
-                                                                            <div style="margin-top: 8px; font-size: 1rem;">${finalPriceHtml}</div>
+                                                                            <div style="margin-top: 12px; font-size: 1rem;">${finalPriceHtml}</div>
                                                                         </div>
                                                                     </div>
                                                                 </td>
