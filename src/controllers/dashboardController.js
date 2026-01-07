@@ -357,32 +357,27 @@ const getAdvertiserOffers = async (req, res) => {
             snapshot = await db.collection('offers').where('advertiserId', '==', Number(id)).get();
         }
 
+        const now = new Date();
         const offers = [];
-        snapshot.forEach(doc => offers.push(doc.data()));
-
-        // deduplicate offers
-        const uniqueOffers = {};
-        offers.forEach(offer => {
-            const key = (offer.title || offer.description || '').trim();
-            if (!key) return; // Skip empty offers? Or keep them? Let's skip to be safe/clean.
-
-            if (!uniqueOffers[key]) {
-                uniqueOffers[key] = offer;
-            } else {
-                // Compare dates
-                const current = uniqueOffers[key];
-                const cleanDate = (d) => d ? new Date(d).getTime() : Infinity; // Treat null/missing as forever
-
-                const curDate = cleanDate(current.endDate);
-                const newDate = cleanDate(offer.endDate);
-
-                if (newDate > curDate) {
-                    uniqueOffers[key] = offer;
-                }
-            }
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            // Filter out expired offers
+            if (data.endDate && new Date(data.endDate) < now) return;
+            offers.push(data);
         });
 
-        res.json({ success: true, offers: Object.values(uniqueOffers) });
+        // Sort offers: Code-based results first, then by date (soonest expiry first)
+        offers.sort((a, b) => {
+            const hasCodeA = (a.code && a.code !== 'N/A') ? 1 : 0;
+            const hasCodeB = (b.code && b.code !== 'N/A') ? 1 : 0;
+            if (hasCodeA !== hasCodeB) return hasCodeB - hasCodeA;
+
+            const dateA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
+            const dateB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
+            return dateA - dateB;
+        });
+
+        res.json({ success: true, offers });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
     }

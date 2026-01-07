@@ -175,9 +175,13 @@ const syncRakutenCoupons = async () => {
             activeIds.add(result.id);
 
             const aid = String(coupon.advertiserId);
-            offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
-            if (coupon.code && coupon.code !== 'N/A') {
-                hasCodesMap[aid] = true;
+            const isExpired = coupon.endDate && new Date(coupon.endDate) < new Date();
+
+            if (!isExpired) {
+                offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
+                if (coupon.code && coupon.code !== 'N/A') {
+                    hasCodesMap[aid] = true;
+                }
             }
 
             if (result.status === 'created') {
@@ -382,9 +386,13 @@ const syncCJLinks = async () => {
             activeIds.add(result.id);
 
             const aid = String(link.advertiserId);
-            offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
-            if (link.code && link.code !== 'N/A') {
-                hasCodesMap[aid] = true;
+            const isExpired = link.endDate && new Date(link.endDate) < new Date();
+
+            if (!isExpired) {
+                offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
+                if (link.code && link.code !== 'N/A') {
+                    hasCodesMap[aid] = true;
+                }
             }
 
             if (result.status === 'created') {
@@ -597,9 +605,13 @@ const syncAWINOffers = async () => {
             activeIds.add(result.id);
 
             const aid = String(offer.advertiserId);
-            offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
-            if (offer.code && offer.code !== 'N/A') {
-                hasCodesMap[aid] = true;
+            const isExpired = offer.endDate && new Date(offer.endDate) < new Date();
+
+            if (!isExpired) {
+                offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
+                if (offer.code && offer.code !== 'N/A') {
+                    hasCodesMap[aid] = true;
+                }
             }
 
             if (result.status === 'created') {
