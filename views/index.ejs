@@ -798,21 +798,27 @@
                 const q = input.value.trim();
                 const resultsDiv = document.getElementById('global-search-results');
 
-                // Fallback to advertiser filter
+                // Always clear existing timeout immediately to stop pending searches
+                clearTimeout(searchTimeout);
+
+                // Fallback to advertiser filter (local brand filtering)
                 applyFiltersAndSort();
 
                 if (q.length < 2) {
                     resultsDiv.style.display = 'none';
+                    resultsDiv.innerHTML = ''; // Explicitly clear any stale results
                     return;
                 }
 
-                clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(async () => {
                     try {
                         const res = await fetch(`/api/products/search?q=${encodeURIComponent(q)}`);
                         const data = await res.json();
-                        if (data.success) {
+                        // Double check if the input is still long enough before rendering
+                        if (data.success && input.value.trim().length >= 2) {
                             renderGlobalSearchResults(data.products);
+                        } else {
+                            resultsDiv.style.display = 'none';
                         }
                     } catch (err) {
                         console.error('Search error:', err);
