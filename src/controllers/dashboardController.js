@@ -329,18 +329,69 @@ const getArchitecture = async (req, res) => {
 const getAdvertiserProducts = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log(`[DEBUG] getAdvertiserProducts for ID: ${id} (${typeof id})`);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+
         const db = firebaseConfig.db;
-        let snapshot = await db.collection('products').where('advertiserId', '==', id).get();
+        let query = db.collection('products').where('advertiserId', '==', id);
+        let snapshot = await query.get();
 
         if (snapshot.empty) {
-            console.log('[DEBUG] No products found with string ID. Trying number...');
-            snapshot = await db.collection('products').where('advertiserId', '==', Number(id)).get();
+            query = db.collection('products').where('advertiserId', '==', Number(id));
+            snapshot = await query.get();
         }
+
+        const total = snapshot.size;
+
+        // Firestore doesn't support offset directly in a performant way for large sets, 
+        // but for < 1000 items it's usually fine. 
+        // For production scale, we'd use startAfter(doc).
+        const paginatedQuery = query.limit(limit).offset(offset);
+        const paginatedSnapshot = await paginatedQuery.get();
+
+        const products = [];
+        paginatedSnapshot.forEach(doc => products.push(doc.data()));
+
+        res.json({
+            success: true,
+            products,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+};
+
+const globalProductSearch = async (req, res) => {
+    try {
+        const q = req.query.q;
+        if (!q || q.length < 2) {
+            return res.json({ success: true, products: [] });
+        }
+
+        const db = firebaseConfig.db;
+        // Firestore is case-sensitive and doesn't support 'contains'.
+        // We'll do a prefix search on the title. 
+        // Note: For 'contains' search, an external index like Algolia is recommended.
+        const queryText = q.toLowerCase();
+
+        // We hope the product names are stored with a searchable lowercase version or we filter in memory
+        // for small sets. Since we have no search index, we'll try a basic prefix search.
+        const snapshot = await db.collection('products')
+            .where('name', '>=', q)
+            .where('name', '<=', q + '\uf8ff')
+            .limit(10)
+            .get();
 
         const products = [];
         snapshot.forEach(doc => products.push(doc.data()));
-        console.log(`[DEBUG] Found ${products.length} products.`);
+
         res.json({ success: true, products });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
@@ -612,6 +663,7 @@ module.exports = {
     refreshData,
     getAdvertiserProducts,
     getAdvertiserOffers,
+    globalProductSearch,
     uploadLogo,
     resetLogo,
     updateHomeLink,
