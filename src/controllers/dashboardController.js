@@ -329,34 +329,52 @@ const getArchitecture = async (req, res) => {
 const getAdvertiserProducts = async (req, res) => {
     try {
         const { id } = req.params;
-        const q = req.query.q ? req.query.q.toLowerCase() : null;
+        const q = req.query.q ? req.query.q.toLowerCase().trim() : null;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 100;
         const offset = (page - 1) * limit;
 
+        console.log(`[DEBUG] getAdvertiserProducts - ID: ${id}, Query: "${q}"`);
+
         const db = firebaseConfig.db;
         let baseQuery = db.collection('products').where('advertiserId', '==', id);
 
-        // Check if string ID has results, if not switch to number
         let checkSnap = await baseQuery.limit(1).get();
         if (checkSnap.empty) {
             baseQuery = db.collection('products').where('advertiserId', '==', Number(id));
         }
 
-        // Apply search if provided
         let query = baseQuery;
         if (q && q.length >= 2) {
-            query = query.where('searchKeywords', 'array-contains', q);
+            query = baseQuery.where('searchKeywords', 'array-contains', q);
         }
 
-        const countSnapshot = await query.get();
-        const total = countSnapshot.size;
+        let total = 0;
+        let products = [];
 
-        const paginatedQuery = query.limit(limit).offset(offset);
-        const paginatedSnapshot = await paginatedQuery.get();
+        try {
+            let countSnapshot = await query.get();
+            total = countSnapshot.size;
 
-        const products = [];
-        paginatedSnapshot.forEach(doc => products.push(doc.data()));
+            if (total === 0 && q && q.length >= 2) {
+                const capitalizedQ = q.charAt(0).toUpperCase() + q.slice(1);
+                query = baseQuery
+                    .where('name', '>=', capitalizedQ)
+                    .where('name', '<=', capitalizedQ + '\uf8ff');
+                countSnapshot = await query.get();
+                total = countSnapshot.size;
+            }
+
+            const paginatedQuery = query.limit(limit).offset(offset);
+            const paginatedSnapshot = await paginatedQuery.get();
+            paginatedSnapshot.forEach(doc => products.push(doc.data()));
+        } catch (queryErr) {
+            console.error('[ERROR] Firestore search failed:', queryErr);
+            // Safe fallback if the keyword/prefix query fails
+            const safeSnap = await baseQuery.limit(limit).get();
+            safeSnap.forEach(doc => products.push(doc.data()));
+            total = products.length;
+        }
 
         res.json({
             success: true,
@@ -369,6 +387,7 @@ const getAdvertiserProducts = async (req, res) => {
             }
         });
     } catch (e) {
+        console.error('[ERROR] getAdvertiserProducts Top Level:', e);
         res.status(500).json({ success: false, error: e.message });
     }
 };
