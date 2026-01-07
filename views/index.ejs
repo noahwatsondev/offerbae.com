@@ -847,7 +847,7 @@
                         <img src="${p.storageImageUrl || p.imageUrl || ''}" class="search-result-thumb" onerror="this.src='https://placehold.co/40x40?text=?'">
                         <div class="search-result-info">
                             <div class="search-result-name">${p.name}</div>
-                            <div class="search-result-brand">${p.advertiserName || 'Product'}</div>
+                            <div class="search-result-brand" style="font-weight: 700; color: var(--primary);">${p.advertiserName || ''}</div>
                         </div>
                     </div>
                 `).join('');
