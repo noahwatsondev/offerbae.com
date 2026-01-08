@@ -1,3 +1,4 @@
+const firebaseConfig = require('../config/firebase');
 const brandfetch = require('./brandfetch');
 const rakutenService = require('./rakuten');
 const cjService = require('./cj');
@@ -104,11 +105,29 @@ const recalculateAdvertiserCounts = async (network, advertiserId) => {
         const [os1, os2] = await Promise.all([o1, o2]);
         const actualOfferCount = os1.size + os2.size;
 
+        // NEW: Detect if any ACTIVE offers show a promo code
+        let hasActivePromoCode = false;
+        const allOffers = [...os1.docs.map(d => d.data()), ...os2.docs.map(d => d.data())];
+        for (const offer of allOffers) {
+            const isExpired = offer.endDate && new Date(offer.endDate) < new Date();
+            if (!isExpired) {
+                let code = offer.code;
+                if (!isRealCode(code)) {
+                    code = extractCodeFromDescription(offer.description);
+                }
+                if (isRealCode(code)) {
+                    hasActivePromoCode = true;
+                    break;
+                }
+            }
+        }
+
         await upsertAdvertiser({
             id: aid,
             network: network,
             productCount: actualProductCount,
-            offerCount: actualOfferCount
+            offerCount: actualOfferCount,
+            hasPromoCodes: hasActivePromoCode
         });
 
         return { products: actualProductCount, offers: actualOfferCount };
@@ -170,6 +189,7 @@ const syncRakutenAdvertisers = async () => {
     const rakutenAdvs = await rakutenService.fetchAdvertisers();
     console.log(`SYNC: Found ${rakutenAdvs.length} Rakuten advertisers.`);
 
+    const activeIds = new Set();
     // Generate Deep Links for all (rate-limited)
     const deepLinksMap = await rakutenService.generateDeepLinksForAll(rakutenAdvs);
 
@@ -237,7 +257,9 @@ const syncRakutenAdvertisers = async () => {
         } else {
             syncState.Rakuten.advertisers.checked++;
         }
+        activeIds.add(result.id);
     }
+    await pruneStaleRecords('Rakuten', 'advertisers', Array.from(activeIds));
 };
 
 const syncRakutenCoupons = async () => {
@@ -254,6 +276,7 @@ const syncRakutenCoupons = async () => {
             }
         });
         const coupons = [...deduped.values()];
+        const activeIds = new Set();
         const offerCountsMap = {};
         const hasCodesMap = {};
         for (const coupon of coupons) {
@@ -940,5 +963,6 @@ module.exports = {
     syncCJLinks,
     syncAWINOffers,
     getGlobalSyncState,
-    getSyncHistory
+    getSyncHistory,
+    recalculateAdvertiserCounts
 };
