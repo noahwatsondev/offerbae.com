@@ -1,0 +1,33 @@
+{
+  "logoText": "OfferBae",
+  "bgColor": "#f9fafb",
+  "bgImageUrl": "https://storage.googleapis.com/offerbae-com.firebasestorage.app/settings/bg/c9afd3bc1d2c9368f6ecfb666c10c7da.png",
+  "logoUrl": "https://storage.googleapis.com/offerbae-com.firebasestorage.app/settings/logo/fb0da08c68a31b0be6f56e65a3edc343.png",
+  "headerStyles": "/* 2. Semi-transparent background for the \"glass\" element */\r\nbackground: rgba(255, 255, 255, 0.9); \r\n  \r\n/* 3. The key property: Blur the background behind this element */\r\nbackdrop-filter: blur(10px); /* Adjust blur strength as needed */\r\n-webkit-backdrop-filter: blur(2px); /* For Safari support */\r\n  \r\n/* 4. Finishing touches for a realistic look */\r\nborder: 1px solid rgba(255, 255, 255, 0.9); /* Light, semi-transparent border */\r\nbox-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */",
+  "filterInputStyles": "border-width: 2px;\r\nborder-style: solid;\r\nborder-image: linear-gradient(to right, #FFD15C, #EF3E5C, #8b5cf6) 1;\r\nborder-radius: 0;\r\npadding: 10px;\r\nwidth: 75%;",
+  "categoryHoverStyles": "background: linear-gradient(to right, #EF3E5C, #8b5cf6);\r\ncolor: white;",
+  "categorySelectedStyles": "background: linear-gradient(to right, #EF3E5C, #8b5cf6);\r\ncolor: white;",
+  "logoStyles": "background: linear-gradient(to right, #FFD15C, #EF3E5C);\r\ncolor: transparent;\r\nbackground-clip: text;\r\ndisplay: inline-block;\r\nfont-weight: 800;\r\nletter-spacing:1px;\r\nfont-style: italic;\r\nfont-size:2rem;\r\nfilter: drop-shadow(2px 2px white);",
+  "categoriesHeading": "Find Brands by Category",
+  "categoriesHeadingStyles": "color: white;\r\ntext-align: left;\r\nfont-size: 1.5rem;\r\nfont-weight: bold;\r\nwidth: 100%;\r\nmargin: 0;\r\npadding-left: 110px;",
+  "categoryLinkStyles": "color: #EF3E5C;\r\nbackground: white;\r\nfont-weight: bold;\r\npadding: 4px 8px;\r\nmargin: 2px;\r\n",
+  "productImageStyles": "",
+  "productRowStyles": "",
+  "offerTimeLeftStyles": "",
+  "offerImageStyles": "",
+  "offerRowStyles": "padding: 10px;",
+  "productPriceStyles": "font-size: 1.5rem;",
+  "productTitleStyles": "margin-top: 5px;\r\nfont-weight: bold;",
+  "offerTitleStyles": "margin-top: 5px;\r\nfont-weight: bold;",
+  "productSalePriceStyles": "font-size: 1.5rem;",
+  "productsCtaStyles": "border-radius:0.375rem;\r\nborder: 2px dotted #0d51d9;\r\ncolor:#0d51d9;\r\nfont-weight:bold;\r\npadding-top: .5rem;\r\npadding-bottom: .5rem;\r\nbackground-color: rgba(219, 234, 254, .5);\r\nbackground: linear-gradient(to bottom right, rgba(219, 234, 254, .5), white, white, rgba(219, 234, 254, .5));\r\nfont-size: 1.25rem;\r\nfont-style: italic;\r\ntext-align: left;",
+  "offersCtaStyles": "border-radius:0.375rem;\r\nborder: 2px dotted #8b5cf6;\r\ncolor:#8b5cf6;\r\nfont-weight:bold;\r\npadding-top: .5rem;\r\npadding-bottom: .5rem;\r\nbackground: linear-gradient(to bottom right, rgba(216, 180, 254, .2), white, white, rgba(216, 180, 254, .2));\r\nfont-size:1.25rem;\r\nfont-style: italic;\r\ntext-align: left;",
+  "productsCtaCountStyles": "font-weight: 800;\r\nletter-spacing:1px;\r\nfont-size:2rem;\r\n",
+  "offersCtaCountStyles": "font-weight: 800;\r\nletter-spacing:1px;\r\nfont-size:2rem;",
+  "defaultLinkColor": "#2200cc",
+  "offerPromoCodeStyles": "border: 3px dashed green;\r\nborder-radius:0.375rem !important;\r\nbackground: palegreen;\r\npadding: 5px;\r\ncolor: green;\r\nletter-spacing: 3px;\r\nfont-family: monospace;\r\nfont-size: 1.15rem;\r\nwidth: 200px;\r\ndisplay: block;\r\nmargin: 20px 10px 10px 0;\r\ntext-align: center;\r\nfont-weight: 800;",
+  "updatedAt": {
+    "_seconds": 1767743930,
+    "_nanoseconds": 917000000
+  }
+}

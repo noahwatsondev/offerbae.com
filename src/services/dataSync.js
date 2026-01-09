@@ -3,6 +3,7 @@ const brandfetch = require('./brandfetch');
 const rakutenService = require('./rakuten');
 const cjService = require('./cj');
 const awinService = require('./awin');
+const pepperjamService = require('./pepperjam');
 const { upsertAdvertiser, upsertOffer, upsertProduct, getAdvertiser, getProduct, logSyncComplete, getSyncHistory, pruneStaleRecords } = require('./db');
 const imageStore = require('./imageStore');
 
@@ -12,7 +13,8 @@ let isGlobalSyncRunning = false;
 const syncState = {
     Rakuten: { status: 'idle', advertisers: { checked: 0, new: 0 }, offers: { checked: 0, new: 0 }, products: { checked: 0, new: 0 } },
     CJ: { status: 'idle', advertisers: { checked: 0, new: 0 }, offers: { checked: 0, new: 0 }, products: { checked: 0, new: 0 } },
-    AWIN: { status: 'idle', advertisers: { checked: 0, new: 0 }, offers: { checked: 0, new: 0 }, products: { checked: 0, new: 0 } }
+    AWIN: { status: 'idle', advertisers: { checked: 0, new: 0 }, offers: { checked: 0, new: 0 }, products: { checked: 0, new: 0 } },
+    Pepperjam: { status: 'idle', advertisers: { checked: 0, new: 0 }, offers: { checked: 0, new: 0 }, products: { checked: 0, new: 0 } }
 };
 
 const getGlobalSyncState = () => syncState;
@@ -903,11 +905,174 @@ const syncAWINProducts = async (inputAdvs = null) => {
     console.log('[AWIN] Product sync complete.');
 };
 
+
+// Pepperjam
+const syncPepperjamAll = async () => {
+    return syncWithLog('Pepperjam', async () => {
+        await syncPepperjamAdvertisers();
+        await syncPepperjamOffers();
+        await syncPepperjamProducts();
+    });
+};
+
+const syncPepperjamAdvertisers = async () => {
+    console.log('SYNC: Fetching Pepperjam advertisers...');
+    const advs = await pepperjamService.fetchAdvertisers();
+    console.log(`SYNC: Found ${advs.length} Pepperjam advertisers.`);
+
+    const activeIds = new Set();
+    for (const adv of advs) {
+        const existingData = await getAdvertiser('Pepperjam', adv.id);
+
+        let logoUrl = null;
+        let storageLogoUrl = existingData ? existingData.storageLogoUrl : null;
+
+        // Pepperjam doesn't provide logos in advertiser list, so fallback to Brandfetch
+        if (!storageLogoUrl && adv.url) {
+            const domain = brandfetch.extractDomain(adv.url);
+            const bfLogoUrl = await brandfetch.fetchLogo(domain);
+            if (bfLogoUrl) {
+                logoUrl = bfLogoUrl;
+                storageLogoUrl = await cacheImage(logoUrl, 'advertisers/pepperjam');
+            }
+        }
+
+        const result = await upsertAdvertiser({
+            id: adv.id,
+            network: 'Pepperjam',
+            name: adv.name,
+            status: adv.status,
+            url: adv.url || '',
+            categories: adv.categories || [],
+            country: 'Unknown',
+            logoUrl: logoUrl,
+            storageLogoUrl: storageLogoUrl,
+            raw_data: adv
+        }, existingData);
+
+        activeIds.add(result.id);
+
+        if (result.status === 'created') {
+            syncState.Pepperjam.advertisers.new++;
+        } else {
+            syncState.Pepperjam.advertisers.checked++;
+        }
+    }
+    await pruneStaleRecords('Pepperjam', 'advertisers', Array.from(activeIds));
+};
+
+const syncPepperjamOffers = async () => {
+    console.log('SYNC: Fetching Pepperjam Offers...');
+    try {
+        const offers = await pepperjamService.fetchOffers();
+        const activeIds = new Set();
+        const offerCountsMap = {};
+        const hasCodesMap = {};
+
+        for (const offer of offers) {
+            const result = await upsertOffer({
+                ...offer,
+                advertiserId: String(offer.advertiserId),
+                network: 'Pepperjam'
+            });
+            activeIds.add(result.id);
+
+            const aid = String(offer.advertiserId);
+            const isExpired = offer.endDate && new Date(offer.endDate) < new Date();
+
+            let activeCode = offer.code;
+            if (!isRealCode(activeCode)) {
+                activeCode = extractCodeFromDescription(offer.description) || 'N/A';
+            }
+
+            if (!isExpired) {
+                offerCountsMap[aid] = (offerCountsMap[aid] || 0) + 1;
+                if (isRealCode(activeCode)) {
+                    hasCodesMap[aid] = true;
+                }
+            }
+
+            if (result.status === 'created') {
+                syncState.Pepperjam.offers.new++;
+            } else {
+                syncState.Pepperjam.offers.checked++;
+            }
+        }
+
+        for (const [aid, count] of Object.entries(offerCountsMap)) {
+            await upsertAdvertiser({
+                id: aid,
+                network: 'Pepperjam',
+                offerCount: count,
+                hasPromoCodes: hasCodesMap[aid] || false
+            });
+        }
+
+        await pruneStaleRecords('Pepperjam', 'offers', Array.from(activeIds));
+    } catch (error) {
+        console.error('SYNC: Error syncing Pepperjam offers:', error.message);
+    }
+};
+
+const syncPepperjamProducts = async () => {
+    console.log('SYNC: Fetching Pepperjam Products...');
+    const activeIds = new Set();
+
+    try {
+        await pepperjamService.fetchProducts(async (products, page) => {
+            for (const p of products) {
+                try {
+                    const sku = p.sku;
+                    const existingData = await getProduct('Pepperjam', sku);
+
+                    let storageImageUrl = existingData ? existingData.storageImageUrl : null;
+                    const imageChanged = !existingData || existingData.imageUrl !== p.imageUrl;
+
+                    if (p.imageUrl && (imageChanged || !storageImageUrl)) {
+                        storageImageUrl = await cacheImage(p.imageUrl, 'products/pepperjam');
+                    }
+
+                    const productData = {
+                        ...p,
+                        storageImageUrl: storageImageUrl,
+                        searchKeywords: generateSearchKeywords(p.name)
+                    };
+
+                    const result = await upsertProduct(productData, existingData);
+                    activeIds.add(result.id);
+
+                    if (result.status === 'created') {
+                        syncState.Pepperjam.products.new++;
+                    } else {
+                        syncState.Pepperjam.products.checked++;
+                    }
+                } catch (err) {
+                    console.error(`[Pepperjam] Failed to save product ${p.sku}:`, err.message);
+                }
+            }
+        });
+
+        await pruneStaleRecords('Pepperjam', 'products', Array.from(activeIds));
+
+        // Audit counts
+        console.log('SYNC: Auditing final Pepperjam counts...');
+        const advs = await pepperjamService.fetchAdvertisers();
+        for (const adv of advs) {
+            await recalculateAdvertiserCounts('Pepperjam', adv.id);
+        }
+
+        console.log('[Pepperjam] Product sync complete.');
+    } catch (error) {
+        console.error('SYNC: Error syncing Pepperjam products:', error.message);
+    }
+};
+
 const syncAdvertisers = async () => {
     console.log('SYNC: Starting Advertiser Sync (Sequential Mode)...');
     await syncRakutenAdvertisers().catch(e => console.error('Rakuten Advertiser Sync Failed:', e.message));
     await syncCJAdvertisers().catch(e => console.error('CJ Advertiser Sync Failed:', e.message));
     await syncAWINAdvertisers().catch(e => console.error('AWIN Advertiser Sync Failed:', e.message));
+    await syncPepperjamAdvertisers().catch(e => console.error('Pepperjam Advertiser Sync Failed:', e.message));
 };
 
 const syncOffers = async () => {
@@ -915,6 +1080,7 @@ const syncOffers = async () => {
     await syncRakutenCoupons().catch(e => console.error('Rakuten Coupon Sync Failed:', e.message));
     await syncCJLinks().catch(e => console.error('CJ Link Sync Failed:', e.message));
     await syncAWINOffers().catch(e => console.error('AWIN Offer Sync Failed:', e.message));
+    await syncPepperjamOffers().catch(e => console.error('Pepperjam Offer Sync Failed:', e.message));
 };
 
 const syncProducts = async () => {
@@ -922,6 +1088,7 @@ const syncProducts = async () => {
     await syncRakutenProducts().catch(e => console.error('Rakuten Product Sync Failed:', e.message));
     await syncCJProducts().catch(e => console.error('CJ Product Sync Failed:', e.message));
     await syncAWINProducts().catch(e => console.error('AWIN Product Sync Failed:', e.message));
+    await syncPepperjamProducts().catch(e => console.error('Pepperjam Product Sync Failed:', e.message));
 };
 
 const syncAll = async () => {
@@ -962,6 +1129,10 @@ module.exports = {
     syncRakutenCoupons,
     syncCJLinks,
     syncAWINOffers,
+    syncPepperjamAll,
+    syncPepperjamAdvertisers,
+    syncPepperjamOffers,
+    syncPepperjamProducts,
     getGlobalSyncState,
     getSyncHistory,
     recalculateAdvertiserCounts

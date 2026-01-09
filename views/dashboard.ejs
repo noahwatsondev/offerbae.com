@@ -387,6 +387,28 @@
                         <%= stats.networkDetailed.AWIN.products.toLocaleString() %>
                     </div>
                 </div>
+                <div class="stat-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div class="stat-label">Pepperjam</div>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="refresh-icon" data-network="Pepperjam"
+                            style="width: 16px; height: 16px; cursor: pointer; color: var(--text-secondary);">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                    </div>
+                    <div id="pepperjam-count" class="stat-value">
+                        <%= stats.networkDetailed.Pepperjam ? stats.networkDetailed.Pepperjam.advertisers : 0 %>
+                    </div>
+                    <div class="stat-sub">Offers:
+                        <%= stats.networkDetailed.Pepperjam ? stats.networkDetailed.Pepperjam.offers.toLocaleString() :
+                            0 %>
+                    </div>
+                    <div class="stat-sub">Products:
+                        <%= stats.networkDetailed.Pepperjam ? stats.networkDetailed.Pepperjam.products.toLocaleString()
+                            : 0 %>
+                    </div>
+                </div>
             </div>
 
             <div class="filter-bar">
@@ -630,7 +652,7 @@
 
 
                                         <a href="javascript:void(0)" onclick="openHomeLinkModal(' <%=adv.id %>', '<%=
-                                                    adv.manualHomeUrl || "" %>')" style="
+                                                    adv.manualHomeUrl || '' %>')" style="
                                                     color: var(--primary);
                                                     padding: 8px 12px;
                                                     text-decoration: none;
@@ -644,13 +666,15 @@
                                                         LOGO
                                                     </div>
                                                     <a href="javascript:void(0)"
-                                                        onclick="triggerUpload('<%= adv.id %>')" style="
-                                            color: var(--text-primary);
-                                            padding: 8px 12px;
-                                            text-decoration: none;
-                                            display: block;
-                                            font-size: 0.8rem;
-                                        ">Upload</a>
+                                                        onclick="triggerUpload('<%= adv.id %>')"
+                                                        style="color: var(--text-primary); padding: 8px 12px; text-decoration: none; display: block; font-size: 0.8rem; border-bottom: 1px solid var(--border);">Update
+                                                        Logo</a>
+                                                    color: var(--text-primary);
+                                                    padding: 8px 12px;
+                                                    text-decoration: none;
+                                                    display: block;
+                                                    font-size: 0.8rem;
+                                                    ">Upload</a>
             </div>
             <input type="file" id="upload-<%= adv.id %>" style="display: none;" accept="image/*"
                 onchange="handleFileUpload(this, '<%= adv.id %>')">

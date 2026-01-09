@@ -15,5 +15,8 @@ module.exports = {
     awin: {
         accessToken: process.env.AWIN_ACCESS_TOKEN,
         publisherId: process.env.AWIN_PUBLISHER_ID
+    },
+    pepperjam: {
+        apiKey: process.env.PEPPERJAM_API_KEY
     }
 };

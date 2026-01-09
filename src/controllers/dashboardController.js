@@ -159,7 +159,8 @@ const getDashboardData = async (req, res) => {
         const networkStats = {
             Rakuten: { advertisers: 0, offers: 0, products: 0 },
             CJ: { advertisers: 0, offers: 0, products: 0 },
-            AWIN: { advertisers: 0, offers: 0, products: 0 }
+            AWIN: { advertisers: 0, offers: 0, products: 0 },
+            Pepperjam: { advertisers: 0, offers: 0, products: 0 }
         };
 
         enrichedAdvertisers.forEach(adv => {
@@ -188,10 +189,12 @@ const getDashboardData = async (req, res) => {
             offerCounts: {},
             productCounts: {},
             saleProductCounts: {},
+            networks: Object.keys(networkStats),
             stats: {
                 rakuten: networkStats.Rakuten.advertisers,
                 cj: networkStats.CJ.advertisers,
                 awin: networkStats.AWIN.advertisers,
+                pepperjam: networkStats.Pepperjam.advertisers,
                 totalProducts: totalProducts,
                 totalAdvertisers: enrichedAdvertisers.length,
                 totalCoupons: totalOffers,
@@ -219,7 +222,8 @@ const getHomepage = async (req, res) => {
     let networkStats = {
         Rakuten: { advertisers: 0, offers: 0, products: 0 },
         CJ: { advertisers: 0, offers: 0, products: 0 },
-        AWIN: { advertisers: 0, offers: 0, products: 0 }
+        AWIN: { advertisers: 0, offers: 0, products: 0 },
+        Pepperjam: { advertisers: 0, offers: 0, products: 0 }
     };
 
     try {
@@ -269,7 +273,8 @@ const getHomepage = async (req, res) => {
         const networkStats = {
             Rakuten: { advertisers: 0, offers: 0, products: 0 },
             CJ: { advertisers: 0, offers: 0, products: 0 },
-            AWIN: { advertisers: 0, offers: 0, products: 0 }
+            AWIN: { advertisers: 0, offers: 0, products: 0 },
+            Pepperjam: { advertisers: 0, offers: 0, products: 0 }
         };
         enrichedAdvertisers.forEach(adv => {
             const net = adv.network;
@@ -293,6 +298,7 @@ const getHomepage = async (req, res) => {
                 rakuten: networkStats.Rakuten.advertisers,
                 cj: networkStats.CJ.advertisers,
                 awin: networkStats.AWIN.advertisers,
+                pepperjam: networkStats.Pepperjam.advertisers,
                 totalProducts: totalProducts,
                 totalAdvertisers: enrichedAdvertisers.length,
                 totalCoupons: totalOffers,

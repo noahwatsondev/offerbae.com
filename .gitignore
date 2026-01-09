@@ -18,3 +18,4 @@ sync_*.js
 debug_*.js
 current_served_*.html
 
+service-account.json

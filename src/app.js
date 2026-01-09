@@ -76,7 +76,8 @@ const initializeApp = async () => {
             'CJ_WEBSITE_ID': 'CJ_WEBSITE_ID',
             'AWIN_ACCESS_TOKEN': 'AWIN_ACCESS_TOKEN',
             'AWIN_PUBLISHER_ID': 'AWIN_PUBLISHER_ID',
-            'BRANDFETCH_API_KEY': 'BRANDFETCH_API_KEY'
+            'BRANDFETCH_API_KEY': 'BRANDFETCH_API_KEY',
+            'PEPPERJAM_API_KEY': 'PEPPERJAM_API_KEY'
         };
 
         for (const [secretName, envName] of Object.entries(secretsMap)) {
@@ -153,6 +154,16 @@ app.get('/update/awin-sync', async (req, res) => {
     try {
         dataSync.syncAWINAll().catch(e => console.error(e));
         res.send('AWIN Sync Started');
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
+});
+
+// Explicit manual sync route for Pepperjam only
+app.get('/update/pepperjam-sync', async (req, res) => {
+    try {
+        dataSync.syncPepperjamAll().catch(e => console.error(e));
+        res.send('Pepperjam Sync Started');
     } catch (e) {
         res.status(500).send(e.message);
     }
