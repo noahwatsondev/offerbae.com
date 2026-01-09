@@ -95,49 +95,78 @@ const recalculateAdvertiserCounts = async (network, advertiserId) => {
     try {
         const db = firebaseConfig.db;
         const aid = String(advertiserId);
+        const now = new Date();
 
-        // Match both string and number IDs
-        const p1 = db.collection('products').where('advertiserId', '==', aid).get();
-        const p2 = db.collection('products').where('advertiserId', '==', Number(aid)).get();
-        const [ps1, ps2] = await Promise.all([p1, p2]);
-        const actualProductCount = ps1.size + ps2.size;
+        // Optimized counting using .count() - Match both string and number IDs
+        const p1Snap = await db.collection('products')
+            .where('network', '==', network)
+            .where('advertiserId', '==', aid)
+            .count().get();
+        const p2Snap = await db.collection('products')
+            .where('network', '==', network)
+            .where('advertiserId', '==', Number(aid))
+            .count().get();
+        const actualProductCount = p1Snap.data().count + p2Snap.data().count;
 
+        // Fetch all offers to check for expiration and promo codes
         const o1 = db.collection('offers').where('advertiserId', '==', aid).get();
         const o2 = db.collection('offers').where('advertiserId', '==', Number(aid)).get();
         const [os1, os2] = await Promise.all([o1, o2]);
-        const actualOfferCount = os1.size + os2.size;
-
-        // NEW: Detect if any ACTIVE offers show a promo code
-        let hasActivePromoCode = false;
         const allOffers = [...os1.docs.map(d => d.data()), ...os2.docs.map(d => d.data())];
+
+        let activeOfferCount = 0;
+        let hasActivePromoCode = false;
+
         for (const offer of allOffers) {
-            const isExpired = offer.endDate && new Date(offer.endDate) < new Date();
+            const isExpired = offer.endDate && new Date(offer.endDate) < now;
             if (!isExpired) {
+                activeOfferCount++;
                 let code = offer.code;
                 if (!isRealCode(code)) {
                     code = extractCodeFromDescription(offer.description);
                 }
                 if (isRealCode(code)) {
                     hasActivePromoCode = true;
-                    break;
                 }
             }
         }
 
+        // Atomic update of denormalized stats
         await upsertAdvertiser({
             id: aid,
             network: network,
             productCount: actualProductCount,
-            offerCount: actualOfferCount,
+            offerCount: activeOfferCount,
             hasPromoCodes: hasActivePromoCode
         });
 
-        return { products: actualProductCount, offers: actualOfferCount };
+        return { products: actualProductCount, offers: activeOfferCount };
     } catch (e) {
         console.error(`[SYNC] Failed to recalculate counts for ${advertiserId}:`, e.message);
         return null;
     }
 };
+
+/**
+ * Performs a global audit of all advertiser product counts to ensure zero drift.
+ * This should be run after a full sync cycle.
+ */
+const reconcileAllProductCounts = async () => {
+    try {
+        console.log('SYNC: Starting Global Product Count Reconciliation...');
+        const db = firebaseConfig.db;
+        const advSnapshot = await db.collection('advertisers').get();
+
+        for (const doc of advSnapshot.docs) {
+            const adv = doc.data();
+            await recalculateAdvertiserCounts(adv.network, adv.id);
+        }
+        console.log('SYNC: Global Reconciliation complete.');
+    } catch (e) {
+        console.error('SYNC: Global reconciliation failed:', e.message);
+    }
+};
+
 
 // Generic Sync Wrapper
 const syncWithLog = async (network, syncFn) => {
@@ -1103,6 +1132,10 @@ const syncAll = async () => {
         await syncAdvertisers();
         await syncOffers();
         await syncProducts();
+
+        // Audit everything at the end to ensure denormalized counts are 100% correct
+        await reconcileAllProductCounts();
+
         const duration = (Date.now() - startTime) / 1000;
         console.log(`SYNC: Full Sync Complete in ${duration}s.`);
     } catch (e) {
