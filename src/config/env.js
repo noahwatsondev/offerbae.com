@@ -18,5 +18,9 @@ module.exports = {
     },
     pepperjam: {
         apiKey: process.env.PEPPERJAM_API_KEY
+    },
+    brandfetch: {
+        apiKey: process.env.BRANDFETCH_API_KEY
     }
+
 };

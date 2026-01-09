@@ -1,10 +1,34 @@
 const axios = require('axios');
+const config = require('../config/env');
 
 const fetchLogo = async (domain) => {
     if (!domain) return null;
 
+    // Use API if key is available
+    if (config.brandfetch && config.brandfetch.apiKey) {
+        try {
+            const response = await axios.get(`https://api.brandfetch.io/v2/brands/${domain}`, {
+                headers: {
+                    'Authorization': `Bearer ${config.brandfetch.apiKey}`
+                },
+                timeout: 5000
+            });
+
+            // Look for logo in the response
+            if (response.data && response.data.logos && response.data.logos.length > 0) {
+                // Prioritize 'icon' or 'logo' types
+                const logo = response.data.logos.find(l => l.type === 'logo') || response.data.logos[0];
+                const format = logo.formats && logo.formats[0];
+                return format ? format.src : null;
+            }
+        } catch (error) {
+            // Fallback to CDN if API fails or brand not found
+            // console.warn(`Brandfetch API failed for ${domain}, falling back to CDN...`);
+        }
+    }
+
     try {
-        // Use the CDN endpoint with browser User-Agent to avoid 403 blocks
+        // Fallback: Use the CDN endpoint
         const logoUrl = `https://cdn.brandfetch.io/${domain}`;
 
         const response = await axios.head(logoUrl, {
@@ -14,18 +38,12 @@ const fetchLogo = async (domain) => {
             timeout: 5000
         });
 
-        if (response.status === 200) {
-            // Found it. 
-            // Note: imageStore.js will also need to use this User-Agent when downloading!
+        if (response.status === 200 && response.headers['content-type']?.startsWith('image/')) {
             return logoUrl;
         }
 
         return null;
     } catch (error) {
-        if (error.response?.status === 404) {
-            return null;
-        }
-        // console.error(`Error fetching logo for ${domain}:`, error.message);
         return null;
     }
 };
