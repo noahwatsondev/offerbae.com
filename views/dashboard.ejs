@@ -548,20 +548,20 @@
                                             font-weight: 600;
                                             white-space: nowrap;
                                             min-width: 100px;
-                                            position: relative;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            gap: 6px;
                                         ">
                                                 <span>Show (<%= offCount.toLocaleString() %>)</span>
                                                 <% if (adv.hasPromoCodes) { %>
                                                     <span title="Promo codes available" style="
                                                 background-color: #22c55e; 
-                                                color: palegreen; 
+                                                color: white; 
                                                 border-radius: 4px; 
                                                 padding: 1px 4px; 
                                                 font-size: 0.6rem; 
                                                 font-weight: 700;
-                                                position: absolute;
-                                                top: -8px;
-                                                right: -8px;
                                             ">CODE</span>
                                                     <% } %>
                                             </button>
