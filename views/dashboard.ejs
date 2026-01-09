@@ -652,14 +652,9 @@
 
 
                                         <a href="javascript:void(0)" onclick="openHomeLinkModal(' <%=adv.id %>', '<%=
-                                                    adv.manualHomeUrl || '' %>')" style="
-                                                    color: var(--primary);
-                                                    padding: 8px 12px;
-                                                    text-decoration: none;
-                                                    display: block;
-                                                    font-size: 0.8rem;
-                                                    border-bottom: 1px solid var(--border);
-                                                    ">Update</a>
+                                                    adv.manualHomeUrl || '' %>')" style="color: var(--primary); padding:
+                                                    8px 12px; text-decoration: none; display: block; font-size: 0.8rem;
+                                                    border-bottom: 1px solid var(--border);">Update</a>
 
                                                     <div
                                                         style="padding: 0.5rem; font-size: 0.7rem; font-weight: bold; background: #f3f4f6; color: #6b7280; border-bottom: 1px solid var(--border);">
@@ -667,14 +662,9 @@
                                                     </div>
                                                     <a href="javascript:void(0)"
                                                         onclick="triggerUpload('<%= adv.id %>')"
-                                                        style="color: var(--text-primary); padding: 8px 12px; text-decoration: none; display: block; font-size: 0.8rem; border-bottom: 1px solid var(--border);">Update
+                                                        style="color: var(--text-primary); padding: 8px 12px; text-decoration: none; display: block; font-size: 0.8rem;">Update
                                                         Logo</a>
-                                                    color: var(--text-primary);
-                                                    padding: 8px 12px;
-                                                    text-decoration: none;
-                                                    display: block;
-                                                    font-size: 0.8rem;
-                                                    ">Upload</a>
+
             </div>
             <input type="file" id="upload-<%= adv.id %>" style="display: none;" accept="image/*"
                 onchange="handleFileUpload(this, '<%= adv.id %>')">
