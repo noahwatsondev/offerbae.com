@@ -32,7 +32,12 @@ const resetState = (network) => {
 const isRealCode = (code) => {
     if (!code) return false;
     const clean = String(code).trim().toUpperCase();
-    const nonCodes = ['N/A', 'NONE', 'NO CODE', '', 'NULL', 'UNDEFINED', 'SEE SITE', 'NO COUPON CODE'];
+    const nonCodes = [
+        'N/A', 'NONE', 'NO CODE', 'NO CODE REQUIRED', 'NO COUPON CODE', 'NO COUPON CODE REQUIRED',
+        'NO COUPON REQUIRED', 'NO PROMO CODE REQUIRED', 'NO PROMO REQUIRED',
+        'SEE SITE', 'CLICK TO REVEAL', 'AUTO-APPLIED', 'ONLINE ONLY', 'NULL', 'UNDEFINED', '',
+        'NO COUPON CODE NEEDED', 'NO CODE NEEDED', 'NO PROMO CODE NEEDED'
+    ];
     return !nonCodes.includes(clean);
 };
 

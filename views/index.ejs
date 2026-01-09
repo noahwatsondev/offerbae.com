@@ -748,9 +748,21 @@
                     return `<span style="color: ${diff < msPerDay * 7 ? 'red' : 'green'};">${p.join(', ')}</span>`;
                 };
 
+                const isRealCode = (code) => {
+                    if (!code) return false;
+                    const clean = String(code).trim().toUpperCase();
+                    const nonCodes = [
+                        'N/A', 'NONE', 'NO CODE', 'NO CODE REQUIRED', 'NO COUPON CODE', 'NO COUPON CODE REQUIRED',
+                        'NO COUPON REQUIRED', 'NO PROMO CODE REQUIRED', 'NO PROMO REQUIRED',
+                        'SEE SITE', 'CLICK TO REVEAL', 'AUTO-APPLIED', 'ONLINE ONLY', 'NULL', 'UNDEFINED', '',
+                        'NO COUPON CODE NEEDED', 'NO CODE NEEDED', 'NO PROMO CODE NEEDED'
+                    ];
+                    return !nonCodes.includes(clean);
+                };
+
                 offers.sort((a, b) => {
-                    const codeA = (a.code && a.code !== 'N/A') ? 1 : 0;
-                    const codeB = (b.code && b.code !== 'N/A') ? 1 : 0;
+                    const codeA = isRealCode(a.code) ? 1 : 0;
+                    const codeB = isRealCode(b.code) ? 1 : 0;
                     if (codeA !== codeB) return codeB - codeA;
                     return (a.endDate ? new Date(a.endDate).getTime() : Infinity) - (b.endDate ? new Date(b.endDate).getTime() : Infinity);
                 });
@@ -765,7 +777,7 @@
                 offers.forEach(o => {
                     if (o.endDate && new Date(o.endDate) < new Date()) return;
                     const safeCode = (o.code || '').replace(/'/g, "\\'");
-                    const hasCode = (o.code && o.code !== 'N/A');
+                    const hasCode = isRealCode(o.code);
                     const codeDisplay = hasCode ? `
                 <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
                     <span style="font-family: monospace; padding: 0.375rem 0.75rem; background: #eef2ff; border: 2px dashed #818cf8; border-radius: 0.375rem; color: #4338ca; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">${o.code}</span>
