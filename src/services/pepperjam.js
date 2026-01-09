@@ -90,8 +90,8 @@ const fetchOffers = async () => {
             advertiserId: String(o.program_id),
             description: o.description || o.name || 'No description',
             code: (o.coupon && o.coupon !== 'No Code Necessary') ? o.coupon : 'N/A',
-            startDate: o.start_date,
-            endDate: o.end_date,
+            startDate: o.start_date === '0000-00-00 00:00:00' ? null : o.start_date,
+            endDate: o.end_date === '0000-00-00 00:00:00' ? null : o.end_date,
             link: o.code, // Tracking URL is in 'code' field for coupons
             imageUrl: null
         }));

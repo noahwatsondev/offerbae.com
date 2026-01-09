@@ -729,8 +729,10 @@
                 }
 
                 const formatTimeLeft = (endDateStr) => {
-                    if (!endDateStr) return '<span style="color: green;">Never</span>';
+                    if (!endDateStr || endDateStr.startsWith('0000-00-00')) return '<span style="color: green;">Never</span>';
                     const end = new Date(endDateStr);
+                    if (isNaN(end.getTime())) return '<span style="color: green;">Never</span>';
+
                     const now = new Date();
                     const diff = end - now;
                     if (diff <= 0) return `<span style="color: red;">Expired (${end.toLocaleDateString()})</span>`;
