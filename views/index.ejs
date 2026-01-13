@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OfferBae</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -515,12 +516,14 @@
 
         <header style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles : '' %>">
             <div class="header-container">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; cursor: pointer;"
+                    onclick="location.href='/'">
                     <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
-                        <img src="<%= settings.logoUrl %>" alt="Logo" style="height: 40px; object-fit: contain;">
+                        <img src="<%= settings.logoUrl %>" alt="Logo"
+                            style="height: 40px; width: auto; max-width: 200px; object-fit: contain;">
                         <% } %>
                             <h1
-                                style="<%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
+                                style="margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
                                 <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText
                                     : 'OfferBae' %>
                             </h1>

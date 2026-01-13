@@ -7,329 +7,301 @@
     <title>
         <%= title %>
     </title>
+    <link rel="icon" type="image/png" href="/favicon.png">
     <meta name="description" content="<%= description %>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <style>
-        :root {
-            --primary: #4F46E5;
-            --primary-light: #EEF2FF;
-            --text-main: #111827;
-            --text-secondary: #4B5563;
-            --bg-body: #F9FAFB;
-            --card-bg: #FFFFFF;
-            --border: #E5E7EB;
-            --danger: #EF4444;
-            --success: #10B981;
-        }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <% const getNum=(v)=> {
+        if (v === undefined || v === null || v === '') return 0;
+        if (typeof v === 'number') return v;
+        const num = parseFloat(String(v).replace(/[^0-9.]/g, ''));
+        return isNaN(num) ? 0 : num;
+        };
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg-body);
-            color: var(--text-main);
-            line-height: 1.6;
-        }
+        const formatPrice = (v) => {
+        const num = getNum(v);
+        if (num <= 0) return '--' ; return num.toLocaleString(undefined, { minimumFractionDigits: 2,
+            maximumFractionDigits: 2 }); }; const checkIsSale=(price, salePrice)=> {
+            const p = getNum(price);
+            const s = getNum(salePrice);
+            return s > 0 && p > s;
+            };
+            %>
 
-        nav {
-            background: #fff;
-            padding: 1rem 2rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+            <style>
+                :root {
+                    --primary: #FFD15C;
+                    --primary-light: #FFF9E6;
+                    --text-main: #111827;
+                    --text-secondary: #4B5563;
+                    --bg-body: #F9FAFB;
+                    --card-bg: #FFFFFF;
+                    --border: #E5E7EB;
+                    --danger: #EF4444;
+                    --success: #10B981;
+                }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            text-decoration: none;
-            letter-spacing: -1px;
-        }
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
 
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-        }
+                body {
+                    font-family: 'Outfit', sans-serif;
+                    background: var(--bg-body);
+                    color: var(--text-main);
+                    line-height: 1.6;
+                }
 
-        .product-layout {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 4rem;
-            background: #fff;
-            padding: 3rem;
-            border-radius: 1.5rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
-        }
+                header {
+                    background: var(--card-bg);
+                    border-bottom: 1px solid var(--border);
+                    position: sticky;
+                    top: 0;
+                    z-index: 1000;
+                    padding: 0.75rem 0;
+                    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                    min-height: 70px;
+                    display: flex;
+                    align-items: center;
+                }
 
-        @media (max-width: 1024px) {
-            .product-layout {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-                padding: 1.5rem;
-            }
+                .header-container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 0 2rem;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }
 
-            .container {
-                padding: 0 1rem;
-                margin: 1rem auto;
-            }
-        }
+                .container {
+                    max-width: 1200px;
+                    margin: 2rem auto;
+                    padding: 0 2rem;
+                }
 
-        /* Image Gallery */
-        .image-gallery {
-            position: sticky;
-            top: 100px;
-        }
+                .product-layout {
+                    display: grid;
+                    grid-template-columns: 1.2fr 1fr;
+                    gap: 4rem;
+                    background: #fff;
+                    padding: 3rem;
+                    border-radius: 1.5rem;
+                    border: 1px solid var(--border);
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+                }
 
-        .main-image-container {
-            background: #fff;
-            border-radius: 1rem;
-            padding: 2rem;
-            border: 1px solid var(--border);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            aspect-ratio: 1;
-        }
+                @media (max-width: 1024px) {
+                    .product-layout {
+                        grid-template-columns: 1fr;
+                        gap: 2rem;
+                        padding: 1.5rem;
+                    }
 
-        .main-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
+                    .container {
+                        padding: 0 1rem;
+                        margin: 1rem auto;
+                    }
+                }
 
-        /* Product Info */
-        .brand-name {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 0.5rem;
-            display: inline-block;
-        }
+                .image-gallery {
+                    position: sticky;
+                    top: 100px;
+                }
 
-        .product-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
-            letter-spacing: -1px;
-        }
+                .main-image-container {
+                    background: #fff;
+                    border-radius: 1rem;
+                    padding: 2rem;
+                    border: 1px solid var(--border);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    position: relative;
+                }
 
-        .price-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
+                .main-image {
+                    max-width: 100%;
+                    max-height: 500px;
+                    object-fit: contain;
+                }
 
-        .current-price {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--text-main);
-        }
+                .sale-badge {
+                    position: absolute;
+                    top: 1.5rem;
+                    left: 1.5rem;
+                    background: var(--danger);
+                    color: #fff;
+                    padding: 0.5rem 1rem;
+                    border-radius: 2rem;
+                    font-weight: 700;
+                    font-size: 0.875rem;
+                    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
+                    z-index: 10;
+                }
 
-        .was-price {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            text-decoration: line-through;
-        }
+                .brand-name {
+                    color: var(--primary);
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    font-size: 0.875rem;
+                    margin-bottom: 1rem;
+                    display: block;
+                }
 
-        .price-badge {
-            background: var(--danger);
-            color: #fff;
-            padding: 0.25rem 0.75rem;
-            border-radius: 2rem;
-            font-size: 0.875rem;
-            font-weight: 700;
-        }
+                .product-title {
+                    font-size: 2.5rem;
+                    font-weight: 800;
+                    line-height: 1.2;
+                    margin-bottom: 1.5rem;
+                    letter-spacing: -1px;
+                }
 
-        .cta-section {
-            margin-bottom: 3rem;
-        }
+                .price-container {
+                    margin-bottom: 2rem;
+                    padding-bottom: 2rem;
+                    border-bottom: 1px solid var(--border);
+                }
 
-        .buy-now-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            width: 100%;
-            padding: 1.25rem;
-            border-radius: 1rem;
-            background: var(--primary);
-            color: #fff;
-            text-decoration: none;
-            font-size: 1.125rem;
-            font-weight: 700;
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
-            transition: all 0.2s;
-        }
+                .current-price {
+                    font-size: 3rem;
+                    font-weight: 800;
+                    color: var(--text-main);
+                }
 
-        .buy-now-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(79, 70, 229, 0.3);
-        }
+                .sale-price {
+                    color: var(--danger);
+                }
 
-        .offer-highlight {
-            background: var(--primary-light);
-            padding: 1.5rem;
-            border-radius: 1rem;
-            border: 1px dashed var(--primary);
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+                .original-price {
+                    font-size: 1.5rem;
+                    color: #9ca3af;
+                    text-decoration: line-through;
+                    margin-left: 1rem;
+                }
 
-        .sparkle-icon {
-            color: var(--primary);
-        }
+                .savings-badge {
+                    display: inline-block;
+                    background: var(--success);
+                    color: #fff;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 0.5rem;
+                    font-weight: 700;
+                    font-size: 0.875rem;
+                    margin-top: 0.5rem;
+                }
 
-        .description-section h2 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
+                .buy-now-btn {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.75rem;
+                    width: 100%;
+                    padding: 1.25rem;
+                    border-radius: 1rem;
+                    background: var(--primary);
+                    color: #1a1a1a;
+                    text-decoration: none;
+                    font-size: 1.125rem;
+                    font-weight: 700;
+                    box-shadow: 0 10px 20px rgba(255, 209, 92, 0.2);
+                    transition: all 0.2s;
+                }
 
-        .description-text {
-            color: var(--text-secondary);
-            line-height: 1.8;
-        }
-
-        /* Features/Specs List */
-        .features-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-    </style>
+                .buy-now-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 15px 30px rgba(255, 209, 92, 0.3);
+                }
+            </style>
 </head>
 
 <body>
-    <nav>
-        <a href="/" class="logo">OFFERBAE</a>
-    </nav>
+    <header
+        style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles.replace(/\/\*[\s\S]*?\*\//g, '') : '' %>">
+        <div class="header-container">
+            <div style="display: flex; align-items: center; gap: 1rem; cursor: pointer;" onclick="location.href='/'">
+                <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
+                    <img src="<%= settings.logoUrl %>" alt="Logo"
+                        style="height: 40px; width: auto; max-width: 200px; object-fit: contain; display: block;">
+                    <% } %>
+                        <h1
+                            style="margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
+                            <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae'
+                                %>
+                        </h1>
+            </div>
+        </div>
+    </header>
 
     <div class="container">
         <div class="product-layout">
             <div class="image-gallery">
                 <div class="main-image-container">
-                    <img src="<%= product.storageImageUrl || product.imageUrl || '/placeholder.png' %>"
-                        alt="<%= product.name %>" class="main-image">
+                    <% const isSale=checkIsSale(product.price, product.salePrice); const pVal=getNum(product.price);
+                        const sVal=getNum(product.salePrice); %>
+                        <% if (isSale) { %>
+                            <div class="sale-badge">SALE</div>
+                            <% } %>
+                                <img src="<%= product.storageImageUrl || product.imageUrl || '/placeholder.png' %>"
+                                    alt="<%= product.name %>" class="main-image">
                 </div>
             </div>
 
-            <div class="product-info">
-                <% if (brand) { %>
-                    <a href="/<%= brand.slug %>" class="brand-name">
-                        <%= brand.name %>
+            <div class="product-content">
+                <span class="brand-name">
+                    <%= brand ? brand.name : product.advertiserName %>
+                </span>
+                <h1 class="product-title">
+                    <%= product.name %>
+                </h1>
+
+                <div class="price-container">
+                    <div style="display: flex; align-items: baseline;">
+                        <% if (isSale) { %>
+                            <span class="current-price sale-price">$<%= formatPrice(sVal) %></span>
+                            <span class="original-price">$<%= formatPrice(pVal) %></span>
+                            <% } else { %>
+                                <span class="current-price">$<%= formatPrice(pVal) %></span>
+                                <% } %>
+                    </div>
+                    <% if (isSale) { %>
+                        <div class="savings-badge">
+                            Save $<%= formatPrice(pVal - sVal) %> (<%= Math.round((1 - sVal/pVal) * 100) %>%)
+                        </div>
+                        <% } %>
+                </div>
+
+                <div class="product-description">
+                    <h3 style="margin-bottom: 1rem;">Product Details</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.8;">
+                        <%= product.description || 'No detailed description available for this item.' %>
+                    </p>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <a href="<%= product.buyUrl || product.link %>" target="_blank" class="buy-now-btn">
+                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        Redeem Offer Now
                     </a>
-                    <% } %>
-                        <h1 class="product-title">
-                            <%= product.name %>
-                        </h1>
-
-                        <div class="price-container">
-                            <% if (product.salePrice && product.price> product.salePrice) { %>
-                                <span class="current-price">$<%= product.salePrice.toLocaleString() %></span>
-                                <span class="was-price">$<%= product.price.toLocaleString() %></span>
-                                <span class="price-badge">Save <%= Math.round((1 - product.salePrice/product.price) *
-                                        100) %>%</span>
-                                <% } else { %>
-                                    <span class="current-price">$<%= (product.price || 0).toLocaleString() %></span>
-                                    <% } %>
-                        </div>
-
-                        <div class="offer-highlight">
-                            <div class="sparkle-icon">
-                                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <strong style="color: var(--primary); display: block;">Exclusive Offer
-                                    Available</strong>
-                                <span style="font-size: 0.875rem; color: var(--text-secondary);">Redeem now to get the
-                                    best price on this item.</span>
-                            </div>
-                        </div>
-
-                        <div class="cta-section">
-                            <a href="<%= product.link %>" target="_blank" class="buy-now-btn">
-                                <span>Redeem on <%= brand ? brand.name : 'Store' %></span>
-                                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                </svg>
-                            </a>
-                            <p
-                                style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: var(--text-secondary);">
-                                Redirecting to official partner site
-                            </p>
-                        </div>
-
-                        <div class="description-section">
-                            <h2>Product Details</h2>
-                            <div class="description-text">
-                                <%= product.description || 'No detailed description available for this product yet.' %>
-                            </div>
-                        </div>
-
-                        <div class="features-grid">
-                            <div class="feature-item">
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--success)">
-                                    <path stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                Authored Retailer
-                            </div>
-                            <div class="feature-item">
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--success)">
-                                    <path stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                Verified Deal
-                            </div>
-                            <div class="feature-item">
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--success)">
-                                    <path stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                SSL Secured
-                            </div>
-                            <div class="feature-item">
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--success)">
-                                    <path stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                Fast Redirect
-                            </div>
-                        </div>
+                </div>
             </div>
         </div>
     </div>
 
     <footer
-        style="margin-top: 6rem; padding: 4rem 2rem; border-top: 1px solid var(--border); background: #fff; text-align: center;">
-        <p style="color: var(--text-secondary); font-size: 0.875rem;">&copy; 2026 Offerbae. Premium Shopping Resource.
-        </p>
+        style="margin-top: 4rem; padding: 4rem 2rem; border-top: 1px solid var(--border); background: #fff; text-align: center;">
+        <p style="color: var(--text-secondary); font-size: 0.875rem;">&copy; 2026 Offerbae. Premium Fashion & Lifestyle
+            Deals.</p>
     </footer>
 </body>
 

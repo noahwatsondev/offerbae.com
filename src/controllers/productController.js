@@ -55,7 +55,7 @@ const getCatalogPage = async (req, res) => {
             const catName = brandsInCat[0].categories.find(c => slugify(c) === slug);
             return renderCatalog(req, res, {
                 type: 'category',
-                data: { name: catName, brands: brandsInCat.map(b => b.id) },
+                data: { name: catName, brands: brandsInCat }, // Store full objects
                 title: `Best ${catName} Deals & Products | Offerbae`,
                 description: `Discover the best deals, coupons, and products in the ${catName} category from top brands.`
             });
@@ -74,42 +74,103 @@ const getCatalogPage = async (req, res) => {
 
 const renderCatalog = async (req, res, context) => {
     const db = firebaseConfig.db;
+    const { getGlobalSettings } = require('../services/db');
+    const settings = await getGlobalSettings();
     const page = parseInt(req.query.page) || 1;
     const limit = 24;
 
-    let query = db.collection('products');
+    // 4. Handle Search Query
+    const q = req.query.q ? req.query.q.toLowerCase().trim() : '';
 
-    if (context.type === 'brand') {
-        query = query.where('advertiserId', '==', String(context.data.id));
-    } else if (context.type === 'category') {
-        // Firestore 'in' limit is 30. If more brands, we might need multiple queries or alternate strategy.
-        const brandIds = context.data.brands.slice(0, 30);
-        query = query.where('advertiserId', 'in', brandIds);
+    let products = [];
+    let hasNextPage = false;
+    let totalCount = 0;
+
+    try {
+        if (q) {
+            // Search Mode: Consistent with homepage logic
+            const qTokens = q.split(/\s+/).filter(t => t.length >= 2);
+            if (qTokens.length === 0) {
+                // If query exists but no valid tokens (e.g. "a"), return nothing or basic list
+                products = [];
+            } else {
+                const mainToken = qTokens[0];
+                const searchLimit = 2000;
+
+                let searchBase = db.collection('products');
+                if (context.type === 'brand') {
+                    searchBase = searchBase.where('advertiserId', '==', String(context.data.id));
+                } else if (context.type === 'category') {
+                    const brandIds = context.data.brands.map(b => b.id).slice(0, 30);
+                    searchBase = searchBase.where('advertiserId', 'in', brandIds);
+                }
+
+                // Keyword search
+                const snapshot = await searchBase
+                    .where('searchKeywords', 'array-contains', mainToken)
+                    .limit(searchLimit)
+                    .get();
+
+                let filtered = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Refine if multiple tokens
+                if (qTokens.length > 1) {
+                    filtered = filtered.filter(p => {
+                        const searchStr = (p.name || '').toLowerCase();
+                        return qTokens.every(token => searchStr.includes(token));
+                    });
+                }
+                products = filtered;
+            }
+
+            totalCount = products.length;
+            const start = (page - 1) * limit;
+            products = products.slice(start, start + limit);
+            hasNextPage = totalCount > page * limit;
+        } else {
+            // Normal Mode: Optimized sorting & pagination
+            let query = db.collection('products');
+
+            if (context.type === 'brand') {
+                query = query.where('advertiserId', '==', String(context.data.id));
+            } else if (context.type === 'category') {
+                const brandIds = context.data.brands.map(b => b.id).slice(0, 30);
+                query = query.where('advertiserId', 'in', brandIds);
+            }
+
+            const sort = req.query.sort || 'newest';
+            if (sort === 'newest') query = query.orderBy('updatedAt', 'desc');
+            else if (sort === 'price-low') query = query.orderBy('price', 'asc');
+            else if (sort === 'price-high') query = query.orderBy('price', 'desc');
+
+            const snapshot = await query.limit(limit).offset((page - 1) * limit).get();
+            products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            hasNextPage = products.length === limit;
+            totalCount = context.type === 'brand' ? (context.data.productCount || 0) : 0;
+        }
+
+        if (req.query.format === 'json') {
+            return res.json({ products, page, hasNextPage, totalCount });
+        }
+
+        res.render('catalog', {
+            ...context,
+            products,
+            page,
+            sort: req.query.sort || 'newest',
+            filters: req.query,
+            settings,
+            hasNextPage
+        });
+    } catch (error) {
+        if (error.message.includes('requires an index')) {
+            console.error('MISSING INDEX:', error.message);
+            return res.status(500).render('404', {
+                message: 'Database is still optimizing. Please follow the link in your server logs to create the required Firestore index.'
+            });
+        }
+        throw error;
     }
-
-    // Apply sorting
-    const sort = req.query.sort || 'newest';
-    if (sort === 'newest') query = query.orderBy('updatedAt', 'desc');
-    else if (sort === 'price-low') query = query.orderBy('price', 'asc');
-    else if (sort === 'price-high') query = query.orderBy('price', 'desc');
-
-    // Apply Price Filter
-    if (req.query.minPrice) query = query.where('price', '>=', parseFloat(req.query.minPrice));
-    if (req.query.maxPrice) query = query.where('price', '<=', parseFloat(req.query.maxPrice));
-
-    const totalCount = context.type === 'brand' ? (context.data.productCount || 0) : 0; // Category total is harder to get instantly
-
-    const snapshot = await query.limit(limit).offset((page - 1) * limit).get();
-    const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-    res.render('catalog', {
-        ...context,
-        products,
-        page,
-        sort,
-        filters: req.query,
-        hasNextPage: products.length === limit
-    });
 };
 
 const getProductDetail = async (req, res) => {
@@ -130,11 +191,15 @@ const getProductDetail = async (req, res) => {
         const brandSnap = await db.collection('advertisers').where('id', '==', product.advertiserId).limit(1).get();
         const brand = !brandSnap.empty ? brandSnap.docs[0].data() : null;
 
+        const { getGlobalSettings } = require('../services/db');
+        const settings = await getGlobalSettings();
+
         res.render('product', {
             product,
             brand,
             title: `${product.name} | ${brand ? brand.name : 'Offerbae'}`,
-            description: product.description || `Get the best deal on ${product.name}. Shop now on Offerbae.`
+            description: product.description || `Get the best deal on ${product.name}. Shop now on Offerbae.`,
+            settings
         });
 
     } catch (error) {

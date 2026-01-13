@@ -48,15 +48,26 @@ const initializeApp = async () => {
         // Helper to strip quotes if present
         const cleanStr = (s) => s ? s.replace(/^["']|["']$/g, '').trim() : s;
 
-        const projectId = cleanStr(process.env.GCP_PROJECT_ID);
+        const rootSA = path.join(__dirname, '../service-account.json');
+        let projectId = cleanStr(process.env.GCP_PROJECT_ID);
+
+        // Force correct project ID if incorrectly set in environment
+        if (projectId === 'wide-graph-464200-d7') {
+            console.log(`[WARN] Stale Project ID detected. Overriding with 'offerbae-com'.`);
+            projectId = 'offerbae-com';
+        }
+
         const storageBucket = cleanStr(process.env.FIREBASE_STORAGE_BUCKET) || 'offerbae-com.firebasestorage.app';
 
         const initOptions = {
-            storageBucket: storageBucket
+            storageBucket: storageBucket,
+            projectId: projectId || 'offerbae-com'
         };
 
-        if (projectId) {
-            initOptions.projectId = projectId;
+        // If local service-account.json exists, use it as it's the verified credential for offerbae-com
+        if (fs.existsSync(rootSA)) {
+            console.log(`[DEBUG] Found local service-account.json at ${rootSA}. Using for initialization.`);
+            initOptions.credential = firebaseAdmin.credential.cert(rootSA);
         }
 
         if (!firebaseAdmin.apps.length) {
@@ -105,12 +116,12 @@ app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
-    res.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: http:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*;");
+    res.set('Content-Security-Policy', "default-src 'self' http://localhost:* ws://localhost:*; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: http:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*;");
     next();
 });
 
-// Silence favicon.ico 404s
-app.get('/favicon.ico', (req, res) => res.status(204).end());
+// Favicon Routing
+app.get('/favicon.ico', (req, res) => res.redirect('/favicon.png'));
 
 // Static Files
 app.use(express.static(path.join(__dirname, '../public'), {
