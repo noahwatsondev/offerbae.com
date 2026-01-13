@@ -205,6 +205,10 @@ app.get('/api/proxy-image', dashboardController.proxyImage);
 app.get('/api/debug/fyrelux', dashboardController.debugFyreLux);
 app.get('/mission-control', dashboardController.getDashboardData);
 
+// SEO & Catalog Routes (Must be last to avoid catching specific routes)
+app.get('/:slug', productController.getCatalogPage);
+app.get('/:brandSlug/:productSlug', productController.getProductDetail);
+
 // Export the new controller function if it's not already exported
 // Note: We need to make sure globalProductSearch is in the exports of dashboardController.js
 

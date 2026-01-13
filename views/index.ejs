@@ -571,6 +571,7 @@
             <div class="brands-list" id="brands-container">
                 <% advertisers.forEach(adv=> { %>
                     <div class="brand-card" data-id="<%= adv.id %>" data-name="<%= adv.name.toLowerCase() %>"
+                        data-slug="<%= adv.slug || adv.name.toLowerCase().replace(/\s+/g, '-') %>"
                         data-categories='<%= JSON.stringify(adv.categories || []).toLowerCase() %>'
                         data-offers="<%= adv.offerCount || 0 %>" data-products="<%= adv.productCount || 0 %>">
 
@@ -584,18 +585,18 @@
                             </div>
 
                             <div class="brand-info">
-                                <% var brandLink=adv.manualHomeUrl || adv.affiliateHomeUrl || adv.url || '#' ; %>
-                                    <a href="<%= brandLink %>" target="_blank" class="brand-name"
-                                        onclick="event.stopPropagation()">
+                                <% var brandUrl='/' + (adv.slug || adv.name.toLowerCase().replace(/\s+/g, '-' )); %>
+                                    <a href="<%= brandUrl %>" class="brand-name" onclick="event.stopPropagation()">
                                         <%= adv.name %>
                                     </a>
                             </div>
 
                             <div class="brand-categories">
                                 <% (adv.categories || []).sort().forEach(cat=> { %>
-                                    <span class="category-pill">
+                                    <a href="/<%= cat.toLowerCase().replace(/\s+/g, '-') %>" class="category-pill"
+                                        onclick="event.stopPropagation()">
                                         <%= cat %>
-                                    </span>
+                                    </a>
                                     <% }); %>
                             </div>
                         </div>
@@ -730,6 +731,16 @@
             const activeStyleSettings = JSON.parse(document.body.dataset.styleSettings || '{}');
             let currentCategory = 'all';
 
+            const slugify = (text) => {
+                if (!text) return '';
+                return text.toString().toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^\w\-]+/g, '')
+                    .replace(/\-\-+/g, '-')
+                    .replace(/^-+/, '')
+                    .replace(/-+$/, '');
+            };
+
             // Lazy Loading and UI Toggling
             // Helper functions for rendering
             const renderOffersTable = (container, offers, advId) => {
@@ -857,6 +868,7 @@
                             matchingBrands.push({
                                 id: card.dataset.id,
                                 name: card.querySelector('.brand-name').innerText.trim(),
+                                slug: card.dataset.slug,
                                 logoUrl: logo ? logo.src : null
                             });
                         }
@@ -910,7 +922,7 @@
                 // Brands Section
                 if (brands.length > 0) {
                     html += brands.map(b => `
-                        <div class="search-result-item" onclick="scrollToBrand('${b.id}')">
+                        <div class="search-result-item" onclick="location.href='/${b.slug}'">
                             <div class="search-result-thumb" style="display:flex; align-items:center; justify-content:center; background:#f3f4f6;">
                                 ${b.logoUrl ? `<img src="${b.logoUrl}" style="max-width:100%; max-height:100%; object-fit:contain;">` : '<span style="font-size:12px; color:#9ca3af;">?</span>'}
                             </div>
@@ -928,15 +940,19 @@
 
                 // Products Section
                 if (products.length > 0) {
-                    html += products.map(p => `
-                        <div class="search-result-item" onclick="window.open('${p.link}', '_blank')">
+                    html += products.map(p => {
+                        const brandSlug = (p.advertiserName || '').toLowerCase().replace(/\s+/g, '-');
+                        const productUrl = `/${brandSlug}/${p.slug || (slugify(p.name) + '-' + (p.sku || '').substring(0, 5))}`;
+                        return `
+                        <div class="search-result-item" onclick="location.href='${productUrl}'">
                             <img src="${p.storageImageUrl || p.imageUrl || ''}" class="search-result-thumb" onerror="this.src='https://placehold.co/40x40?text=?'">
                             <div class="search-result-info">
                                 <div class="search-result-name">${p.name}</div>
                                 <div class="search-result-brand" style="font-weight: 700; color: var(--primary);">${p.advertiserName || ''}</div>
                             </div>
                         </div>
-                    `).join('');
+                    `;
+                    }).join('');
                 }
 
                 resultsDiv.innerHTML = html;
@@ -1057,8 +1073,11 @@
                     <div style="color: var(--success); font-size: 0.75em; font-style: italic; font-weight: 600; margin-top: 2px;">Save ${p._savings.toFixed(2)}!</div>
                 ` : `<span style="color: var(--text-main); font-weight: 600;">${p.price || '--'} ${p.currency || ''}</span>`;
 
+                        const brandSlug = brandName.toLowerCase().replace(/\s+/g, '-');
+                        const productUrl = `/${brandSlug}/${p.slug || (slugify(p.name) + '-' + (p.sku || '').substring(0, 5))}`;
+
                         html += `
-                    <div class="prod-card" data-sale="${p._isSale}" onclick="window.open('${p.link}', '_blank')" style="background: white; border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem; display: flex; gap: 1rem; cursor: pointer; transition: background 0.2s, transform 0.2s; box-shadow: 0 1px 1px rgba(0, 0, 0, .25); height: 100%; box-sizing: border-box;">
+                    <div class="prod-card" data-sale="${p._isSale}" onclick="location.href='${productUrl}'" style="background: white; border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem; display: flex; gap: 1rem; cursor: pointer; transition: background 0.2s, transform 0.2s; box-shadow: 0 1px 1px rgba(0, 0, 0, .25); height: 100%; box-sizing: border-box;">
                         <div style="width: 80px; height: 80px; flex-shrink: 0; background: #f9fafb; border-radius: 0.5rem; overflow: hidden; border: 1px solid #eee;">
                             <img src="${p.storageImageUrl || p.imageUrl || ''}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.src='https://placehold.co/80x80?text=?'">
                         </div>

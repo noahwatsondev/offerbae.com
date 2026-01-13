@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <meta name="description" content="<%= description %>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #EEF2FF;
+            --text-main: #111827;
+            --text-secondary: #4B5563;
+            --bg-body: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --border: #E5E7EB;
+            --danger: #EF4444;
+            --success: #10B981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        nav {
+            background: #fff;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            letter-spacing: -1px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .product-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 4rem;
+            background: #fff;
+            padding: 3rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+        }
+
+        @media (max-width: 1024px) {
+            .product-layout {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                padding: 1.5rem;
+            }
+
+            .container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+        }
+
+        /* Image Gallery */
+        .image-gallery {
+            position: sticky;
+            top: 100px;
+        }
+
+        .main-image-container {
+            background: #fff;
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            aspect-ratio: 1;
+        }
+
+        .main-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Product Info */
+        .brand-name {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .product-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        .price-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .current-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .was-price {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+
+        .price-badge {
+            background: var(--danger);
+            color: #fff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+
+        .cta-section {
+            margin-bottom: 3rem;
+        }
+
+        .buy-now-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            background: var(--primary);
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.125rem;
+            font-weight: 700;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+            transition: all 0.2s;
+        }
+
+        .buy-now-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(79, 70, 229, 0.3);
+        }
+
+        .offer-highlight {
+            background: var(--primary-light);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px dashed var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sparkle-icon {
+            color: var(--primary);
+        }
+
+        .description-section h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .description-text {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        /* Features/Specs List */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="/" class="logo">OFFERBAE</a>
+    </nav>
+
+    <div class="container">
+        <div class="product-layout">
+            <div class="image-gallery">
+                <div class="main-image-container">
+                    <img src="<%= product.storageImageUrl || product.imageUrl || '/placeholder.png' %>"
+                        alt="<%= product.name %>" class="main-image">
+                </div>
+            </div>
+
+            <div class="product-info">
+                <% if (brand) { %>
+                    <a href="/<%= brand.slug %>" class="brand-name">
+                        <%= brand.name %>
+                    </a>
+                    <% } %>
+                        <h1 class="product-title">
+                            <%= product.name %>
+                        </h1>
+
+                        <div class="price-container">
+                            <% if (product.salePrice && product.price> product.salePrice) { %>
+                                <span class="current-price">$<%= product.salePrice.toLocaleString() %></span>
+                                <span class="was-price">$<%= product.price.toLocaleString() %></span>
+                                <span class="price-badge">Save <%= Math.round((1 - product.salePrice/product.price) *
+                                        100) %>%</span>
+                                <% } else { %>
+                                    <span class="current-price">$<%= (product.price || 0).toLocaleString() %></span>
+                                    <% } %>
+                        </div>
+
+                        <div class="offer-highlight">
+                            <div class="sparkle-icon">
+                                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <strong style="color: var(--primary); display: block;">Exclusive Offer
+                                    Available</strong>
+                                <span style="font-size: 0.875rem; color: var(--text-secondary);">Redeem now to get the
+                                    best price on this item.</span>
+                            </div>
+                        </div>
+
+                        <div class="cta-section">
+                            <a href="<%= product.link %>" target="_blank" class="buy-now-btn">
+                                <span>Redeem on <%= brand ? brand.name : 'Store' %></span>
+                                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </a>
+                            <p
+                                style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: var(--text-secondary);">
+                                Redirecting to official partner site
+                            </p>
+                        </div>
+
+                        <div class="description-section">
+                            <h2>Product Details</h2>
+                            <div class="description-text">
+                                <%= product.description || 'No detailed description available for this product yet.' %>
+                            </div>
+                        </div>
+
+                        <div class="features-grid">
+                            <div class="feature-item">
+                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--success)">
+                                    <path stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Authored Retailer
+                            </div>
+                            <div class="feature-item">
+                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--success)">
+                                    <path stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Verified Deal
+                            </div>
+                            <div class="feature-item">
+                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--success)">
+                                    <path stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                SSL Secured
+                            </div>
+                            <div class="feature-item">
+                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--success)">
+                                    <path stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Fast Redirect
+                            </div>
+                        </div>
+            </div>
+        </div>
+    </div>
+
+    <footer
+        style="margin-top: 6rem; padding: 4rem 2rem; border-top: 1px solid var(--border); background: #fff; text-align: center;">
+        <p style="color: var(--text-secondary); font-size: 0.875rem;">&copy; 2026 Offerbae. Premium Shopping Resource.
+        </p>
+    </footer>
+</body>
+
+</html>

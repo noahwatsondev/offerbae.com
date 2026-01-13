@@ -7,6 +7,16 @@ const COLLECTIONS = {
     PRODUCTS: 'products'
 };
 
+function slugify(text) {
+    if (!text) return '';
+    return text.toString().toLowerCase()
+        .replace(/\s+/g, '-')           // Replace spaces with -
+        .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+        .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+        .replace(/^-+/, '')             // Trim - from start of text
+        .replace(/-+$/, '');            // Trim - from end of text
+}
+
 const hasChanged = (newData, existingData) => {
     if (!existingData) return true;
 
@@ -77,6 +87,10 @@ const upsertAdvertiser = async (advertiserData, existingData = null) => {
         if (!hasChanged(advertiserData, existingData)) {
             // console.log(`[DB] Skipping unchanged advertiser: ${advertiserData.name}`);
             return { id: docId, status: 'skipped' };
+        }
+
+        if (!advertiserData.slug && advertiserData.name) {
+            advertiserData.slug = slugify(advertiserData.name);
         }
 
         await ref.set({
@@ -151,6 +165,12 @@ const upsertProduct = async (productData, existingData = null) => {
 
         if (!hasChanged(productData, existingData)) {
             return { id: docId, status: 'skipped' };
+        }
+
+        if (!productData.slug && productData.name) {
+            const baseSlug = slugify(productData.name);
+            const shortId = (productData.id || productData.sku || docId).substring(0, 5);
+            productData.slug = `${baseSlug}-${shortId}`;
         }
 
         await ref.set({
