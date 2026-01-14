@@ -164,6 +164,8 @@ const renderCatalog = async (req, res, context) => {
             return res.json({ products, page, hasNextPage, totalCount });
         }
 
+        // Clear cache and re-require helpers to ensure all functions are available
+        try { delete require.cache[require.resolve('../utils/ejsHelpers')]; } catch (e) { }
         const ejsHelpers = require('../utils/ejsHelpers');
 
         res.render('catalog', {
@@ -209,6 +211,8 @@ const getProductDetail = async (req, res) => {
         const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
 
+        // Clear cache and re-require helpers to ensure all functions are available
+        try { delete require.cache[require.resolve('../utils/ejsHelpers')]; } catch (e) { }
         const ejsHelpers = require('../utils/ejsHelpers');
 
         res.render('product', {
