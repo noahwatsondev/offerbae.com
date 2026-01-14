@@ -30,7 +30,6 @@
             return s > 0 && p > s;
             };
 
-            // Sort products for initial load
             if (typeof products !== 'undefined' && Array.isArray(products)) {
             products.sort((a, b) => {
             const isSaleA = checkIsSale(a.price, a.salePrice);
@@ -273,23 +272,6 @@
                     margin-top: 1px;
                 }
 
-                .redeem-btn {
-                    margin-top: 1rem;
-                    width: 100%;
-                    padding: 0.6rem;
-                    border-radius: 0.6rem;
-                    background: var(--primary-light);
-                    color: #1a1a1a;
-                    border: none;
-                    font-weight: 700;
-                    font-size: 0.8rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 0.4rem;
-                    transition: all 0.2s;
-                }
-
                 .search-area {
                     display: flex;
                     align-items: center;
@@ -309,10 +291,9 @@
                     padding: 0.75rem 1rem;
                     border-radius: 0.5rem;
                     border: 1px solid var(--border);
-                    font-family: 'Outfit', sans-serif;
+                    font-family: inherit;
                     font-size: 0.938rem;
                     outline: none;
-                    transition: border-color 0.2s;
                 }
 
                 .on-sale-label {
@@ -323,7 +304,6 @@
                     font-weight: 700;
                     font-size: 0.938rem;
                     cursor: pointer;
-                    user-select: none;
                 }
 
                 .loading-overlay {
@@ -357,7 +337,6 @@
                     border-radius: 0.75rem;
                     border: 1px solid var(--border);
                     background: #fff;
-                    color: var(--text-main);
                     font-weight: 700;
                     cursor: pointer;
                 }
@@ -367,13 +346,7 @@
                     cursor: not-allowed;
                 }
 
-                @keyframes spin {
-                    to {
-                        transform: rotate(360deg);
-                    }
-                }
-
-                /* Discounts Modal/Dropdown Styles */
+                /* Discounts Modal/Dropdown */
                 .discounts-btn {
                     display: flex;
                     align-items: center;
@@ -386,15 +359,8 @@
                     font-weight: 700;
                     font-size: 0.938rem;
                     cursor: pointer;
-                    transition: all 0.2s;
                     box-shadow: 0 4px 12px rgba(255, 209, 92, 0.2);
                     margin-left: auto;
-                    white-space: nowrap;
-                }
-
-                .discounts-btn:hover {
-                    transform: translateY(-1px);
-                    box-shadow: 0 6px 16px rgba(255, 209, 92, 0.3);
                 }
 
                 .discounts-dropdown {
@@ -410,8 +376,6 @@
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                     z-index: 1100;
                     padding: 1.5rem;
-                    overflow: hidden;
-                    display: flex;
                     flex-direction: column;
                 }
 
@@ -425,12 +389,7 @@
                         width: 100%;
                         max-height: 100vh;
                         border-radius: 0;
-                        z-index: 2000;
                         padding: 1rem;
-                    }
-
-                    .header-container {
-                        padding: 0 1rem;
                     }
                 }
 
@@ -461,6 +420,12 @@
                     border-color: var(--primary);
                     background: var(--primary-light);
                 }
+
+                @keyframes spin {
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
             </style>
 </head>
 
@@ -474,7 +439,7 @@
                         style="height: 40px; width: auto; max-width: 200px; object-fit: contain;">
                     <% } %>
                         <h1
-                            style="margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
+                            style="margin: 0; font-size: 1.25rem; font-weight: 700; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
                             <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae'
                                 %>
                         </h1>
@@ -487,19 +452,19 @@
             <div class="filter-group">
                 <span class="filter-title">Price Range</span>
                 <label
-                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--text-secondary); margin-bottom:0.5rem; cursor:pointer;">
+                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
                     <input type="checkbox" name="price" value="0-25" class="sidebar-filter"> Under $25
                 </label>
                 <label
-                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--text-secondary); margin-bottom:0.5rem; cursor:pointer;">
+                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
                     <input type="checkbox" name="price" value="25-50" class="sidebar-filter"> $25 - $50
                 </label>
                 <label
-                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--text-secondary); margin-bottom:0.5rem; cursor:pointer;">
+                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
                     <input type="checkbox" name="price" value="50-100" class="sidebar-filter"> $50 - $100
                 </label>
                 <label
-                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; color:var(--text-secondary); margin-bottom:0.5rem; cursor:pointer;">
+                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
                     <input type="checkbox" name="price" value="100+" class="sidebar-filter"> $100+
                 </label>
             </div>
@@ -521,13 +486,11 @@
                     </div>
                     <% } %>
                         <div style="flex: 1; min-width: 250px;">
-                            <h1
-                                style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.25rem; letter-spacing: -0.04em;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.25rem;">
                                 <%= typeof data !=='undefined' ? data.name : '' %>
                             </h1>
                             <p style="color: var(--text-secondary); font-weight: 500; font-size: 1.125rem;">Explore
-                                premium deals and products from <%= typeof data !=='undefined' ? data.name
-                                    : 'our partners' %>.</p>
+                                premium deals from <%= typeof data !=='undefined' ? data.name : 'our partners' %>.</p>
                         </div>
 
                         <% if (typeof offers !=='undefined' && offers.length> 0) { %>
@@ -539,9 +502,7 @@
                                     </svg>
                                     See <%= offers.length %> Discounts
                                 </button>
-
                                 <div id="discounts-overlay" class="discounts-overlay" onclick="toggleDiscounts()"></div>
-
                                 <div id="discounts-dropdown" class="discounts-dropdown">
                                     <div
                                         style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; position: sticky; top: 0; background: white; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
@@ -555,12 +516,10 @@
                                             </svg>
                                         </button>
                                     </div>
-
                                     <div style="margin-bottom: 1.5rem;">
                                         <input type="text" id="offer-filter" placeholder="Search offers..."
                                             style="width: 100%; padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid var(--border); font-family: inherit; font-size: 0.938rem; outline: none;">
                                     </div>
-
                                     <div id="offers-list"
                                         style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem;">
                                         <% const isRealCode=(code)=> {
@@ -572,7 +531,6 @@
                                             'AUTO-APPLIED', 'ONLINE ONLY', 'NULL', 'UNDEFINED', ''];
                                             return !nonCodes.includes(clean);
                                             };
-
                                             offers.sort((a,b) => {
                                             const hasCodeA = isRealCode(a.code);
                                             const hasCodeB = isRealCode(b.code);
@@ -608,12 +566,9 @@
                                                             <% } %>
                                                                 <div
                                                                     style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">
-                                                                    <% if (o.endDate) { %>
-                                                                        Expires: <%= new
+                                                                    <% if (o.endDate) { %> Expires: <%= new
                                                                             Date(o.endDate).toLocaleDateString() %>
-                                                                            <% } else { %>
-                                                                                Ongoing
-                                                                                <% } %>
+                                                                            <% } else { %> Ongoing <% } %>
                                                                 </div>
                                                 </div>
                                             </div>
@@ -670,11 +625,9 @@
                                 <div class="price-row">
                                     <% if (isSale) { %>
                                         <div style="display:flex; flex-direction:column;">
-                                            <div>
-                                                <span class="current-price sale-price">$<%= formatPrice(p.salePrice) %>
-                                                </span>
-                                                <span class="was-price">$<%= formatPrice(p.price) %></span>
-                                            </div>
+                                            <div><span class="current-price sale-price">$<%= formatPrice(p.salePrice) %>
+                                                        </span> <span class="was-price">$<%= formatPrice(p.price) %>
+                                                        </span></div>
                                             <div class="savings-info">Save $<%= formatPrice(getNum(p.price) -
                                                     getNum(p.salePrice)) %>!</div>
                                         </div>
@@ -722,45 +675,28 @@
 
             try {
                 const response = await fetch(`${window.location.pathname}?${params.toString()}`);
-
-                // Content-Type check
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await response.text();
-                    if (text.includes('<!DOCTYPE')) {
-                        grid.innerHTML = `<div style="grid-column:1 / -1; padding:4rem; text-align:center; background:#fff; border:1px solid var(--danger); border-radius:1rem;">
-                            <h3 style="color:var(--danger);">Database Index Required</h3>
-                            <p>Firestore requires a composite index for this search. Please check your server logs for the creation link.</p>
-                            <div style="font-family:monospace; margin-top:1rem; padding:1rem; background:#f8f9fa;">Index: products (advertiserId ASC, searchKeywords ARRAY)</div>
-                        </div>`;
-                        return;
-                    }
-                }
-
                 const data = await response.json();
                 renderProducts(data.products);
                 currentPage = data.page;
                 pageInfo.textContent = `Page ${data.page}`;
                 prevBtn.disabled = data.page === 1;
                 nextBtn.disabled = !data.hasNextPage;
-
                 const urlParams = new URLSearchParams(params); urlParams.delete('format');
                 window.history.pushState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
             } catch (err) {
                 console.error('Fetch error:', err);
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--danger);">Something went wrong. Please refresh the page.</div>';
+            } finally {
+                overlay.classList.remove('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-            finally { overlay.classList.remove('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
         }
 
         function renderProducts(products) {
             if (!products || !products.length) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:4rem;">No products found.</div>'; return; }
-            const showSaleOnly = saleOnlyCb.checked;
             grid.innerHTML = products.map(p => {
                 const isSale = getNum(p.salePrice) > 0 && getNum(p.price) > getNum(p.salePrice);
-                const display = (showSaleOnly || !isSale) ? 'flex' : 'none';
                 return `
-                    <a href="/${(p.advertiserName || '').toLowerCase().replace(/\s+/g, '-')}/${p.slug}" class="product-card" data-sale="${isSale}" style="display:${display}">
+                    <a href="/${(p.advertiserName || '').toLowerCase().replace(/\s+/g, '-')}/${p.slug}" class="product-card" data-sale="${isSale}">
                         <div class="product-image-wrapper">
                             ${isSale ? '<div class="sale-badge">SALE</div>' : ''}
                             <img src="${p.storageImageUrl || p.imageUrl || '/placeholder.png'}" class="product-image" loading="lazy">
@@ -770,7 +706,6 @@
                             <h3 class="product-name">${p.name}</h3>
                             <div class="price-row">
                                 ${isSale ? `<div><span class="current-price sale-price">$${formatPrice(p.salePrice)}</span> <span class="was-price">$${formatPrice(p.price)}</span></div><div class="savings-info">Save $${formatPrice(getNum(p.price) - getNum(p.salePrice))}!</div>` : `<span class="current-price">$${formatPrice(p.price)}</span>`}
-                            </div>
                             </div>
                         </div>
                     </a>`;
@@ -789,30 +724,24 @@
         sortSelect.onchange = () => fetchProducts(1);
         prevBtn.onclick = () => fetchProducts(currentPage - 1);
         nextBtn.onclick = () => fetchProducts(currentPage + 1);
-        document.querySelectorAll('.sidebar-filter').forEach(cb => {
-            cb.onchange = () => fetchProducts(1);
-        });
 
         function toggleDiscounts() {
             const dropdown = document.getElementById('discounts-dropdown');
             const overlay = document.getElementById('discounts-overlay');
-            if (!dropdown) return;
-            dropdown.classList.toggle('active');
-            overlay.classList.toggle('active');
-            if (dropdown.classList.contains('active')) {
-                document.body.style.overflow = 'hidden';
-            } else {
-                document.body.style.overflow = '';
+            if (dropdown) {
+                dropdown.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = dropdown.classList.contains('active') ? 'hidden' : '';
             }
         }
 
         const offerFilter = document.getElementById('offer-filter');
         if (offerFilter) {
             offerFilter.oninput = (e) => {
-                const term = e.target.value.toLowerCase();
+                const q = e.target.value.toLowerCase();
                 document.querySelectorAll('.offer-card').forEach(card => {
                     const text = card.innerText.toLowerCase();
-                    card.style.display = text.includes(term) ? 'flex' : 'none';
+                    card.style.display = text.includes(q) ? 'block' : 'none';
                 });
             };
         }
