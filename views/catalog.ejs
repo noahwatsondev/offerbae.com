@@ -578,9 +578,9 @@
                                             const hasCodeB = isRealCode(b.code);
                                             if(hasCodeA && !hasCodeB) return -1;
                                             if(!hasCodeA && hasCodeB) return 1;
-                                            const timeA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
-                                            const timeB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
-                                            return timeA - timeB;
+                                            const tA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
+                                            const tB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
+                                            return tA - tB;
                                             }).forEach(o => { %>
                                             <div class="offer-card" onclick="window.open('<%= o.link %>', '_blank')">
                                                 <div
@@ -617,7 +617,7 @@
                                                                 </div>
                                                 </div>
                                             </div>
-                                            <% }); %>
+                                            <% }) %>
                                     </div>
                                 </div>
                             </div>
@@ -672,7 +672,7 @@
                                         <div style="display:flex; flex-direction:column;">
                                             <div>
                                                 <span class="current-price sale-price">$<%= formatPrice(p.salePrice) %>
-                                                        </span>
+                                                </span>
                                                 <span class="was-price">$<%= formatPrice(p.price) %></span>
                                             </div>
                                             <div class="savings-info">Save $<%= formatPrice(getNum(p.price) -
