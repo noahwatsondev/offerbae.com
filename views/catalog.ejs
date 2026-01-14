@@ -352,16 +352,28 @@
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
-                padding: 0.625rem 1.25rem;
-                background: var(--primary);
-                color: #1a1a1a;
-                border: none;
-                border-radius: 3rem;
-                font-weight: 700;
-                font-size: 0.938rem;
+                padding: 0.625rem 1rem;
+                border-radius: 0.625rem;
+                border: 1px solid var(--border);
+                background: #fff;
+                color: var(--text-main);
+                font-size: 0.813rem;
+                font-weight: 600;
                 cursor: pointer;
-                box-shadow: 0 4px 12px rgba(255, 209, 92, 0.2);
+                transition: all 0.2s;
                 margin-left: auto;
+            }
+
+            .discounts-btn:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+                background: rgba(79, 70, 229, 0.02);
+            }
+
+            .discounts-btn.active {
+                background: rgba(79, 70, 229, 0.06);
+                border-color: var(--primary);
+                color: var(--primary);
             }
 
             .discounts-dropdown-container {
@@ -778,9 +790,11 @@
         function toggleDiscounts() {
             const dropdown = document.getElementById('discounts-dropdown');
             const overlay = document.getElementById('discounts-overlay');
+            const btn = document.querySelector('.discounts-btn');
             if (dropdown) {
                 dropdown.classList.toggle('active');
                 overlay.classList.toggle('active');
+                if (btn) btn.classList.toggle('active');
                 document.body.style.overflow = dropdown.classList.contains('active') ? 'hidden' : '';
             }
         }
