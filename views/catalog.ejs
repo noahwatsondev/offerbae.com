@@ -498,7 +498,6 @@
                                                 <span class="current-price">$<%= formatPrice(p.price) %></span>
                                                 <% } %>
                                     </div>
-                                    <button class="redeem-btn">View Deal</button>
                                 </div>
                             </a>
                             <% }); %>
@@ -588,7 +587,7 @@
                             <div class="price-row">
                                 ${isSale ? `<div><span class="current-price sale-price">$${formatPrice(p.salePrice)}</span> <span class="was-price">$${formatPrice(p.price)}</span></div><div class="savings-info">Save $${formatPrice(getNum(p.price) - getNum(p.salePrice))}!</div>` : `<span class="current-price">$${formatPrice(p.price)}</span>`}
                             </div>
-                            <button class="redeem-btn">View Deal</button>
+                            </div>
                         </div>
                     </a>`;
             }).join('');
