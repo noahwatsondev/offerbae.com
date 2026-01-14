@@ -251,15 +251,13 @@ const syncRakutenAdvertisers = async () => {
         }
 
         // Fallback to Brandfetch if no logo OR if caching failed (broken link)
-        // Only retry if we don't have a good one already
-        if (!storageLogoUrl && adv.url) {
-            if (!existingData || !existingData.storageLogoUrl) {
-                const domain = brandfetch.extractDomain(adv.url);
-                const bfLogoUrl = await brandfetch.fetchLogo(domain);
-                if (bfLogoUrl) {
-                    logoUrl = bfLogoUrl; // Update to use BF logo
-                    storageLogoUrl = await cacheImage(logoUrl, 'advertisers/rakuten');
-                }
+        // Optimization: Only lookup if it's a new advertiser or the logo changed
+        if (!storageLogoUrl && adv.url && logoChanged) {
+            const domain = brandfetch.extractDomain(adv.url);
+            const bfLogoUrl = await brandfetch.fetchLogo(domain);
+            if (bfLogoUrl) {
+                logoUrl = bfLogoUrl; // Update to use BF logo
+                storageLogoUrl = await cacheImage(logoUrl, 'advertisers/rakuten');
             }
         }
 
@@ -496,14 +494,12 @@ const syncCJAdvertisers = async () => {
         }
         if (!storageLogoUrl && logoChanged) logoUrl = null;
 
-        if (!storageLogoUrl && adv.url) {
-            if (!existingData || !existingData.storageLogoUrl) {
-                const domain = brandfetch.extractDomain(adv.url);
-                const bfLogoUrl = await brandfetch.fetchLogo(domain);
-                if (bfLogoUrl) {
-                    logoUrl = bfLogoUrl;
-                    storageLogoUrl = await cacheImage(logoUrl, 'advertisers/cj');
-                }
+        if (!storageLogoUrl && adv.url && logoChanged) {
+            const domain = brandfetch.extractDomain(adv.url);
+            const bfLogoUrl = await brandfetch.fetchLogo(domain);
+            if (bfLogoUrl) {
+                logoUrl = bfLogoUrl;
+                storageLogoUrl = await cacheImage(logoUrl, 'advertisers/cj');
             }
         }
 
@@ -729,15 +725,12 @@ const syncAWINAdvertisers = async () => {
         }
         if (!storageLogoUrl && logoChanged) logoUrl = null;
 
-        if (!storageLogoUrl && adv.url) {
-            if (!existingData || !existingData.storageLogoUrl) {
-                // ... (brandfetch)
-                const domain = brandfetch.extractDomain(adv.url);
-                const bfLogoUrl = await brandfetch.fetchLogo(domain);
-                if (bfLogoUrl) {
-                    logoUrl = bfLogoUrl;
-                    storageLogoUrl = await cacheImage(logoUrl, 'advertisers/awin');
-                }
+        if (!storageLogoUrl && adv.url && logoChanged) {
+            const domain = brandfetch.extractDomain(adv.url);
+            const bfLogoUrl = await brandfetch.fetchLogo(domain);
+            if (bfLogoUrl) {
+                logoUrl = bfLogoUrl;
+                storageLogoUrl = await cacheImage(logoUrl, 'advertisers/awin');
             }
         }
 
@@ -962,7 +955,8 @@ const syncPepperjamAdvertisers = async () => {
         let storageLogoUrl = existingData ? existingData.storageLogoUrl : null;
 
         // Pepperjam doesn't provide logos in advertiser list, so fallback to Brandfetch
-        if (!storageLogoUrl && adv.url) {
+        // Optimization: Only lookup Brandfetch if this is a brand new advertiser
+        if (!storageLogoUrl && adv.url && !existingData) {
             const domain = brandfetch.extractDomain(adv.url);
             const bfLogoUrl = await brandfetch.fetchLogo(domain);
             if (bfLogoUrl) {
