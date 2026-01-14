@@ -342,10 +342,14 @@
                 margin-left: auto;
             }
 
+            .discounts-dropdown-container {
+                position: relative;
+            }
+
             .discounts-dropdown {
                 display: none;
                 position: absolute;
-                top: calc(100% + 1rem);
+                top: calc(100% + 1.25rem);
                 right: 0;
                 width: 450px;
                 max-height: 500px;
@@ -487,7 +491,7 @@
                                         style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; position: sticky; top: 0; background: white; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
                                         <h2 style="font-size: 1.25rem; font-weight: 800;">Exclusive Offers</h2>
                                         <button onclick="toggleDiscounts()"
-                                            style="background: none; border: none; cursor: padding: 0.5rem; color: var(--text-secondary);">
+                                            style="background: none; border: none; cursor: pointer; padding: 0.5rem; color: var(--text-secondary);">
                                             <svg width="24" height="24" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -597,7 +601,7 @@
                                         <div style="display:flex; flex-direction:column;">
                                             <div><span class="current-price sale-price">$<%= h.formatPrice(p.salePrice)
                                                         %></span> <span class="was-price">$<%= h.formatPrice(p.price) %>
-                                                        </span></div>
+                                                </span></div>
                                             <div class="savings-info">Save $<%= h.formatPrice(h.getNum(p.price) -
                                                     h.getNum(p.salePrice)) %>!</div>
                                         </div>
