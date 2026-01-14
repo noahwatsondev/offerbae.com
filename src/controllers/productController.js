@@ -83,10 +83,21 @@ const renderCatalog = async (req, res, context) => {
     const q = req.query.q ? req.query.q.toLowerCase().trim() : '';
 
     let products = [];
+    let offers = [];
     let hasNextPage = false;
     let totalCount = 0;
 
     try {
+        // Fetch Offers if it's a Brand page
+        if (context.type === 'brand') {
+            const now = new Date();
+            const offersSnap = await db.collection('offers')
+                .where('advertiserId', '==', String(context.data.id))
+                .get();
+            offers = offersSnap.docs
+                .map(doc => doc.data())
+                .filter(o => !o.endDate || new Date(o.endDate) > now);
+        }
         if (q) {
             // Search Mode: Consistent with homepage logic
             const qTokens = q.split(/\s+/).filter(t => t.length >= 2);
@@ -156,6 +167,7 @@ const renderCatalog = async (req, res, context) => {
         res.render('catalog', {
             ...context,
             products,
+            offers,
             page,
             sort: req.query.sort || 'newest',
             filters: req.query,
