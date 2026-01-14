@@ -566,24 +566,20 @@
                                         <% const isRealCode=(code)=> {
                                             if (!code) return false;
                                             const clean = String(code).trim().toUpperCase();
-                                            const nonCodes = [
-                                            'N/A', 'NONE', 'NO CODE', 'NO CODE REQUIRED', 'NO COUPON CODE', 'NO COUPON
-                                            CODE REQUIRED',
-                                            'NO COUPON REQUIRED', 'NO PROMO CODE REQUIRED', 'NO PROMO REQUIRED',
-                                            'SEE SITE', 'CLICK TO REVEAL', 'AUTO-APPLIED', 'ONLINE ONLY', 'NULL',
-                                            'UNDEFINED', '',
-                                            'NO COUPON CODE NEEDED', 'NO CODE NEEDED', 'NO PROMO CODE NEEDED'
-                                            ];
+                                            const nonCodes = ['N/A', 'NONE', 'NO CODE', 'NO CODE REQUIRED', 'NO COUPON
+                                            CODE', 'NO COUPON CODE REQUIRED', 'NO COUPON REQUIRED', 'NO PROMO CODE
+                                            REQUIRED', 'NO PROMO REQUIRED', 'SEE SITE', 'CLICK TO REVEAL',
+                                            'AUTO-APPLIED', 'ONLINE ONLY', 'NULL', 'UNDEFINED', ''];
                                             return !nonCodes.includes(clean);
                                             };
 
-                                            offers.sort((a,b)=> {
+                                            offers.sort((a,b) => {
                                             const hasCodeA = isRealCode(a.code);
                                             const hasCodeB = isRealCode(b.code);
                                             if(hasCodeA && !hasCodeB) return -1;
                                             if(!hasCodeA && hasCodeB) return 1;
-                                            return (a.endDate ? new Date(a.endDate) : Infinity) - (b.endDate ? new
-                                            Date(b.endDate) : Infinity);
+                                            return (a.endDate ? new Date(a.endDate).getTime() : Infinity) - (b.endDate ?
+                                            new Date(b.endDate).getTime() : Infinity);
                                             }).forEach(o => { %>
                                             <div class="offer-card" onclick="window.open('<%= o.link %>', '_blank')">
                                                 <div
