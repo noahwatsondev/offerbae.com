@@ -164,6 +164,8 @@ const renderCatalog = async (req, res, context) => {
             return res.json({ products, page, hasNextPage, totalCount });
         }
 
+        const ejsHelpers = require('../utils/ejsHelpers');
+
         res.render('catalog', {
             ...context,
             products,
@@ -172,7 +174,8 @@ const renderCatalog = async (req, res, context) => {
             sort: req.query.sort || 'newest',
             filters: req.query,
             settings,
-            hasNextPage
+            hasNextPage,
+            h: ejsHelpers
         });
     } catch (error) {
         if (error.message.includes('requires an index')) {
@@ -206,12 +209,15 @@ const getProductDetail = async (req, res) => {
         const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
 
+        const ejsHelpers = require('../utils/ejsHelpers');
+
         res.render('product', {
             product,
             brand,
             title: `${product.name} | ${brand ? brand.name : 'Offerbae'}`,
             description: product.description || `Get the best deal on ${product.name}. Shop now on Offerbae.`,
-            settings
+            settings,
+            h: ejsHelpers
         });
 
     } catch (error) {

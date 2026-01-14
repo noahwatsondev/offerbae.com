@@ -13,420 +13,399 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-
-    <% const getNum=(v)=> {
-        if (v === undefined || v === null || v === '') return 0;
-        if (typeof v === 'number') return v;
-        const num = parseFloat(String(v).replace(/[^0-9.]/g, ''));
-        return isNaN(num) ? 0 : num;
-        };
-
-        const formatPrice = (v) => {
-        const num = getNum(v);
-        if (num <= 0) return '--' ; return num.toLocaleString(undefined, { minimumFractionDigits: 2,
-            maximumFractionDigits: 2 }); }; const checkIsSale=(price, salePrice)=> {
-            const p = getNum(price);
-            const s = getNum(salePrice);
-            return s > 0 && p > s;
-            };
-
-            if (typeof products !== 'undefined' && Array.isArray(products)) {
-            products.sort((a, b) => {
-            const isSaleA = checkIsSale(a.price, a.salePrice);
-            const isSaleB = checkIsSale(b.price, b.salePrice);
-            if (isSaleA && !isSaleB) return -1;
-            if (!isSaleA && isSaleB) return 1;
-            if (isSaleA && isSaleB) {
-            const savingsA = getNum(a.price) - getNum(a.salePrice);
-            const savingsB = getNum(b.price) - getNum(b.salePrice);
-            return savingsB - savingsA;
+    <% if (typeof products !=='undefined' && Array.isArray(products)) { products.sort((a, b)=> {
+        const isSaleA = h.checkIsSale(a.price, a.salePrice);
+        const isSaleB = h.checkIsSale(b.price, b.salePrice);
+        if (isSaleA && !isSaleB) return -1;
+        if (!isSaleA && isSaleB) return 1;
+        if (isSaleA && isSaleB) {
+        const savingsA = h.getNum(a.price) - h.getNum(a.salePrice);
+        const savingsB = h.getNum(b.price) - h.getNum(b.salePrice);
+        return savingsB - savingsA;
+        }
+        return 0;
+        });
+        } %>
+        <style>
+            :root {
+                --primary: #FFD15C;
+                --primary-light: #FFF9E6;
+                --text-main: #111827;
+                --text-secondary: #4B5563;
+                --bg-body: #F9FAFB;
+                --card-bg: #FFFFFF;
+                --border: #E5E7EB;
+                --danger: #EF4444;
+                --success: #10B981;
             }
-            return 0;
-            });
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
             }
-            %>
 
-            <style>
-                :root {
-                    --primary: #FFD15C;
-                    --primary-light: #FFF9E6;
-                    --text-main: #111827;
-                    --text-secondary: #4B5563;
-                    --bg-body: #F9FAFB;
-                    --card-bg: #FFFFFF;
-                    --border: #E5E7EB;
-                    --danger: #EF4444;
-                    --success: #10B981;
-                }
+            body {
+                font-family: 'Outfit', sans-serif;
+                background: var(--bg-body);
+                color: var(--text-main);
+                line-height: 1.5;
+            }
 
-                * {
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }
+            header {
+                background: var(--card-bg);
+                border-bottom: 1px solid var(--border);
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+                padding: 0.75rem 0;
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                min-height: 70px;
+                display: flex;
+                align-items: center;
+            }
 
-                body {
-                    font-family: 'Outfit', sans-serif;
-                    background: var(--bg-body);
-                    color: var(--text-main);
-                    line-height: 1.5;
-                }
+            .header-container {
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 0 2rem;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
 
-                header {
-                    background: var(--card-bg);
-                    border-bottom: 1px solid var(--border);
-                    position: sticky;
-                    top: 0;
-                    z-index: 1000;
-                    padding: 0.75rem 0;
-                    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-                    min-height: 70px;
-                    display: flex;
-                    align-items: center;
-                }
+            .container {
+                max-width: 1600px;
+                margin: 0 auto;
+                padding: 2rem;
+                display: grid;
+                grid-template-columns: 280px 1fr;
+                gap: 2rem;
+            }
 
-                .header-container {
-                    max-width: 1400px;
-                    margin: 0 auto;
-                    padding: 0 2rem;
-                    width: 100%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-
+            @media (max-width: 1200px) {
                 .container {
-                    max-width: 1600px;
-                    margin: 0 auto;
-                    padding: 2rem;
-                    display: grid;
-                    grid-template-columns: 280px 1fr;
-                    gap: 2rem;
-                }
-
-                @media (max-width: 1200px) {
-                    .container {
-                        grid-template-columns: 1fr;
-                        padding: 1rem;
-                    }
-
-                    aside {
-                        display: none;
-                    }
+                    grid-template-columns: 1fr;
+                    padding: 1rem;
                 }
 
                 aside {
-                    background: #fff;
-                    border-radius: 1rem;
-                    padding: 1.5rem;
-                    border: 1px solid var(--border);
-                    height: fit-content;
+                    display: none;
                 }
+            }
 
-                .filter-group {
-                    margin-bottom: 2rem;
-                }
+            aside {
+                background: #fff;
+                border-radius: 1rem;
+                padding: 1.5rem;
+                border: 1px solid var(--border);
+                height: fit-content;
+            }
 
-                .filter-title {
-                    font-weight: 700;
-                    font-size: 1rem;
-                    margin-bottom: 1rem;
-                    display: block;
-                    border-left: 4px solid var(--primary);
-                    padding-left: 0.75rem;
-                }
+            .filter-group {
+                margin-bottom: 2rem;
+            }
 
+            .filter-title {
+                font-weight: 700;
+                font-size: 1rem;
+                margin-bottom: 1rem;
+                display: block;
+                border-left: 4px solid var(--primary);
+                padding-left: 0.75rem;
+            }
+
+            .product-grid {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 1.25rem;
+                transition: opacity 0.3s;
+                position: relative;
+            }
+
+            @media (max-width: 1600px) {
                 .product-grid {
-                    display: grid;
-                    grid-template-columns: repeat(5, 1fr);
-                    gap: 1.25rem;
-                    transition: opacity 0.3s;
-                    position: relative;
+                    grid-template-columns: repeat(4, 1fr);
                 }
+            }
 
-                @media (max-width: 1600px) {
-                    .product-grid {
-                        grid-template-columns: repeat(4, 1fr);
-                    }
+            @media (max-width: 1280px) {
+                .product-grid {
+                    grid-template-columns: repeat(3, 1fr);
                 }
+            }
 
-                @media (max-width: 1280px) {
-                    .product-grid {
-                        grid-template-columns: repeat(3, 1fr);
-                    }
+            @media (max-width: 768px) {
+                .product-grid {
+                    grid-template-columns: repeat(2, 1fr);
                 }
+            }
 
-                @media (max-width: 768px) {
-                    .product-grid {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
+            @media (max-width: 480px) {
+                .product-grid {
+                    grid-template-columns: 1fr;
                 }
+            }
 
-                @media (max-width: 480px) {
-                    .product-grid {
-                        grid-template-columns: 1fr;
-                    }
-                }
+            .product-card {
+                background: var(--card-bg);
+                border-radius: 1rem;
+                overflow: hidden;
+                border: 1px solid var(--border);
+                transition: all 0.2s;
+                display: flex;
+                flex-direction: column;
+                text-decoration: none;
+                color: inherit;
+                height: 100%;
+            }
 
-                .product-card {
-                    background: var(--card-bg);
-                    border-radius: 1rem;
-                    overflow: hidden;
-                    border: 1px solid var(--border);
-                    transition: all 0.2s;
-                    display: flex;
-                    flex-direction: column;
-                    text-decoration: none;
-                    color: inherit;
-                    height: 100%;
-                }
+            .product-card:hover {
+                border-color: var(--primary);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            }
 
-                .product-card:hover {
-                    border-color: var(--primary);
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-                }
+            .product-image-wrapper {
+                position: relative;
+                padding-bottom: 100%;
+                background: #fff;
+            }
 
-                .product-image-wrapper {
-                    position: relative;
-                    padding-bottom: 100%;
-                    background: #fff;
-                }
+            .product-image {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                padding: 1.25rem;
+            }
 
-                .product-image {
-                    position: absolute;
-                    inset: 0;
-                    width: 100%;
-                    height: 100%;
-                    object-fit: contain;
-                    padding: 1.25rem;
-                }
+            .sale-badge {
+                position: absolute;
+                top: 0.75rem;
+                left: 0.75rem;
+                background: var(--danger);
+                color: #fff;
+                padding: 0.2rem 0.6rem;
+                border-radius: 2rem;
+                font-size: 0.7rem;
+                font-weight: 800;
+                z-index: 10;
+            }
 
-                .sale-badge {
-                    position: absolute;
-                    top: 0.75rem;
-                    left: 0.75rem;
-                    background: var(--danger);
-                    color: #fff;
-                    padding: 0.2rem 0.6rem;
-                    border-radius: 2rem;
-                    font-size: 0.7rem;
-                    font-weight: 800;
-                    z-index: 10;
-                }
+            .product-info {
+                padding: 1rem;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
 
-                .product-info {
-                    padding: 1rem;
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                }
+            .brand-label {
+                font-size: 0.65rem;
+                font-weight: 700;
+                color: var(--primary);
+                text-transform: uppercase;
+                margin-bottom: 0.25rem;
+            }
 
-                .brand-label {
-                    font-size: 0.65rem;
-                    font-weight: 700;
-                    color: var(--primary);
-                    text-transform: uppercase;
-                    margin-bottom: 0.25rem;
-                }
+            .product-name {
+                font-size: 0.875rem;
+                font-weight: 600;
+                line-height: 1.3;
+                color: var(--text-main);
+                margin-bottom: 0.75rem;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                height: 2.6em;
+            }
 
-                .product-name {
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                    line-height: 1.3;
-                    color: var(--text-main);
-                    margin-bottom: 0.75rem;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                    height: 2.6em;
-                }
+            .price-row {
+                margin-top: auto;
+            }
 
-                .price-row {
-                    margin-top: auto;
-                }
+            .current-price {
+                font-size: 1.125rem;
+                font-weight: 800;
+                color: var(--text-main);
+            }
 
-                .current-price {
-                    font-size: 1.125rem;
-                    font-weight: 800;
-                    color: var(--text-main);
-                }
+            .sale-price {
+                color: var(--danger);
+            }
 
-                .sale-price {
-                    color: var(--danger);
-                }
+            .was-price {
+                text-decoration: line-through;
+                color: #9ca3af;
+                font-size: 0.75rem;
+                margin-left: 0.25rem;
+            }
 
-                .was-price {
-                    text-decoration: line-through;
-                    color: #9ca3af;
-                    font-size: 0.75rem;
-                    margin-left: 0.25rem;
-                }
+            .savings-info {
+                color: var(--success);
+                font-size: 0.7rem;
+                font-style: italic;
+                font-weight: 700;
+                margin-top: 1px;
+            }
 
-                .savings-info {
-                    color: var(--success);
-                    font-size: 0.7rem;
-                    font-style: italic;
-                    font-weight: 700;
-                    margin-top: 1px;
-                }
+            .search-area {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+                flex-wrap: wrap;
+            }
 
-                .search-area {
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
-                    margin-bottom: 1.5rem;
-                    flex-wrap: wrap;
-                }
+            .search-input-wrapper {
+                position: relative;
+                flex: 1;
+                min-width: 300px;
+            }
 
-                .search-input-wrapper {
-                    position: relative;
-                    flex: 1;
-                    min-width: 300px;
-                }
+            .prod-search-input {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                border-radius: 0.5rem;
+                border: 1px solid var(--border);
+                font-family: inherit;
+                font-size: 0.938rem;
+                outline: none;
+            }
 
-                .prod-search-input {
-                    width: 100%;
-                    padding: 0.75rem 1rem;
-                    border-radius: 0.5rem;
-                    border: 1px solid var(--border);
-                    font-family: inherit;
-                    font-size: 0.938rem;
-                    outline: none;
-                }
+            .on-sale-label {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                color: var(--danger);
+                font-weight: 700;
+                font-size: 0.938rem;
+                cursor: pointer;
+            }
 
-                .on-sale-label {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    color: var(--danger);
-                    font-weight: 700;
-                    font-size: 0.938rem;
-                    cursor: pointer;
-                }
+            .loading-overlay {
+                position: absolute;
+                inset: 0;
+                background: rgba(255, 255, 255, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 50;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s;
+            }
 
-                .loading-overlay {
-                    position: absolute;
-                    inset: 0;
-                    background: rgba(255, 255, 255, 0.7);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 50;
-                    opacity: 0;
-                    pointer-events: none;
-                    transition: opacity 0.2s;
-                }
+            .loading-overlay.active {
+                opacity: 1;
+                pointer-events: all;
+            }
 
-                .loading-overlay.active {
-                    opacity: 1;
-                    pointer-events: all;
-                }
+            .pagination-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 1rem;
+                margin-top: 4rem;
+            }
 
-                .pagination-container {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    gap: 1rem;
-                    margin-top: 4rem;
-                }
+            .pagination-btn {
+                padding: 0.75rem 2rem;
+                border-radius: 0.75rem;
+                border: 1px solid var(--border);
+                background: #fff;
+                font-weight: 700;
+                cursor: pointer;
+            }
 
-                .pagination-btn {
-                    padding: 0.75rem 2rem;
-                    border-radius: 0.75rem;
-                    border: 1px solid var(--border);
-                    background: #fff;
-                    font-weight: 700;
-                    cursor: pointer;
-                }
+            .pagination-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
 
-                .pagination-btn:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
+            .discounts-btn {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.625rem 1.25rem;
+                background: var(--primary);
+                color: #1a1a1a;
+                border: none;
+                border-radius: 3rem;
+                font-weight: 700;
+                font-size: 0.938rem;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(255, 209, 92, 0.2);
+                margin-left: auto;
+            }
 
-                /* Discounts Modal/Dropdown */
-                .discounts-btn {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    padding: 0.625rem 1.25rem;
-                    background: var(--primary);
-                    color: #1a1a1a;
-                    border: none;
-                    border-radius: 3rem;
-                    font-weight: 700;
-                    font-size: 0.938rem;
-                    cursor: pointer;
-                    box-shadow: 0 4px 12px rgba(255, 209, 92, 0.2);
-                    margin-left: auto;
-                }
+            .discounts-dropdown {
+                display: none;
+                position: absolute;
+                top: calc(100% + 1rem);
+                right: 0;
+                width: 450px;
+                max-height: 500px;
+                background: #fff;
+                border-radius: 1.5rem;
+                border: 1px solid var(--border);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                z-index: 1100;
+                padding: 1.5rem;
+                flex-direction: column;
+            }
 
+            @media (max-width: 768px) {
                 .discounts-dropdown {
-                    display: none;
-                    position: absolute;
-                    top: calc(100% + 1rem);
-                    right: 0;
-                    width: 450px;
-                    max-height: 500px;
-                    background: #fff;
-                    border-radius: 1.5rem;
-                    border: 1px solid var(--border);
-                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-                    z-index: 1100;
-                    padding: 1.5rem;
-                    flex-direction: column;
-                }
-
-                @media (max-width: 768px) {
-                    .discounts-dropdown {
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        width: 100%;
-                        max-height: 100vh;
-                        border-radius: 0;
-                        padding: 1rem;
-                    }
-                }
-
-                .discounts-overlay {
-                    display: none;
                     position: fixed;
-                    inset: 0;
-                    background: rgba(0, 0, 0, 0.4);
-                    backdrop-filter: blur(4px);
-                    z-index: 1050;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    width: 100%;
+                    max-height: 100vh;
+                    border-radius: 0;
+                    padding: 1rem;
                 }
+            }
 
-                .discounts-overlay.active,
-                .discounts-dropdown.active {
-                    display: flex;
-                }
+            .discounts-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(4px);
+                z-index: 1050;
+            }
 
-                .offer-card {
-                    background: #fff;
-                    border: 1px solid var(--border);
-                    border-radius: 1rem;
-                    padding: 1.25rem;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
+            .discounts-overlay.active,
+            .discounts-dropdown.active {
+                display: flex;
+            }
 
-                .offer-card:hover {
-                    border-color: var(--primary);
-                    background: var(--primary-light);
-                }
+            .offer-card {
+                background: #fff;
+                border: 1px solid var(--border);
+                border-radius: 1rem;
+                padding: 1.25rem;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
 
-                @keyframes spin {
-                    to {
-                        transform: rotate(360deg);
-                    }
+            .offer-card:hover {
+                border-color: var(--primary);
+                background: var(--primary-light);
+            }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
                 }
-            </style>
+            }
+        </style>
 </head>
 
 <body>
@@ -508,7 +487,7 @@
                                         style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; position: sticky; top: 0; background: white; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
                                         <h2 style="font-size: 1.25rem; font-weight: 800;">Exclusive Offers</h2>
                                         <button onclick="toggleDiscounts()"
-                                            style="background: none; border: none; cursor: pointer; padding: 0.5rem; color: var(--text-secondary);">
+                                            style="background: none; border: none; cursor: padding: 0.5rem; color: var(--text-secondary);">
                                             <svg width="24" height="24" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -522,20 +501,11 @@
                                     </div>
                                     <div id="offers-list"
                                         style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem;">
-                                        <% const isRealCode=(code)=> {
-                                            if (!code) return false;
-                                            const clean = String(code).trim().toUpperCase();
-                                            const nonCodes = ['N/A', 'NONE', 'NO CODE', 'NO CODE REQUIRED', 'NO COUPON
-                                            CODE', 'NO COUPON CODE REQUIRED', 'NO COUPON REQUIRED', 'NO PROMO CODE
-                                            REQUIRED', 'NO PROMO REQUIRED', 'SEE SITE', 'CLICK TO REVEAL',
-                                            'AUTO-APPLIED', 'ONLINE ONLY', 'NULL', 'UNDEFINED', ''];
-                                            return !nonCodes.includes(clean);
-                                            };
-                                            offers.sort((a,b) => {
-                                            const hasCodeA = isRealCode(a.code);
-                                            const hasCodeB = isRealCode(b.code);
-                                            if(hasCodeA && !hasCodeB) return -1;
-                                            if(!hasCodeA && hasCodeB) return 1;
+                                        <% offers.sort((a,b)=> {
+                                            const hasA = h.isRealCode(a.code);
+                                            const hasB = h.isRealCode(b.code);
+                                            if(hasA && !hasB) return -1;
+                                            if(!hasA && hasB) return 1;
                                             const tA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
                                             const tB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
                                             return tA - tB;
@@ -547,7 +517,7 @@
                                                 </div>
                                                 <div
                                                     style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
-                                                    <% if (isRealCode(o.code)) { %>
+                                                    <% if (h.isRealCode(o.code)) { %>
                                                         <div
                                                             style="font-family: monospace; padding: 0.25rem 0.625rem; background: var(--primary-light); border: 2px dashed var(--primary); border-radius: 0.5rem; color: #1a1a1a; font-weight: 800; font-size: 0.875rem;">
                                                             <%= o.code %>
@@ -604,7 +574,7 @@
             <div id="product-grid" class="product-grid">
                 <% if (typeof products !=='undefined' && Array.isArray(products)) { %>
                     <% products.forEach(p=> {
-                        const isSale = checkIsSale(p.price, p.salePrice);
+                        const isSale = h.checkIsSale(p.price, p.salePrice);
                         const brandSlug = (p.advertiserName || 'brand').toLowerCase().replace(/\s+/g, '-');
                         %>
                         <a href="/<%= brandSlug %>/<%= p.slug %>" class="product-card" data-sale="<%= isSale %>">
@@ -625,14 +595,14 @@
                                 <div class="price-row">
                                     <% if (isSale) { %>
                                         <div style="display:flex; flex-direction:column;">
-                                            <div><span class="current-price sale-price">$<%= formatPrice(p.salePrice) %>
-                                                        </span> <span class="was-price">$<%= formatPrice(p.price) %>
+                                            <div><span class="current-price sale-price">$<%= h.formatPrice(p.salePrice)
+                                                        %></span> <span class="was-price">$<%= h.formatPrice(p.price) %>
                                                         </span></div>
-                                            <div class="savings-info">Save $<%= formatPrice(getNum(p.price) -
-                                                    getNum(p.salePrice)) %>!</div>
+                                            <div class="savings-info">Save $<%= h.formatPrice(h.getNum(p.price) -
+                                                    h.getNum(p.salePrice)) %>!</div>
                                         </div>
                                         <% } else { %>
-                                            <span class="current-price">$<%= formatPrice(p.price) %></span>
+                                            <span class="current-price">$<%= h.formatPrice(p.price) %></span>
                                             <% } %>
                                 </div>
                             </div>

@@ -124,6 +124,11 @@ app.use((req, res, next) => {
 // Favicon Routing
 app.get('/favicon.ico', (req, res) => res.redirect('/favicon.png'));
 
+// Chrome DevTools Connectivity
+app.all('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
+    res.status(200).json({ ok: true });
+});
+
 // Static Files
 app.use(express.static(path.join(__dirname, '../public'), {
     etag: false,
@@ -224,6 +229,17 @@ app.get('/:brandSlug/:productSlug', productController.getProductDetail);
 // Export the new controller function if it's not already exported
 // Note: We need to make sure globalProductSearch is in the exports of dashboardController.js
 
+
+// 404 Handler
+app.use((req, res) => {
+    res.status(404).render('404', { message: "We couldn't find what you were looking for." });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error('GLOBAL ERROR:', err);
+    res.status(500).render('404', { message: "Internal Server Error: " + err.message });
+});
 
 // Initialize and Start Server
 initializeApp().then(() => {
