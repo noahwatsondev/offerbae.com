@@ -29,9 +29,34 @@ const isRealCode = (code) => {
     return !nonCodes.includes(clean);
 };
 
+const formatTimeLeft = (endDateStr) => {
+    if (!endDateStr || endDateStr.startsWith('0000-00-00')) return '<span style="color: #10b981; font-weight: 700;">Never Expires</span>';
+    const end = new Date(endDateStr);
+    if (isNaN(end.getTime())) return '<span style="color: #10b981; font-weight: 700;">Never Expires</span>';
+
+    const now = new Date();
+    const diff = end - now;
+    if (diff <= 0) return `<span style="color: #ef4444; font-weight: 700;">Expired (${end.toLocaleDateString()})</span>`;
+
+    const msPerDay = 86400000;
+    const msPerYear = msPerDay * 365.25;
+    const years = Math.floor(diff / msPerYear);
+    const days = Math.floor((diff % msPerYear) / msPerDay);
+    const hours = Math.floor((diff % msPerDay) / 3600000);
+
+    let p = [];
+    if (years > 0) p.push(`<b>${years}</b> year${years !== 1 ? 's' : ''}`);
+    if (days > 0 || years > 0) p.push(`<b>${days}</b> day${days !== 1 ? 's' : ''}`);
+    p.push(`<b>${hours}</b> hour${hours !== 1 ? 's' : ''}`);
+
+    const isUrgent = diff < msPerDay * 7;
+    return `<span style="color: ${isUrgent ? '#ef4444' : '#10b981'}; font-weight: 500;">${p.join(', ')}</span>`;
+};
+
 module.exports = {
     getNum,
     formatPrice,
     checkIsSale,
-    isRealCode
+    isRealCode,
+    formatTimeLeft
 };
