@@ -578,8 +578,9 @@
                                             const hasCodeB = isRealCode(b.code);
                                             if(hasCodeA && !hasCodeB) return -1;
                                             if(!hasCodeA && hasCodeB) return 1;
-                                            return (a.endDate ? new Date(a.endDate).getTime() : Infinity) - (b.endDate ?
-                                            new Date(b.endDate).getTime() : Infinity);
+                                            const timeA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
+                                            const timeB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
+                                            return timeA - timeB;
                                             }).forEach(o => { %>
                                             <div class="offer-card" onclick="window.open('<%= o.link %>', '_blank')">
                                                 <div
@@ -616,7 +617,7 @@
                                                                 </div>
                                                 </div>
                                             </div>
-                                            <% }) %>
+                                            <% }); %>
                                     </div>
                                 </div>
                             </div>
@@ -630,7 +631,8 @@
                 </div>
                 <label class="on-sale-label">
                     <input type="checkbox" id="sale-only-toggle"
-                        style="width:18px;height:18px;accent-color:var(--danger);" checked>
+                        style="width:18px;height:18px;accent-color:var(--danger);" <%=(typeof filters==='undefined' ||
+                        filters.sale !=='false' ) ? 'checked' : '' %>>
                     On Sale
                 </label>
                 <select id="sort-select"
@@ -646,43 +648,44 @@
 
             <div id="product-grid" class="product-grid">
                 <% if (typeof products !=='undefined' && Array.isArray(products)) { %>
-                    <% products.forEach(p=> { %>
-                        <% const isSale=checkIsSale(p.price, p.salePrice); const brandSlug=(p.advertiserName || 'brand'
-                            ).toLowerCase().replace(/\s+/g, '-' ); %>
-                            <a href="/<%= brandSlug %>/<%= p.slug %>" class="product-card" data-sale="<%= isSale %>">
-                                <div class="product-image-wrapper">
+                    <% products.forEach(p=> {
+                        const isSale = checkIsSale(p.price, p.salePrice);
+                        const brandSlug = (p.advertiserName || 'brand').toLowerCase().replace(/\s+/g, '-');
+                        %>
+                        <a href="/<%= brandSlug %>/<%= p.slug %>" class="product-card" data-sale="<%= isSale %>">
+                            <div class="product-image-wrapper">
+                                <% if (isSale) { %>
+                                    <div class="sale-badge">SALE</div>
+                                    <% } %>
+                                        <img src="<%= p.storageImageUrl || p.imageUrl || '/placeholder.png' %>"
+                                            class="product-image" loading="lazy">
+                            </div>
+                            <div class="product-info">
+                                <span class="brand-label">
+                                    <%= p.advertiserName %>
+                                </span>
+                                <h3 class="product-name">
+                                    <%= p.name %>
+                                </h3>
+                                <div class="price-row">
                                     <% if (isSale) { %>
-                                        <div class="sale-badge">SALE</div>
-                                        <% } %>
-                                            <img src="<%= p.storageImageUrl || p.imageUrl || '/placeholder.png' %>"
-                                                class="product-image" loading="lazy">
-                                </div>
-                                <div class="product-info">
-                                    <span class="brand-label">
-                                        <%= p.advertiserName %>
-                                    </span>
-                                    <h3 class="product-name">
-                                        <%= p.name %>
-                                    </h3>
-                                    <div class="price-row">
-                                        <% if (isSale) { %>
-                                            <div style="display:flex; flex-direction:column;">
-                                                <div>
-                                                    <span class="current-price sale-price">$<%= formatPrice(p.salePrice)
-                                                            %></span>
-                                                    <span class="was-price">$<%= formatPrice(p.price) %></span>
-                                                </div>
-                                                <div class="savings-info">Save $<%= formatPrice(getNum(p.price) -
-                                                        getNum(p.salePrice)) %>!</div>
+                                        <div style="display:flex; flex-direction:column;">
+                                            <div>
+                                                <span class="current-price sale-price">$<%= formatPrice(p.salePrice) %>
+                                                        </span>
+                                                <span class="was-price">$<%= formatPrice(p.price) %></span>
                                             </div>
-                                            <% } else { %>
-                                                <span class="current-price">$<%= formatPrice(p.price) %></span>
-                                                <% } %>
-                                    </div>
+                                            <div class="savings-info">Save $<%= formatPrice(getNum(p.price) -
+                                                    getNum(p.salePrice)) %>!</div>
+                                        </div>
+                                        <% } else { %>
+                                            <span class="current-price">$<%= formatPrice(p.price) %></span>
+                                            <% } %>
                                 </div>
-                            </a>
-                            <% }); %>
-                                <% } %>
+                            </div>
+                        </a>
+                        <% }); %>
+                            <% } %>
             </div>
 
             <div class="pagination-container">
