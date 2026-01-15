@@ -658,6 +658,14 @@
 
                                                     <div
                                                         style="padding: 0.5rem; font-size: 0.7rem; font-weight: bold; background: #f3f4f6; color: #6b7280; border-bottom: 1px solid var(--border);">
+                                                        DESCRIPTION
+                                                    </div>
+                                                    <a href="javascript:void(0)"
+                                                        onclick="openDescriptionModal('<%= adv.id %>', `<%= (adv.manualDescription || adv.description || '').replace(/`/g, '\\`') %>`)"
+                                                        style="color: var(--primary); padding: 8px 12px; text-decoration: none; display: block; font-size: 0.8rem; border-bottom: 1px solid var(--border);">Update</a>
+
+                                                    <div
+                                                        style="padding: 0.5rem; font-size: 0.7rem; font-weight: bold; background: #f3f4f6; color: #6b7280; border-bottom: 1px solid var(--border);">
                                                         LOGO
                                                     </div>
                                                     <a href="javascript:void(0)"
@@ -1485,6 +1493,75 @@
                 </div>
             </div>
         </div>
+        </div>
+
+        <!-- Description Modal -->
+        <div id="descriptionModal"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
+            <div
+                style="background: white; padding: 2rem; border-radius: 8px; width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--text-primary);">Update Brand Description
+                </h3>
+                <textarea id="modalDescriptionInput" rows="6" placeholder="Enter custom description..."
+                    style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; resize: vertical;"></textarea>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button onclick="closeDescriptionModal()"
+                        style="background: transparent; border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    <button id="modalDescSubmitBtn" onclick="submitDescription()"
+                        style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let currentDescAdvId = null;
+
+            function openDescriptionModal(id, currentDesc) {
+                currentDescAdvId = id;
+                const input = document.getElementById('modalDescriptionInput');
+                // Decode if necessary or just use raw string
+                input.value = currentDesc || '';
+                document.getElementById('descriptionModal').style.display = 'flex';
+            }
+
+            function closeDescriptionModal() {
+                document.getElementById('descriptionModal').style.display = 'none';
+                currentDescAdvId = null;
+            }
+
+            async function submitDescription() {
+                if (!currentDescAdvId) return;
+
+                const input = document.getElementById('modalDescriptionInput');
+                const newVal = input.value.trim();
+                const btn = document.getElementById('modalDescSubmitBtn');
+
+                try {
+                    btn.textContent = 'Saving...';
+                    btn.disabled = true;
+
+                    const res = await fetch(`/api/advertiser/${currentDescAdvId}/description`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ description: newVal })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Error updating description: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Error updating description');
+                } finally {
+                    btn.textContent = 'Save';
+                    btn.disabled = false;
+                    closeDescriptionModal();
+                }
+            }
+        </script>
 </body>
 
 </html>

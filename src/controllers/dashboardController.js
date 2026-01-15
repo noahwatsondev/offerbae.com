@@ -716,6 +716,36 @@ const updateHomeLink = async (req, res) => {
     }
 };
 
+const updateDescription = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { description } = req.body;
+        // Logic similar to updateHomeLink
+        let existing = await getAdvertiser('Rakuten', id);
+        if (!existing) {
+            existing = await getAdvertiser('CJ', id);
+        }
+        if (!existing) {
+            existing = await getAdvertiser('AWIN', id);
+        }
+
+        if (!existing) {
+            return res.status(404).json({ success: false, error: 'Advertiser not found' });
+        }
+
+        await upsertAdvertiser({
+            ...existing,
+            manualDescription: description
+        }, existing);
+
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error('Error updating description:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+};
+
 const proxyImage = async (req, res) => {
     try {
         const { url } = req.query;
@@ -740,46 +770,6 @@ const proxyImage = async (req, res) => {
 
 
 
-const debugFyreLux = async (req, res) => {
-    try {
-        const db = firebaseConfig.db;
-        console.log('DEBUG: Finding FyreLux advertisers...');
-        const advSnapshot = await db.collection('advertisers').where('name', '==', 'FyreLux').get();
-
-        const results = [];
-        if (advSnapshot.empty) {
-            return res.json({ message: 'No FyreLux advertisers found.' });
-        }
-
-        for (const doc of advSnapshot.docs) {
-            const adv = doc.data();
-            const id = adv.id;
-
-            // Check products for this ID (string and number)
-            const pSnapStr = await db.collection('products').where('advertiserId', '==', String(id)).count().get();
-            const pSnapNum = await db.collection('products').where('advertiserId', '==', Number(id)).count().get();
-
-            // Check offers too
-            const oSnap = await db.collection('offers').where('advertiserId', '==', String(id)).count().get();
-
-            results.push({
-                docId: doc.id,
-                advId: id,
-                name: adv.name,
-                productsCountString: pSnapStr.data().count,
-                productsCountNumber: pSnapNum.data().count,
-                offersCount: oSnap.data().count
-            });
-        }
-
-        res.json({ success: true, count: results.length, data: results });
-
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: e.message });
-    }
-};
-
 module.exports = {
     getDashboardData,
     refreshData,
@@ -789,12 +779,12 @@ module.exports = {
     uploadLogo,
     resetLogo,
     updateHomeLink,
+    updateDescription,
     uploadLogoMiddleware,
     getHomepage,
     getArchitecture,
     getStyle,
     updateStyle,
     uploadStyleMiddleware,
-    proxyImage,
-    debugFyreLux
+    proxyImage
 };

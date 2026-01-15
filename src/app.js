@@ -217,9 +217,9 @@ app.get('/api/advertiser/:id/offers', dashboardController.getAdvertiserOffers);
 app.post('/api/advertiser/:id/logo/upload', dashboardController.uploadLogoMiddleware, dashboardController.uploadLogo);
 app.post('/api/advertiser/:id/logo/reset', dashboardController.resetLogo);
 app.post('/api/advertiser/:id/homelink', express.json(), dashboardController.updateHomeLink);
+app.post('/api/advertiser/:id/description', express.json(), dashboardController.updateDescription);
 app.get('/api/products/search', dashboardController.globalProductSearch);
 app.get('/api/proxy-image', dashboardController.proxyImage);
-app.get('/api/debug/fyrelux', dashboardController.debugFyreLux);
 app.get('/mission-control', dashboardController.getDashboardData);
 
 // SEO & Catalog Routes (Must be last to avoid catching specific routes)

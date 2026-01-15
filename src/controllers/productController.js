@@ -15,7 +15,7 @@ const getCatalogPage = async (req, res) => {
         const db = firebaseConfig.db;
         const { slug } = req.params;
         const page = parseInt(req.query.page) || 1;
-        const limit = 24;
+        const limit = 50;
         const offset = (page - 1) * limit;
 
         // 1. Try to find a Brand matching this slug
@@ -26,6 +26,9 @@ const getCatalogPage = async (req, res) => {
 
         if (!brandSnap.empty) {
             const brand = brandSnap.docs[0].data();
+            if (brand.manualDescription) {
+                brand.description = brand.manualDescription;
+            }
             return renderCatalog(req, res, {
                 type: 'brand',
                 data: brand,
@@ -34,17 +37,13 @@ const getCatalogPage = async (req, res) => {
             });
         }
 
-        // 2. Try to find if this is a Category
+        // 2. Try to find if this is a Category -- DISABLED TEMPORARILY
         // We look for any brand that has this category (slugified)
         // Since we don't store a separate categories collection, we'll check against a set of known categories 
         // derived from the advertisers. To be efficient, we'd ideally have a categories collection.
         // For now, let's look for any advertiser where the categories list contains something that slugifies to this.
 
-        // Better: Fetch all distinct categories once or use a fixed list if we have one.
-        // Let's assume for now any slug that doesn't match a brand might be a category.
-        // We'll query products where advertiserName or categories might match? 
-        // Actually, advertisers have categories.
-
+        /* 
         // Find brands in this category
         const allAdvsSnap = await db.collection('advertisers').get();
         const brandsInCat = allAdvsSnap.docs
@@ -60,6 +59,7 @@ const getCatalogPage = async (req, res) => {
                 description: `Discover the best deals, coupons, and products in the ${catName} category from top brands.`
             });
         }
+        */
 
         // 3. Fallback: Check if it's a Product Detail Page (/:brandSlug/:productSlug)
         // This is handled by a different route in app.js
@@ -77,7 +77,7 @@ const renderCatalog = async (req, res, context) => {
     const { getGlobalSettings } = require('../services/db');
     const settings = await getGlobalSettings();
     const page = parseInt(req.query.page) || 1;
-    const limit = 24;
+    const limit = 50;
 
     // 4. Handle Search Query
     const q = req.query.q ? req.query.q.toLowerCase().trim() : '';
@@ -139,7 +139,10 @@ const renderCatalog = async (req, res, context) => {
             products = products.slice(start, start + limit);
             hasNextPage = totalCount > page * limit;
         } else {
-            // Normal Mode: Optimized sorting & pagination
+            // Normal Mode: In-Memory Sorting & Pagination
+            // We fetch all products for the brand/category (up to a reasonable limit)
+            // and perform sorting/pagination in memory to avoid Firestore Index errors
+            // and ensure correct numeric sorting even if data is mixed strings/numbers.
             let query = db.collection('products');
 
             if (context.type === 'brand') {
@@ -149,23 +152,39 @@ const renderCatalog = async (req, res, context) => {
                 query = query.where('advertiserId', 'in', brandIds);
             }
 
-            const sort = req.query.sort || 'newest';
-            if (sort === 'newest') query = query.orderBy('updatedAt', 'desc');
-            else if (sort === 'price-low') query = query.orderBy('price', 'asc');
-            else if (sort === 'price-high') query = query.orderBy('price', 'desc');
+            // Fetch up to 1000 products to sort in-memory
+            const snapshot = await query.limit(1000).get();
+            let allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            const snapshot = await query.limit(limit).offset((page - 1) * limit).get();
-            products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            hasNextPage = products.length === limit;
-            totalCount = context.type === 'brand' ? (context.data.productCount || 0) : 0;
+            // Apply Sorting
+            const sort = req.query.sort || 'newest';
+            const getPrice = (p) => {
+                const v = parseFloat(p.price);
+                return isNaN(v) ? 0 : v;
+            };
+            const getDate = (p) => {
+                return p.updatedAt ? (p.updatedAt._seconds || new Date(p.updatedAt).getTime()) : 0;
+            };
+
+            if (sort === 'newest') {
+                allProducts.sort((a, b) => getDate(b) - getDate(a));
+            } else if (sort === 'price-low') {
+                allProducts.sort((a, b) => getPrice(a) - getPrice(b));
+            } else if (sort === 'price-high') {
+                allProducts.sort((a, b) => getPrice(b) - getPrice(a));
+            }
+
+            // Apply Pagination
+            totalCount = allProducts.length;
+            const start = (page - 1) * limit;
+            products = allProducts.slice(start, start + limit);
+            hasNextPage = totalCount > page * limit;
         }
 
         if (req.query.format === 'json') {
             return res.json({ products, page, hasNextPage, totalCount });
         }
 
-        // Clear cache and re-require helpers to ensure all functions are available
-        try { delete require.cache[require.resolve('../utils/ejsHelpers')]; } catch (e) { }
         const ejsHelpers = require('../utils/ejsHelpers');
 
         res.render('catalog', {
@@ -177,6 +196,7 @@ const renderCatalog = async (req, res, context) => {
             filters: req.query,
             settings,
             hasNextPage,
+            totalCount,
             h: ejsHelpers
         });
     } catch (error) {
@@ -211,8 +231,6 @@ const getProductDetail = async (req, res) => {
         const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
 
-        // Clear cache and re-require helpers to ensure all functions are available
-        try { delete require.cache[require.resolve('../utils/ejsHelpers')]; } catch (e) { }
         const ejsHelpers = require('../utils/ejsHelpers');
 
         res.render('product', {

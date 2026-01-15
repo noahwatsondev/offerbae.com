@@ -76,7 +76,6 @@
             }
 
             .header-container {
-                max-width: 1400px;
                 margin: 0 auto;
                 padding: 0 2rem;
                 width: 100%;
@@ -86,12 +85,11 @@
             }
 
             .container {
-                max-width: 1600px;
                 margin: 0 auto;
-                padding: 2rem;
+                padding: 1rem;
                 display: grid;
-                grid-template-columns: 280px 1fr;
-                gap: 2rem;
+                grid-template-columns: 360px 1fr;
+                gap: 1rem;
             }
 
             @media (max-width: 1200px) {
@@ -102,6 +100,10 @@
 
                 aside {
                     display: none;
+                }
+
+                .mobile-offers-btn {
+                    display: block !important;
                 }
 
                 .brand-heading {
@@ -123,9 +125,9 @@
             }
 
             aside {
-                background: #fff;
+                background: rgba(255, 255, 255, .9);
                 border-radius: 1rem;
-                padding: 1.5rem;
+                padding: 1rem;
                 border: 1px solid var(--border);
                 height: fit-content;
             }
@@ -138,9 +140,9 @@
                 font-weight: 700;
                 font-size: 1rem;
                 margin-bottom: 1rem;
-                display: block;
-                border-left: 4px solid var(--primary);
-                padding-left: 0.75rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
             }
 
             .product-grid {
@@ -492,29 +494,102 @@
                                 %>
                         </h1>
             </div>
+
+
+
         </div>
     </header>
 
     <div class="container">
         <aside>
             <div class="filter-group">
-                <span class="filter-title">Price Range</span>
-                <label
-                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
-                    <input type="checkbox" name="price" value="0-25" class="sidebar-filter"> Under $25
-                </label>
-                <label
-                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
-                    <input type="checkbox" name="price" value="25-50" class="sidebar-filter"> $25 - $50
-                </label>
-                <label
-                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
-                    <input type="checkbox" name="price" value="50-100" class="sidebar-filter"> $50 - $100
-                </label>
-                <label
-                    style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
-                    <input type="checkbox" name="price" value="100+" class="sidebar-filter"> $100+
-                </label>
+                <% if (typeof offers !=='undefined' && offers.length> 0) { %>
+                    <span class="filter-title">
+                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            style="color: var(--primary);">
+                            <path stroke-width="2"
+                                d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                        </svg>
+                        <%= offers.length %> Active <%= offers.length===1 ? 'Offer' : 'Offers' %> for <%= data.name %>
+                    </span>
+                    <!-- Search Offers -->
+                    <div style="margin-bottom: 0.75rem;">
+                        <input type="text" id="offer-filter" placeholder="Search offers..."
+                            style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: 1px solid var(--border); font-family: inherit; font-size: 0.85rem; outline: none;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <% offers.sort((a,b)=> {
+                            const hasA = h.isRealCode(a.code);
+                            const hasB = h.isRealCode(b.code);
+                            if(hasA && !hasB) return -1;
+                            if(!hasA && hasB) return 1;
+                            const tA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
+                            const tB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
+                            return tA - tB;
+                            }).forEach(o => { %>
+                            <div class="offer-row" onclick="window.open('<%= o.link %>', '_blank')"
+                                style="margin-bottom: 0;">
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div
+                                            style="font-weight: 600; font-size: 0.9rem; color: var(--text-main); word-break: break-word; line-height: 1.35;">
+                                            <%= o.description %>
+                                        </div>
+                                        <div
+                                            style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                            Expires: <%- h.formatTimeLeft(o.endDate) %>
+                                        </div>
+                                        <% const hasCode=h.isRealCode(o.code); %>
+                                            <% if (hasCode) { %>
+                                                <div
+                                                    style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                                    <span
+                                                        style="font-family: monospace; padding: 0.25rem 0.5rem; background: #eef2ff; border: 2px dashed #818cf8; border-radius: 0.375rem; color: #4338ca; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">
+                                                        <%= o.code %>
+                                                    </span>
+                                                    <span
+                                                        style="font-size: 0.7rem; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 4px;"
+                                                        onclick="event.stopPropagation(); navigator.clipboard.writeText('<%= (o.code || '').replace(/'/g, '\\\'') %>'); this.style.color='#10b981'; this.lastChild.textContent='Copied!'; setTimeout(()=>{this.lastChild.textContent='Copy/Redeem'; this.style.color='';}, 2000)">
+                                                        <svg width="12" height="12" fill="none" viewBox="0 0 24 24"
+                                                            stroke="currentColor">
+                                                            <path stroke-width="2"
+                                                                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2" />
+                                                        </svg>
+                                                        <span>Copy/Redeem</span>
+                                                    </span>
+                                                </div>
+                                                <% } else { %>
+                                                    <div style="margin-top: 0.5rem;">
+                                                        <span
+                                                            style="padding: 0.2rem 0.5rem; background: #eef2ff; border: 1px solid #818cf8; border-radius: 0.375rem; color: #4338ca; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
+                                                            Redeem &rarr;
+                                                        </span>
+                                                    </div>
+                                                    <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                            <% }) %>
+                    </div>
+                    <% } else { %>
+                        <span class="filter-title">Price Range</span>
+                        <label
+                            style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
+                            <input type="checkbox" name="price" value="0-25" class="sidebar-filter"> Under $25
+                        </label>
+                        <label
+                            style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
+                            <input type="checkbox" name="price" value="25-50" class="sidebar-filter"> $25 - $50
+                        </label>
+                        <label
+                            style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
+                            <input type="checkbox" name="price" value="50-100" class="sidebar-filter"> $50 - $100
+                        </label>
+                        <label
+                            style="display:flex; align-items:center; gap:0.5rem; font-size:0.875rem; margin-bottom:0.5rem; cursor:pointer;">
+                            <input type="checkbox" name="price" value="100+" class="sidebar-filter"> $100+
+                        </label>
+                        <% } %>
             </div>
         </aside>
 
@@ -525,10 +600,10 @@
                 </div>
             </div>
 
-            <div style="margin-bottom: 2.5rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="margin-bottom: 2.5rem; display: flex; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap;">
                 <% if (type==='brand' && (data.storageLogoUrl || data.logoUrl)) { %>
                     <div
-                        style="width: 80px; height: 80px; flex-shrink: 0; background: #fff; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                        style="width: 100px; height: 100px; flex-shrink: 0; background: #fff; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                         <img src="<%= data.storageLogoUrl || data.logoUrl %>" alt="<%= data.name %>"
                             style="max-width: 100%; max-height: 100%; object-fit: contain; padding: 0.75rem;">
                     </div>
@@ -555,130 +630,60 @@
                         </div>
 
                         <% if (typeof offers !=='undefined' && offers.length> 0) { %>
-                            <div class="discounts-dropdown-container">
-                                <button class="discounts-btn" onclick="toggleDiscounts()">
-                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            <div class="mobile-offers-btn" style="width: 100%; margin-top: 1rem; display: none;">
+                                <button onclick="toggleDiscounts()"
+                                    style="width: 100%; padding: 0.75rem; background: var(--bg-body); border: 1px solid var(--border); border-radius: 0.5rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-width="2"
                                             d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                                     </svg>
-                                    <span>
-                                        <%= (offers.length).toLocaleString() %>
-                                            <%= (offers.length===1) ? 'Offer' : 'Offers' %>
-                                    </span>
-                                    <% if (data.hasPromoCodes) { %>
-                                        <span class="badge-code">CODE</span>
-                                        <% } %>
+                                    View <%= offers.length %> Active <%= offers.length===1 ? 'Offer' : 'Offers' %>
                                 </button>
-                                <div id="discounts-overlay" class="discounts-overlay" onclick="toggleDiscounts()"></div>
-                                <div id="discounts-dropdown" class="discounts-dropdown">
-                                    <div
-                                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; position: sticky; top: 0; background: white; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
-                                        <h2 style="font-size: 1.25rem; font-weight: 800;">Exclusive Offers</h2>
-                                        <button onclick="toggleDiscounts()"
-                                            style="background: none; border: none; cursor: pointer; padding: 0.5rem; color: var(--text-secondary);">
-                                            <svg width="24" height="24" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <div style="margin-bottom: 1.5rem;">
-                                        <input type="text" id="offer-filter" placeholder="Search offers..."
-                                            style="width: 100%; padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid var(--border); font-family: inherit; font-size: 0.938rem; outline: none;">
-                                    </div>
-                                    <div id="offers-list"
-                                        style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; padding: 0.25rem;">
-                                        <% offers.sort((a,b)=> {
-                                            const hasA = h.isRealCode(a.code);
-                                            const hasB = h.isRealCode(b.code);
-                                            if(hasA && !hasB) return -1;
-                                            if(!hasA && hasB) return 1;
-                                            const tA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
-                                            const tB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
-                                            return tA - tB;
-                                            }).forEach(o => { %>
-                                            <div class="offer-row" onclick="window.open('<%= o.link %>', '_blank')">
-                                                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                                                    <div style="flex-shrink: 0; opacity: 0.75;">
-                                                        <svg width="40" height="40" fill="none" viewBox="0 0 24 24"
-                                                            stroke="#8b5cf6">
-                                                            <path stroke-width="2"
-                                                                d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                                                        </svg>
-                                                    </div>
-                                                    <div style="flex: 1; min-width: 0;">
-                                                        <div
-                                                            style="font-weight: 600; font-size: 1.063rem; color: var(--text-main); word-break: break-word; line-height: 1.4;">
-                                                            <%= o.description %>
-                                                        </div>
-                                                        <div
-                                                            style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                                                            Expires: <%- h.formatTimeLeft(o.endDate) %>
-                                                        </div>
-
-                                                        <% const hasCode=h.isRealCode(o.code); %>
-                                                            <div
-                                                                style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
-                                                                <% if (hasCode) { %>
-                                                                    <span
-                                                                        style="font-family: monospace; padding: 0.375rem 0.75rem; background: #eef2ff; border: 2px dashed #818cf8; border-radius: 0.375rem; color: #4338ca; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">
-                                                                        <%= o.code %>
-                                                                    </span>
-                                                                    <span
-                                                                        style="cursor: pointer; color: var(--text-secondary); font-size: 0.75rem; display: flex; align-items: center; gap: 4px;"
-                                                                        onclick="event.stopPropagation(); navigator.clipboard.writeText('<%= (o.code || '').replace(/'/g, '\\\'') %>'); this.lastChild.textContent = ' Copied!'; this.style.color='#10b981'; setTimeout(()=>{this.lastChild.textContent = ' Copy/Redeem'; this.style.color='';}, 2000)">
-                                                                        <svg width="14" height="14" fill="none"
-                                                                            viewBox="0 0 24 24" stroke="currentColor">
-                                                                            <path stroke-width="2"
-                                                                                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2" />
-                                                                        </svg> Copy/Redeem
-                                                                    </span>
-                                                                    <% } else { %>
-                                                                        <span
-                                                                            style="padding: 0.375rem 0.75rem; background: #eef2ff; border: 1px solid #818cf8; border-radius: 0.375rem; color: #4338ca; font-weight: 700; font-size: 1rem; display: inline-flex; align-items: center; gap: 6px;">
-                                                                            <svg width="18" height="18" fill="none"
-                                                                                viewBox="0 0 24 24"
-                                                                                stroke="currentColor">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    stroke-width="2"
-                                                                                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                                                                            </svg>
-                                                                            Redeem
-                                                                        </span>
-                                                                        <% } %>
-                                                            </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <% }) %>
-                                    </div>
-                                </div>
                             </div>
                             <% } %>
             </div>
 
             <div class="search-area">
                 <div class="search-input-wrapper">
-                    <input type="text" id="prod-search" class="prod-search-input" placeholder="Search..."
+                    <input type="text" id="prod-search" class="prod-search-input"
+                        placeholder="Search <%= (typeof totalCount !=='undefined' ) ? totalCount.toLocaleString() : '0' %> products..."
                         value="<%= (typeof filters !== 'undefined' && filters.q) ? filters.q : '' %>">
                 </div>
-                <label class="on-sale-label">
-                    <input type="checkbox" id="sale-only-toggle"
-                        style="width:18px;height:18px;accent-color:var(--danger);" <%=(typeof filters==='undefined' ||
-                        filters.sale !=='false' ) ? 'checked' : '' %>>
-                    On Sale
-                </label>
-                <select id="sort-select"
-                    style="padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); font-family: inherit; font-weight: 600;">
-                    <option value="newest" <%=(typeof sort !=='undefined' && sort==='newest' ) ? 'selected' : '' %>
-                        >Newest</option>
-                    <option value="price-low" <%=(typeof sort !=='undefined' && sort==='price-low' ) ? 'selected' : ''
-                        %>>Price: Low-High</option>
-                    <option value="price-high" <%=(typeof sort !=='undefined' && sort==='price-high' ) ? 'selected' : ''
-                        %>>Price: High-Low</option>
-                </select>
+                <% if (typeof type==='undefined' || type !=='brand' || (typeof data !=='undefined' &&
+                    data.hasSaleItems)) { %>
+                    <label class="on-sale-label">
+                        <input type="checkbox" id="sale-only-toggle"
+                            style="width:18px;height:18px;accent-color:var(--danger);" <%=(typeof filters==='undefined'
+                            || filters.sale !=='false' ) ? 'checked' : '' %>>
+                        On Sale
+                    </label>
+                    <% } %>
+                        <select id="sort-select"
+                            style="padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); font-family: inherit; font-weight: 600;">
+                            <option value="newest" <%=(typeof sort !=='undefined' && sort==='newest' ) ? 'selected' : ''
+                                %>
+                                >Newest</option>
+                            <option value="price-low" <%=(typeof sort !=='undefined' && sort==='price-low' )
+                                ? 'selected' : '' %>>Price: Low-High</option>
+                            <option value="price-high" <%=(typeof sort !=='undefined' && sort==='price-high' )
+                                ? 'selected' : '' %>>Price: High-Low</option>
+                        </select>
+
+                        <!-- Mirrored Pagination Buttons (Compact) -->
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button id="prev-btn-top"
+                                onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); fetchProducts(currentPage - 1);"
+                                style="padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
+                                <%=(typeof page !=='undefined' && page===1) ? 'disabled' : '' %>>
+                                &larr;
+                            </button>
+                            <button id="next-btn-top"
+                                onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); fetchProducts(currentPage + 1);"
+                                style="padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
+                                <%=(typeof hasNextPage !=='undefined' && !hasNextPage) ? 'disabled' : '' %>>
+                                &rarr;
+                            </button>
+                        </div>
             </div>
 
             <div id="product-grid" class="product-grid">
@@ -722,11 +727,11 @@
             </div>
 
             <div class="pagination-container">
-                <button class="pagination-btn" id="prev-btn" <%=(typeof page !=='undefined' && page===1) ? 'disabled'
-                    : '' %>>Previous</button>
+                <button class="pagination-btn" id="prev-btn" onclick="fetchProducts(currentPage - 1);" <%=(typeof page
+                    !=='undefined' && page===1) ? 'disabled' : '' %>>Previous</button>
                 <span id="page-info">Page <%= typeof page !=='undefined' ? page : 1 %></span>
-                <button class="pagination-btn" id="next-btn" <%=(typeof hasNextPage !=='undefined' && !hasNextPage)
-                    ? 'disabled' : '' %>>Next</button>
+                <button class="pagination-btn" id="next-btn" onclick="fetchProducts(currentPage + 1);" <%=(typeof
+                    hasNextPage !=='undefined' && !hasNextPage) ? 'disabled' : '' %>>Next</button>
             </div>
         </main>
     </div>
@@ -794,13 +799,27 @@
 
         let searchTimeout;
         searchInput.oninput = () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => fetchProducts(1), 400); };
-        saleOnlyCb.onchange = () => {
-            const showSaleOnly = saleOnlyCb.checked;
-            document.querySelectorAll('.product-card').forEach(card => {
-                const isSale = card.dataset.sale === 'true';
-                card.style.display = (showSaleOnly || !isSale) ? 'flex' : 'none';
-            });
-        };
+        if (saleOnlyCb) {
+            saleOnlyCb.onchange = () => {
+                const showSaleOnly = saleOnlyCb.checked;
+                document.querySelectorAll('.product-card').forEach(card => {
+                    const isSale = card.dataset.sale === 'true';
+                    // Correction: Toggle visibility based on saleonly.
+                    // Actually, if checked, show only sales. If unchecked, show all.
+                    // Wait, previous logic was: `(showSaleOnly || !isSale)` which is wrong if checked?
+                    // Previous Logic RE-READ: (showSaleOnly || !isSale) ? 'flex' : 'none'
+                    // If Checked (True): (True || any) -> True (Display All?) No
+                    // Logic must be: If Checked, Show Sale Only.
+
+                    // Correct Logic:
+                    if (showSaleOnly) {
+                        card.style.display = isSale ? 'flex' : 'none';
+                    } else {
+                        card.style.display = 'flex';
+                    }
+                });
+            };
+        }
         sortSelect.onchange = () => fetchProducts(1);
         prevBtn.onclick = () => fetchProducts(currentPage - 1);
         nextBtn.onclick = () => fetchProducts(currentPage + 1);
@@ -828,6 +847,84 @@
             };
         }
     </script>
+    <!-- Mobile Discounts Modal Moved To Body End -->
+    <div id="discounts-overlay" class="discounts-overlay" onclick="toggleDiscounts()"></div>
+    <div id="discounts-dropdown" class="discounts-dropdown">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3
+                style="font-size:1.25rem; font-weight:800; color:var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    style="color: var(--primary);">
+                    <path stroke-width="2"
+                        d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                </svg>
+                <span>
+                    <%= offers.length %> Active <%= offers.length===1 ? 'Offer' : 'Offers' %> for <%= data.name %>
+                </span>
+            </h3>
+            <button onclick="toggleDiscounts()"
+                style="background:none; border:none; padding:0.5rem; cursor:pointer; color:var(--text-secondary);">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div style="flex:1; overflow-y:auto; padding-right:0.5rem;">
+            <% if (typeof offers !=='undefined' && offers.length> 0) {
+                offers.sort((a,b) => {
+                const hasA = h.isRealCode(a.code);
+                const hasB = h.isRealCode(b.code);
+                if(hasA && !hasB) return -1;
+                if(!hasA && hasB) return 1;
+                const tA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
+                const tB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
+                return tA - tB;
+                }).forEach(o => { %>
+                <div class="offer-row" onclick="window.open('<%= o.link %>', '_blank')" style="margin-bottom:0.75rem;">
+                    <div style="display: flex; gap: 0.75rem;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div
+                                style="font-weight: 600; font-size: 0.9rem; color: var(--text-main); word-break: break-word; line-height: 1.35;">
+                                <%= o.description %>
+                            </div>
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                Expires: <%- h.formatTimeLeft(o.endDate) %>
+                            </div>
+                            <% const hasCode=h.isRealCode(o.code); %>
+                                <% if (hasCode) { %>
+                                    <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                        <span
+                                            style="font-family: monospace; padding: 0.25rem 0.5rem; background: #eef2ff; border: 2px dashed #818cf8; border-radius: 0.375rem; color: #4338ca; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">
+                                            <%= o.code %>
+                                        </span>
+                                        <span
+                                            style="font-size: 0.7rem; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 4px;"
+                                            onclick="event.stopPropagation(); navigator.clipboard.writeText('<%= (o.code || '').replace(/'/g, '\\\'') %>'); this.style.color='#10b981'; this.lastChild.textContent='Copied!'; setTimeout(()=>{this.lastChild.textContent='Copy/Redeem'; this.style.color='';}, 2000)">
+                                            <svg width="12" height="12" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-width="2"
+                                                    d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2" />
+                                            </svg>
+                                            <span>Copy/Redeem</span>
+                                        </span>
+                                    </div>
+                                    <% } else { %>
+                                        <div style="margin-top: 0.5rem;">
+                                            <span
+                                                style="padding: 0.2rem 0.5rem; background: #eef2ff; border: 1px solid #818cf8; border-radius: 0.375rem; color: #4338ca; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
+                                                Redeem &rarr;
+                                            </span>
+                                        </div>
+                                        <% } %>
+                        </div>
+                    </div>
+                </div>
+                <% }) } else { %>
+                    <div style="text-align:center; padding:2rem; color:var(--text-secondary);">No active offers
+                        found.</div>
+                    <% } %>
+        </div>
+    </div>
 </body>
 
 </html>

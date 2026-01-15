@@ -24,7 +24,7 @@ const isRealCode = (code) => {
         'N/A', 'NONE', 'NO CODE', 'NO CODE REQUIRED', 'NO COUPON CODE',
         'NO COUPON CODE REQUIRED', 'NO COUPON REQUIRED', 'NO PROMO CODE REQUIRED',
         'NO PROMO REQUIRED', 'SEE SITE', 'CLICK TO REVEAL', 'AUTO-APPLIED',
-        'ONLINE ONLY', 'NULL', 'UNDEFINED', ''
+        'ONLINE ONLY', 'NULL', 'UNDEFINED', '', 'NO CODE NEEDED'
     ];
     return !nonCodes.includes(clean);
 };

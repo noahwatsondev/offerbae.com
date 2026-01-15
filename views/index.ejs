@@ -596,10 +596,9 @@
 
                             <div class="brand-categories">
                                 <% (adv.categories || []).sort().forEach(cat=> { %>
-                                    <a href="/<%= cat.toLowerCase().replace(/\s+/g, '-') %>" class="category-pill"
-                                        onclick="event.stopPropagation()">
+                                    <span class="category-pill">
                                         <%= cat %>
-                                    </a>
+                                    </span>
                                     <% }); %>
                             </div>
                         </div>
