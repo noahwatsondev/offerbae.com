@@ -227,7 +227,7 @@
     <header
         style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles.replace(/\/\*[\s\S]*?\*\//g, '') : '' %>">
         <div class="header-container">
-            <div style="display: flex; align-items: center; gap: 1rem; cursor: pointer;" onclick="location.href='/'">
+            <div style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer;" onclick="location.href='/'">
                 <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
                     <img src="<%= settings.logoUrl %>" alt="Logo"
                         style="height: 40px; width: auto; max-width: 200px; object-fit: contain; display: block;">
@@ -307,9 +307,39 @@
     </div>
 
     <footer
-        style="margin-top: 4rem; padding: 4rem 2rem; border-top: 1px solid var(--border); background: #fff; text-align: center;">
-        <p style="color: var(--text-secondary); font-size: 0.875rem;">&copy; 2026 Offerbae. Premium Fashion & Lifestyle
-            Deals.</p>
+        style="margin-top: 5rem; padding: 2rem 1.5rem; background: linear-gradient(to bottom, #EF3E5C, #E42A53); color: white;">
+        <div
+            style="max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem;">
+            <!-- Logo Section -->
+            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
+                    <img src="<%= settings.logoUrl %>" alt="Logo"
+                        style="height: 48px; width: auto; max-width: 250px; object-fit: contain;">
+                    <% } %>
+                        <h2
+                            style="margin: 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.025em; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles.replace(/\/\*[\s\S]*?\*\//g, '') : '' %> color: white !important; filter: none !important; text-shadow: none !important;">
+                            <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae'
+                                %>
+                        </h2>
+            </div>
+
+            <!-- Copyright -->
+            <p style="margin: 0; font-size: 1rem; font-weight: 500; opacity: 0.9; font-style: italic;">&copy; 2026
+                OfferBae. All rights reserved.</p>
+
+            <!-- Legal Links -->
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                <a href="#"
+                    style="color: white; text-decoration: none; font-size: 0.938rem; font-weight: 600; opacity: 0.8; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Legal Statement</a>
+                <a href="#"
+                    style="color: white; text-decoration: none; font-size: 0.938rem; font-weight: 600; opacity: 0.8; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Privacy Policy</a>
+                <a href="#"
+                    style="color: white; text-decoration: none; font-size: 0.938rem; font-weight: 600; opacity: 0.8; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Terms of Use</a>
+            </div>
+        </div>
     </footer>
 </body>
 

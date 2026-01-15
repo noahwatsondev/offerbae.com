@@ -481,6 +481,27 @@
             text-decoration: underline;
         }
 
+        @media (max-width: 480px) {
+            .brand-actions {
+                display: flex;
+                gap: 0.75rem;
+                padding: .5rem .5rem;
+                flex-wrap: wrap;
+            }
+
+            .brand-header {
+                padding: .75rem;
+                display: grid;
+                grid-template-columns: auto 1fr;
+                grid-template-areas:
+                    "logo info"
+                    "categories categories";
+                gap: 0.5rem 1.5rem;
+                align-items: center;
+                cursor: pointer;
+            }
+        }
+
         @media (max-width: 640px) {
             .brand-header {
                 gap: 0.5rem 1rem;
@@ -516,7 +537,7 @@
 
         <header style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles : '' %>">
             <div class="header-container">
-                <div style="display: flex; align-items: center; gap: 1rem; cursor: pointer;"
+                <div style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer;"
                     onclick="location.href='/'">
                     <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
                         <img src="<%= settings.logoUrl %>" alt="Logo"
@@ -658,13 +679,38 @@
             </div>
         </div>
 
-        <footer>
-            <div class="header-container" style="display: block;">
-                <p>&copy; 2024 OfferBae. All rights reserved.</p>
-                <div>
-                    <a href="#">Legal Statement</a>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Use</a>
+        <footer
+            style="margin-top: 5rem; padding: 2rem 1.5rem; background: linear-gradient(to bottom, #EF3E5C, #E42A53); color: white;">
+            <div
+                style="max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem;">
+                <!-- Logo Section -->
+                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                    <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
+                        <img src="<%= settings.logoUrl %>" alt="Logo"
+                            style="height: 48px; width: auto; max-width: 250px; object-fit: contain;">
+                        <% } %>
+                            <h2
+                                style="margin: 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.025em; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %> color: white !important; filter: none !important; text-shadow: none !important;">
+                                <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText
+                                    : 'OfferBae' %>
+                            </h2>
+                </div>
+
+                <!-- Copyright -->
+                <p style="margin: 0; font-size: 1rem; font-weight: 500; opacity: 0.9; font-style: italic;">&copy; 2026
+                    OfferBae. All rights reserved.</p>
+
+                <!-- Legal Links -->
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                    <a href="#"
+                        style="color: white; text-decoration: none; font-size: 0.938rem; font-weight: 600; opacity: 0.8; transition: opacity 0.2s;"
+                        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Legal Statement</a>
+                    <a href="#"
+                        style="color: white; text-decoration: none; font-size: 0.938rem; font-weight: 600; opacity: 0.8; transition: opacity 0.2s;"
+                        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Privacy Policy</a>
+                    <a href="#"
+                        style="color: white; text-decoration: none; font-size: 0.938rem; font-weight: 600; opacity: 0.8; transition: opacity 0.2s;"
+                        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Terms of Use</a>
                 </div>
             </div>
         </footer>
