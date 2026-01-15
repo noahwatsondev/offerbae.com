@@ -44,6 +44,8 @@ const fetchAdvertisers = async () => {
             network: 'Pepperjam',
             status: a.status,
             url: a.website,
+            logoUrl: a.logo ? (a.logo.startsWith('//') ? `https:${a.logo}` : a.logo) : null,
+            description: a.description || a.description_long || a.description_short || null,
             country: 'Unknown', // Pepperjam doesn't always provide this in the basic list
             categories: a.categories ? a.categories.map(c => c.name) : []
         }));

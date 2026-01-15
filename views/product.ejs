@@ -256,7 +256,14 @@
 
             <div class="product-content">
                 <span class="brand-name">
-                    <%= brand ? brand.name : product.advertiserName %>
+                    <% if (brand && brand.affiliateHomeUrl) { %>
+                        <a href="<%= brand.affiliateHomeUrl %>" target="_blank" rel="noopener noreferrer"
+                            style="color: var(--primary); text-decoration: none; font-weight: 700;">
+                            <%= brand.name %>
+                        </a>
+                        <% } else { %>
+                            <%= brand ? brand.name : product.advertiserName %>
+                                <% } %>
                 </span>
                 <h1 class="product-title">
                     <%= product.name %>

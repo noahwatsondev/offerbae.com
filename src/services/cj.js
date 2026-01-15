@@ -74,6 +74,7 @@ const fetchAdvertisers = async () => {
             status: a['relationship-status'],
             url: a['program-url'],
             country: a['advertiser-country'] || 'Unknown',
+            description: a['program-description'] || a['general-description'] || null,
             categories: (() => {
                 const primary = a['primary-category'];
                 if (!primary) return [];

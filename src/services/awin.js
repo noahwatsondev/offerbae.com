@@ -33,6 +33,7 @@ const fetchAdvertisers = async () => {
             status: p.status,
             url: p.displayUrl,
             country: p.primaryRegion ? p.primaryRegion.countryCode : 'US',
+            description: p.description || null,
             categories: p.primarySector ? [p.primarySector] : []
         }));
 

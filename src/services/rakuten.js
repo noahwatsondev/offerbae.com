@@ -121,6 +121,7 @@ const fetchAdvertisers = async () => {
                 status: p.status,
                 url: details?.advertiser?.url || p.advertiser.url || null, // Access nested advertiser.url
                 country: details?.advertiser?.contact?.country || 'Unknown',
+                description: details?.advertiser?.description || details?.advertiser?.shortDescription || details?.advertiser?.longDescription || null,
                 categories: p.advertiser.categories || []
             };
         });
