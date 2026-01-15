@@ -621,12 +621,23 @@
                                         <%= typeof data !=='undefined' ? data.name : '' %>
                                             <% } %>
                             </h1>
-                            <p
-                                style="color: var(--text-secondary); font-weight: 500; font-size: 1rem; line-height: 1.6; max-width: 800px;">
-                                <%= (typeof data !=='undefined' && data.description) ? data.description : `Explore
-                                    premium deals and exclusive offers from ${typeof data !=='undefined' ? data.name
-                                    : 'our partners' }.` %>
-                            </p>
+                            <% if (typeof data !=='undefined' && data.categories && data.categories.length> 0) { %>
+                                <div
+                                    style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; margin-bottom: 0.75rem;">
+                                    <% data.categories.sort().forEach(cat=> { %>
+                                        <span
+                                            style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); background: #f3f4f6; padding: 0.2rem 0.6rem; border-radius: 0.375rem;">
+                                            <%= cat %>
+                                        </span>
+                                        <% }) %>
+                                </div>
+                                <% } %>
+                                    <p
+                                        style="color: var(--text-secondary); font-weight: 500; font-size: 1rem; line-height: 1.6; max-width: 800px;">
+                                        <%= (typeof data !=='undefined' && data.description) ? data.description :
+                                            `Explore premium deals and exclusive offers from ${typeof data
+                                            !=='undefined' ? data.name : 'our partners' }.` %>
+                                    </p>
                         </div>
 
                         <% if (typeof offers !=='undefined' && offers.length> 0) { %>
