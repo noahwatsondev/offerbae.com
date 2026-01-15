@@ -600,7 +600,7 @@
                 </div>
             </div>
 
-            <div style="margin-bottom: 2.5rem; display: flex; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap;">
                 <% if (type==='brand' && (data.storageLogoUrl || data.logoUrl)) { %>
                     <div
                         style="width: 100px; height: 100px; flex-shrink: 0; background: #fff; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; overflow: hidden;">
@@ -632,16 +632,11 @@
                                         <% }) %>
                                 </div>
                                 <% } %>
-                                    <p
-                                        style="color: var(--text-secondary); font-weight: 500; font-size: 1rem; line-height: 1.6; max-width: 800px;">
-                                        <%= (typeof data !=='undefined' && data.description) ? data.description :
-                                            `Explore premium deals and exclusive offers from ${typeof data
-                                            !=='undefined' ? data.name : 'our partners' }.` %>
-                                    </p>
+
                         </div>
 
                         <% if (typeof offers !=='undefined' && offers.length> 0) { %>
-                            <div class="mobile-offers-btn" style="width: 100%; margin-top: 1rem; display: none;">
+                            <div class="mobile-offers-btn" style="width: 100%; margin-top: 0; display: none;">
                                 <button onclick="toggleDiscounts()"
                                     style="width: 100%; padding: 0.75rem; background: var(--bg-body); border: 1px solid var(--border); border-radius: 0.5rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -649,15 +644,27 @@
                                             d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                                     </svg>
                                     View <%= offers.length %> Active <%= offers.length===1 ? 'Offer' : 'Offers' %>
+                                            <% if (offers.some(o=> h.isRealCode(o.code))) { %>
+                                                <span class="badge-code"
+                                                    style="font-size: 0.7rem; padding: 0.15rem 0.4rem; margin-left: 0.25rem;">CODES</span>
+                                                <% } %>
                                 </button>
                             </div>
                             <% } %>
             </div>
 
+            <div style="margin-bottom: 2.5rem;">
+                <p
+                    style="color: var(--text-secondary); font-weight: 500; font-size: 1rem; line-height: 1.6; max-width: 800px;">
+                    <%= (typeof data !=='undefined' && data.description) ? data.description : `Explore premium deals and
+                        exclusive offers from ${typeof data !=='undefined' ? data.name : 'our partners' }.` %>
+                </p>
+            </div>
+
             <div class="search-area">
                 <div class="search-input-wrapper">
                     <input type="text" id="prod-search" class="prod-search-input"
-                        placeholder="Search <%= (typeof totalCount !=='undefined' ) ? totalCount.toLocaleString() : '0' %> products..."
+                        placeholder="Search <%= (typeof placeholderCount !=='undefined' ? placeholderCount : (typeof totalCount !=='undefined' ? totalCount : 0)).toLocaleString() %> products..."
                         value="<%= (typeof filters !== 'undefined' && filters.q) ? filters.q : '' %>">
                 </div>
                 <% if (typeof type==='undefined' || type !=='brand' || (typeof data !=='undefined' &&
@@ -759,6 +766,8 @@
         const overlay = document.getElementById('loading-overlay');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
+        const prevBtnTop = document.getElementById('prev-btn-top');
+        const nextBtnTop = document.getElementById('next-btn-top');
         const pageInfo = document.getElementById('page-info');
 
         async function fetchProducts(page = 1) {
@@ -777,6 +786,8 @@
                 pageInfo.textContent = `Page ${data.page}`;
                 prevBtn.disabled = data.page === 1;
                 nextBtn.disabled = !data.hasNextPage;
+                if (prevBtnTop) prevBtnTop.disabled = data.page === 1;
+                if (nextBtnTop) nextBtnTop.disabled = !data.hasNextPage;
                 const urlParams = new URLSearchParams(params); urlParams.delete('format');
                 window.history.pushState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
             } catch (err) {

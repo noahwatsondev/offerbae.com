@@ -187,6 +187,31 @@ const renderCatalog = async (req, res, context) => {
 
         const ejsHelpers = require('../utils/ejsHelpers');
 
+        // Always prioritize the Brand's total product count for the placeholder
+        let placeholderCount = 0;
+        if (context.type === 'brand') {
+            // 1. Try pre-calculated count on brand object
+            if (context.data.productCount) {
+                placeholderCount = context.data.productCount;
+            } else {
+                // 2. Fetch true total from DB if missing (crucial for search queries where 'totalCount' is filtered)
+                try {
+                    const countSnap = await db.collection('products')
+                        .where('advertiserId', '==', String(context.data.id))
+                        .count()
+                        .get();
+                    placeholderCount = countSnap.data().count;
+                    // Optional: Update context to avoid re-fetching if used elsewhere
+                    context.data.productCount = placeholderCount;
+                } catch (e) {
+                    console.error('Error fetching total product count for placeholder:', e);
+                    placeholderCount = totalCount; // Last resort fallback
+                }
+            }
+        } else {
+            placeholderCount = totalCount;
+        }
+
         res.render('catalog', {
             ...context,
             products,
@@ -197,6 +222,7 @@ const renderCatalog = async (req, res, context) => {
             settings,
             hasNextPage,
             totalCount,
+            placeholderCount,
             h: ejsHelpers
         });
     } catch (error) {
