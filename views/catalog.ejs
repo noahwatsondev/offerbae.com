@@ -737,8 +737,8 @@
                 </p>
             </div>
 
-            <div class="search-area" style="display: flex; flex-direction: column; gap: 1rem; align-items: stretch;">
-                <div class="search-input-wrapper" style="flex: none; width: 100%;">
+            <div class="search-area">
+                <div class="search-input-wrapper">
                     <svg class="search-icon" width="20" height="20" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -748,49 +748,44 @@
                         placeholder="Search <%= (typeof placeholderCount !=='undefined' ? placeholderCount : (typeof totalCount !=='undefined' ? totalCount : 0)).toLocaleString() %> products..."
                         value="<%= (typeof filters !== 'undefined' && filters.q) ? filters.q : '' %>">
                 </div>
+                <% if (typeof type==='undefined' || type !=='brand' || (typeof data !=='undefined' &&
+                    data.hasSaleItems)) { %>
+                    <label class="on-sale-label">
+                        <input type="checkbox" id="sale-only-toggle"
+                            style="width:18px;height:18px;accent-color:var(--danger);" <%=(typeof filters==='undefined'
+                            || filters.sale !=='false' ) ? 'checked' : '' %>>
+                        On Sale
+                    </label>
+                    <% } %>
+                        <select id="sort-select"
+                            style="padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); font-family: inherit; font-weight: 600;">
+                            <option value="newest" <%=(typeof sort !=='undefined' && sort==='newest' ) ? 'selected' : ''
+                                %>
+                                >Newest</option>
+                            <option value="price-low" <%=(typeof sort !=='undefined' && sort==='price-low' )
+                                ? 'selected' : '' %>>Price: Low-High</option>
+                            <option value="price-high" <%=(typeof sort !=='undefined' && sort==='price-high' )
+                                ? 'selected' : '' %>>Price: High-Low</option>
+                        </select>
 
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                    <select id="sort-select"
-                        style="padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); font-family: inherit; font-weight: 600;">
-                        <option value="newest" <%=(typeof sort !=='undefined' && sort==='newest' ) ? 'selected' : '' %>
-                            >Newest</option>
-                        <option value="price-low" <%=(typeof sort !=='undefined' && sort==='price-low' ) ? 'selected'
-                            : '' %>>Price: Low-High</option>
-                        <option value="price-high" <%=(typeof sort !=='undefined' && sort==='price-high' ) ? 'selected'
-                            : '' %>>Price: High-Low</option>
-                    </select>
-
-                    <% if (typeof type==='undefined' || type !=='brand' || (typeof data !=='undefined' &&
-                        data.hasSaleItems)) { %>
-                        <label class="on-sale-label">
-                            <input type="checkbox" id="sale-only-toggle"
-                                style="width:18px;height:18px;accent-color:var(--danger);" <%=(typeof
-                                filters==='undefined' || filters.sale !=='false' ) ? 'checked' : '' %>>
-                            On Sale
-                        </label>
-                        <% } %>
-                </div>
-
-                <!-- Top Pagination Centered -->
-                <div style="display: flex; justify-content: center; width: 100%;">
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button id="prev-btn-top"
-                            onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); fetchProducts(currentPage - 1);"
-                            style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
-                            <%=(typeof page !=='undefined' && page===1) ? 'disabled' : '' %>>
-                            &larr;
-                        </button>
-                        <span id="page-info-top" style="font-size: 0.9rem; font-weight: 500;">Page <%= typeof page
-                                !=='undefined' ? page : 1 %></span>
-                        <button id="next-btn-top"
-                            onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); fetchProducts(currentPage + 1);"
-                            style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
-                            <%=(typeof hasNextPage !=='undefined' && !hasNextPage) ? 'disabled' : '' %>>
-                            &rarr;
-                        </button>
-                    </div>
-                </div>
+                        <!-- Mirrored Pagination Buttons (Compact) -->
+                        <!-- Top Pagination -->
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button id="prev-btn-top"
+                                onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); fetchProducts(currentPage - 1);"
+                                style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
+                                <%=(typeof page !=='undefined' && page===1) ? 'disabled' : '' %>>
+                                &larr;
+                            </button>
+                            <span id="page-info-top" style="font-size: 0.9rem; font-weight: 500;">Page <%= typeof page
+                                    !=='undefined' ? page : 1 %></span>
+                            <button id="next-btn-top"
+                                onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); fetchProducts(currentPage + 1);"
+                                style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
+                                <%=(typeof hasNextPage !=='undefined' && !hasNextPage) ? 'disabled' : '' %>>
+                                &rarr;
+                            </button>
+                        </div>
             </div>
 
             <div id="product-grid" class="product-grid">
