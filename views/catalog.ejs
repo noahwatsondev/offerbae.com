@@ -773,7 +773,7 @@
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
                             <button id="prev-btn-top"
                                 onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); fetchProducts(currentPage - 1);"
-                                style="padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
+                                style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
                                 <%=(typeof page !=='undefined' && page===1) ? 'disabled' : '' %>>
                                 &larr;
                             </button>
@@ -781,7 +781,7 @@
                                     !=='undefined' ? page : 1 %></span>
                             <button id="next-btn-top"
                                 onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); fetchProducts(currentPage + 1);"
-                                style="padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
+                                style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
                                 <%=(typeof hasNextPage !=='undefined' && !hasNextPage) ? 'disabled' : '' %>>
                                 &rarr;
                             </button>
@@ -831,12 +831,12 @@
             <div class="pagination-container"
                 style="display: flex; justify-content: center; margin: 1rem 0; gap: 0.5rem; align-items: center;">
                 <button id="prev-btn" onclick="fetchProducts(currentPage - 1);"
-                    style="padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
+                    style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
                     <%=(typeof page !=='undefined' && page===1) ? 'disabled' : '' %>>&larr;</button>
                 <span id="page-info" style="font-size: 0.9rem; font-weight: 500;">Page <%= typeof page !=='undefined' ?
                         page : 1 %></span>
                 <button id="next-btn" onclick="fetchProducts(currentPage + 1);"
-                    style="padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
+                    style="padding: 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border); background: #fff; cursor: pointer;"
                     <%=(typeof hasNextPage !=='undefined' && !hasNextPage) ? 'disabled' : '' %>>&rarr;</button>
             </div>
         </main>
