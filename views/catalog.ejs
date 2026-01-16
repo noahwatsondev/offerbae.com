@@ -438,17 +438,7 @@
                     max-height: 100vh;
                     border-radius: 0;
                     padding: 1rem;
-                    background-color: var(--bg-body);
-
-                    <% if (typeof settings !=='undefined' && settings.bgImageUrl) {
-                        %>background-image: url('<%= settings.bgImageUrl %>');
-                        background-size: cover;
-                        background-attachment: fixed;
-                        background-position: center;
-                        <%
-                    }
-
-                    %>
+                    background: #fff;
                 }
             }
 
