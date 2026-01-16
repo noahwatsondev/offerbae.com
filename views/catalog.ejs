@@ -311,12 +311,21 @@
 
             .prod-search-input {
                 width: 100%;
-                padding: 0.75rem 1rem;
+                padding: 0.75rem 1rem 0.75rem 2.75rem;
                 border-radius: 0.5rem;
-                border: 1px solid var(--border);
+                border: 1px solid var(--primary);
                 font-family: inherit;
                 font-size: 0.938rem;
                 outline: none;
+            }
+
+            .search-icon {
+                position: absolute;
+                left: 1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-secondary);
+                pointer-events: none;
             }
 
             .on-sale-label {
@@ -728,6 +737,11 @@
 
             <div class="search-area">
                 <div class="search-input-wrapper">
+                    <svg class="search-icon" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                     <input type="text" id="prod-search" class="prod-search-input"
                         placeholder="Search <%= (typeof placeholderCount !=='undefined' ? placeholderCount : (typeof totalCount !=='undefined' ? totalCount : 0)).toLocaleString() %> products..."
                         value="<%= (typeof filters !== 'undefined' && filters.q) ? filters.q : '' %>">
