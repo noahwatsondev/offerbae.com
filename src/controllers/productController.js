@@ -13,16 +13,25 @@ const slugify = (text) => {
 const getCatalogPage = async (req, res) => {
     try {
         const db = firebaseConfig.db;
-        const { slug } = req.params;
+        const { idSlug } = req.params;
+        const idPart = idSlug.split('-')[0];
+
         const page = parseInt(req.query.page) || 1;
         const limit = 50;
         const offset = (page - 1) * limit;
 
-        // 1. Try to find a Brand matching this slug
-        const brandSnap = await db.collection('advertisers')
-            .where('slug', '==', slug)
+        // 1. Try to find a Brand matching this ID
+        let brandSnap = await db.collection('advertisers')
+            .where('id', '==', idPart)
             .limit(1)
             .get();
+
+        if (brandSnap.empty && !isNaN(idPart)) {
+            brandSnap = await db.collection('advertisers')
+                .where('id', '==', Number(idPart))
+                .limit(1)
+                .get();
+        }
 
         if (!brandSnap.empty) {
             const brand = brandSnap.docs[0].data();
@@ -37,13 +46,19 @@ const getCatalogPage = async (req, res) => {
             });
         }
 
-        // 2. Try to find if this is a Category -- DISABLED TEMPORARILY
-        // We look for any brand that has this category (slugified)
-        // Since we don't store a separate categories collection, we'll check against a set of known categories 
-        // derived from the advertisers. To be efficient, we'd ideally have a categories collection.
-        // For now, let's look for any advertiser where the categories list contains something that slugifies to this.
+        res.status(404).render('404', { message: 'Brand not found' });
 
-        /* 
+    } catch (error) {
+        console.error('Catalog Error:', error);
+        res.status(500).send('Server Error');
+    }
+};
+
+const getCategoryPage = async (req, res) => {
+    try {
+        const db = firebaseConfig.db;
+        const { slug } = req.params;
+
         // Find brands in this category
         const allAdvsSnap = await db.collection('advertisers').get();
         const brandsInCat = allAdvsSnap.docs
@@ -54,23 +69,18 @@ const getCatalogPage = async (req, res) => {
             const catName = brandsInCat[0].categories.find(c => slugify(c) === slug);
             return renderCatalog(req, res, {
                 type: 'category',
-                data: { name: catName, brands: brandsInCat }, // Store full objects
+                data: { name: catName, brands: brandsInCat },
                 title: `Best ${catName} Deals & Products | Offerbae`,
                 description: `Discover the best deals, coupons, and products in the ${catName} category from top brands.`
             });
         }
-        */
 
-        // 3. Fallback: Check if it's a Product Detail Page (/:brandSlug/:productSlug)
-        // This is handled by a different route in app.js
-
-        res.status(404).render('404', { message: 'Category or Brand not found' });
-
+        res.status(404).render('404', { message: 'Category not found' });
     } catch (error) {
-        console.error('Catalog Error:', error);
+        console.error('Category Page Error:', error);
         res.status(500).send('Server Error');
     }
-};
+}
 
 const renderCatalog = async (req, res, context) => {
     const db = firebaseConfig.db;
@@ -79,7 +89,6 @@ const renderCatalog = async (req, res, context) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 50;
 
-    // 4. Handle Search Query
     const q = req.query.q ? req.query.q.toLowerCase().trim() : '';
 
     let products = [];
@@ -88,7 +97,6 @@ const renderCatalog = async (req, res, context) => {
     let totalCount = 0;
 
     try {
-        // Fetch Offers if it's a Brand page
         if (context.type === 'brand') {
             const now = new Date();
             const offersSnap = await db.collection('offers')
@@ -98,16 +106,13 @@ const renderCatalog = async (req, res, context) => {
                 .map(doc => doc.data())
                 .filter(o => !o.endDate || new Date(o.endDate) > now);
         }
+
         if (q) {
-            // Search Mode: Consistent with homepage logic
             const qTokens = q.split(/\s+/).filter(t => t.length >= 2);
             if (qTokens.length === 0) {
-                // If query exists but no valid tokens (e.g. "a"), return nothing or basic list
                 products = [];
             } else {
                 const mainToken = qTokens[0];
-                const searchLimit = 2000;
-
                 let searchBase = db.collection('products');
                 if (context.type === 'brand') {
                     searchBase = searchBase.where('advertiserId', '==', String(context.data.id));
@@ -116,15 +121,13 @@ const renderCatalog = async (req, res, context) => {
                     searchBase = searchBase.where('advertiserId', 'in', brandIds);
                 }
 
-                // Keyword search
                 const snapshot = await searchBase
                     .where('searchKeywords', 'array-contains', mainToken)
-                    .limit(searchLimit)
+                    .limit(2000)
                     .get();
 
                 let filtered = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                // Refine if multiple tokens
                 if (qTokens.length > 1) {
                     filtered = filtered.filter(p => {
                         const searchStr = (p.name || '').toLowerCase();
@@ -133,18 +136,12 @@ const renderCatalog = async (req, res, context) => {
                 }
                 products = filtered;
             }
-
             totalCount = products.length;
             const start = (page - 1) * limit;
             products = products.slice(start, start + limit);
             hasNextPage = totalCount > page * limit;
         } else {
-            // Normal Mode: In-Memory Sorting & Pagination
-            // We fetch all products for the brand/category (up to a reasonable limit)
-            // and perform sorting/pagination in memory to avoid Firestore Index errors
-            // and ensure correct numeric sorting even if data is mixed strings/numbers.
             let query = db.collection('products');
-
             if (context.type === 'brand') {
                 query = query.where('advertiserId', '==', String(context.data.id));
             } else if (context.type === 'category') {
@@ -152,29 +149,17 @@ const renderCatalog = async (req, res, context) => {
                 query = query.where('advertiserId', 'in', brandIds);
             }
 
-            // Fetch up to 1000 products to sort in-memory
             const snapshot = await query.limit(1000).get();
             let allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // Apply Sorting
             const sort = req.query.sort || 'newest';
-            const getPrice = (p) => {
-                const v = parseFloat(p.price);
-                return isNaN(v) ? 0 : v;
-            };
-            const getDate = (p) => {
-                return p.updatedAt ? (p.updatedAt._seconds || new Date(p.updatedAt).getTime()) : 0;
-            };
+            const getPrice = (p) => parseFloat(p.price) || 0;
+            const getDate = (p) => p.updatedAt ? (p.updatedAt._seconds || new Date(p.updatedAt).getTime()) : 0;
 
-            if (sort === 'newest') {
-                allProducts.sort((a, b) => getDate(b) - getDate(a));
-            } else if (sort === 'price-low') {
-                allProducts.sort((a, b) => getPrice(a) - getPrice(b));
-            } else if (sort === 'price-high') {
-                allProducts.sort((a, b) => getPrice(b) - getPrice(a));
-            }
+            if (sort === 'newest') allProducts.sort((a, b) => getDate(b) - getDate(a));
+            else if (sort === 'price-low') allProducts.sort((a, b) => getPrice(a) - getPrice(b));
+            else if (sort === 'price-high') allProducts.sort((a, b) => getPrice(b) - getPrice(a));
 
-            // Apply Pagination
             totalCount = allProducts.length;
             const start = (page - 1) * limit;
             products = allProducts.slice(start, start + limit);
@@ -186,27 +171,14 @@ const renderCatalog = async (req, res, context) => {
         }
 
         const ejsHelpers = require('../utils/ejsHelpers');
-
-        // Always prioritize the Brand's total product count for the placeholder
         let placeholderCount = 0;
         if (context.type === 'brand') {
-            // 1. Try pre-calculated count on brand object
             if (context.data.productCount) {
                 placeholderCount = context.data.productCount;
             } else {
-                // 2. Fetch true total from DB if missing (crucial for search queries where 'totalCount' is filtered)
-                try {
-                    const countSnap = await db.collection('products')
-                        .where('advertiserId', '==', String(context.data.id))
-                        .count()
-                        .get();
-                    placeholderCount = countSnap.data().count;
-                    // Optional: Update context to avoid re-fetching if used elsewhere
-                    context.data.productCount = placeholderCount;
-                } catch (e) {
-                    console.error('Error fetching total product count for placeholder:', e);
-                    placeholderCount = totalCount; // Last resort fallback
-                }
+                const countSnap = await db.collection('products').where('advertiserId', '==', String(context.data.id)).count().get();
+                placeholderCount = countSnap.data().count;
+                context.data.productCount = placeholderCount;
             }
         } else {
             placeholderCount = totalCount;
@@ -226,28 +198,38 @@ const renderCatalog = async (req, res, context) => {
             h: ejsHelpers
         });
     } catch (error) {
-        if (error.message.includes('requires an index')) {
-            console.error('MISSING INDEX:', error.message);
-            return res.status(500).render('404', {
-                message: 'Database is still optimizing. Please follow the link in your server logs to create the required Firestore index.'
-            });
-        }
-        throw error;
+        console.error('Render Catalog Error:', error);
+        res.status(500).send('Server Error');
     }
 };
 
 const getProductDetail = async (req, res) => {
     try {
-        const { brandSlug, productSlug } = req.params;
+        const { brandSlug, idSlug } = req.params;
+        const productId = idSlug.split('-')[0];
         const db = firebaseConfig.db;
 
-        const pSnap = await db.collection('products')
-            .where('slug', '==', productSlug)
+        // Search by slug (easier since we store it) or ID part
+        // The user's new structure: /product/[brand-slug]/[offerbae-product-id]-[product-title-slug]
+
+        let pSnap = await db.collection('products')
+            .where('slug', '==', idSlug) // Try if idSlug is already the full slug
             .limit(1)
             .get();
 
         if (pSnap.empty) {
-            return res.status(404).render('404', { message: 'Product not found' });
+            // Fallback: search by document ID or a specific SKU-based ID if needed
+            // For now, let's try to match by the "id" field if it exists, or search for the slug that starts with productId
+            const searchSnap = await db.collection('products')
+                .where('slug', '>=', productId)
+                .where('slug', '<=', productId + '\uf8ff')
+                .limit(1)
+                .get();
+
+            if (searchSnap.empty) {
+                return res.status(404).render('404', { message: 'Product not found' });
+            }
+            pSnap = searchSnap;
         }
 
         const product = pSnap.docs[0].data();
@@ -256,7 +238,6 @@ const getProductDetail = async (req, res) => {
 
         const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
-
         const ejsHelpers = require('../utils/ejsHelpers');
 
         res.render('product', {
@@ -274,7 +255,170 @@ const getProductDetail = async (req, res) => {
     }
 };
 
+// --- NEW SEO CONTROLLERS ---
+
+const getCategoriesPage = async (req, res) => {
+    try {
+        const { getGlobalSettings } = require('../services/db');
+        const settings = await getGlobalSettings();
+        res.render('coming-soon', {
+            settings,
+            title: 'Categories - Coming Soon',
+            message: "We're organizing our categories to help you find the best deals faster. This section will be live shortly!",
+            btnText: 'Back to Brands',
+            btnLink: '/brands'
+        });
+    } catch (e) {
+        res.status(500).send('Server Error');
+    }
+};
+
+const getOffersListPage = async (req, res) => {
+    try {
+        const { getGlobalSettings } = require('../services/db');
+        const settings = await getGlobalSettings();
+        res.render('coming-soon', {
+            settings,
+            title: 'Daily Offers & Coupons - Coming Soon',
+            message: "Our real-time offer discovery engine is being optimized. Soon you'll be able to browse all active coupons in one place!",
+            btnText: 'Explore Brands',
+            btnLink: '/brands'
+        });
+    } catch (e) {
+        res.status(500).send('Server Error');
+    }
+};
+
+const getProductsListPage = async (req, res) => {
+    try {
+        const { getGlobalSettings } = require('../services/db');
+        const settings = await getGlobalSettings();
+        res.render('coming-soon', {
+            settings,
+            title: 'Product Discovery - Coming Soon',
+            message: "We're indexing thousands of products to bring you the best prices. Check back soon for our full product catalog!",
+            btnText: 'View Brands',
+            btnLink: '/brands'
+        });
+    } catch (e) {
+        res.status(500).send('Server Error');
+    }
+};
+
+const getOfferDetailPage = async (req, res) => {
+    try {
+        const { brandSlug, idSlug } = req.params;
+        const offerId = idSlug.split('-')[0];
+        const db = firebaseConfig.db;
+
+        const searchSnap = await db.collection('offers').where('id', '==', offerId).limit(1).get();
+        if (searchSnap.empty) {
+            return res.status(404).render('404', { message: 'Offer not found' });
+        }
+
+        const offer = searchSnap.docs[0].data();
+        const brandSnap = await db.collection('advertisers').where('id', '==', String(offer.advertiserId)).limit(1).get();
+        const brand = !brandSnap.empty ? brandSnap.docs[0].data() : null;
+
+        const { getGlobalSettings } = require('../services/db');
+        const settings = await getGlobalSettings();
+
+        res.render('coming-soon', {
+            settings,
+            title: `${offer.description || 'Offer'} | ${brand ? brand.name : 'Offerbae'}`,
+            message: `You've found a great deal for ${brand ? brand.name : 'this brand'}! This detailed offer page is coming soon.`,
+            btnText: `View all ${brand ? brand.name : 'Brand'} Deals`,
+            btnLink: brand ? `/brand/${brand.id}-${slugify(brand.name)}` : '/brands'
+        });
+    } catch (error) {
+        console.error('Offer Detail Error:', error);
+        res.status(500).send('Server Error');
+    }
+};
+
+const getCalendarListPage = async (req, res) => {
+    try {
+        const { getGlobalSettings } = require('../services/db');
+        const settings = await getGlobalSettings();
+        res.render('coming-soon', {
+            settings,
+            title: 'OfferBae Calendar - Coming Soon',
+            message: "Our annual calendar of specialty sales, holiday events, and exclusive shopping dates is currently being curated. Stay tuned for the ultimate shopping timeline!",
+            btnText: 'Back to Brands',
+            btnLink: '/brands'
+        });
+    } catch (e) {
+        res.status(500).send('Server Error');
+    }
+};
+
+const getCalendarEventPage = async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const { getGlobalSettings } = require('../services/db');
+        const settings = await getGlobalSettings();
+
+        // Convert slug to Title Case for the message
+        const eventName = slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
+        res.render('coming-soon', {
+            settings,
+            title: `${eventName} Deals & Events | OfferBae`,
+            message: `The ${eventName} event page is under construction. We are gathering the best offers and exclusive products for this date. Check back soon!`,
+            btnText: 'View Current Brands',
+            btnLink: '/brands'
+        });
+    } catch (e) {
+        res.status(500).send('Server Error');
+    }
+};
+
+const getJournalListPage = async (req, res) => {
+    try {
+        const { getGlobalSettings } = require('../services/db');
+        const settings = await getGlobalSettings();
+        res.render('coming-soon', {
+            settings,
+            title: 'OfferBae Journal - Premium Shopping Insights',
+            message: "Our editorial team is preparing deep dives into shopping trends, brand histories, and expert saving strategies. The Journal is coming soon.",
+            btnText: 'Explore Brands',
+            btnLink: '/brands'
+        });
+    } catch (e) {
+        res.status(500).send('Server Error');
+    }
+};
+
+const getJournalArticlePage = async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const { getGlobalSettings } = require('../services/db');
+        const settings = await getGlobalSettings();
+
+        const articleName = slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
+        res.render('coming-soon', {
+            settings,
+            title: `${articleName} | OfferBae Journal`,
+            message: `This Journal article is being finalized by our editors. We'll have world-class insights on "${articleName}" live very soon!`,
+            btnText: 'Back to Journal',
+            btnLink: '/journal'
+        });
+    } catch (e) {
+        res.status(500).send('Server Error');
+    }
+};
+
 module.exports = {
     getCatalogPage,
-    getProductDetail
+    getCategoryPage,
+    getProductDetail,
+    getCategoriesPage,
+    getOffersListPage,
+    getProductsListPage,
+    getOfferDetailPage,
+    getCalendarListPage,
+    getCalendarEventPage,
+    getJournalListPage,
+    getJournalArticlePage
 };

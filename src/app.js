@@ -203,7 +203,7 @@ app.get('/api/sync-history/:network', async (req, res) => {
 // Routes
 // Routes
 // Routes
-app.get('/', dashboardController.getHomepage); // Use getHomepage
+app.get('/', dashboardController.getComingSoon);
 app.get('/mission-control/architecture', dashboardController.getArchitecture);
 app.get('/mission-control/style', dashboardController.getStyle);
 app.post('/mission-control/style', (req, res, next) => {
@@ -223,8 +223,18 @@ app.get('/api/proxy-image', dashboardController.proxyImage);
 app.get('/mission-control', dashboardController.getDashboardData);
 
 // SEO & Catalog Routes (Must be last to avoid catching specific routes)
-app.get('/:slug', productController.getCatalogPage);
-app.get('/:brandSlug/:productSlug', productController.getProductDetail);
+app.get('/brands', dashboardController.getHomepage);
+app.get('/brand/:idSlug', productController.getCatalogPage);
+app.get('/categories', productController.getCategoriesPage);
+app.get('/category/:slug', productController.getCategoryPage);
+app.get('/offers', productController.getOffersListPage);
+app.get('/offer/:brandSlug/:idSlug', productController.getOfferDetailPage);
+app.get('/products', productController.getProductsListPage);
+app.get('/product/:brandSlug/:idSlug', productController.getProductDetail);
+app.get('/calendar', productController.getCalendarListPage);
+app.get('/calendar/:slug', productController.getCalendarEventPage);
+app.get('/journal', productController.getJournalListPage);
+app.get('/journal/:slug', productController.getJournalArticlePage);
 
 // Export the new controller function if it's not already exported
 // Note: We need to make sure globalProductSearch is in the exports of dashboardController.js

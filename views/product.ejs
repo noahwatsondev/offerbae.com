@@ -54,293 +54,243 @@
                     font-family: 'Outfit', sans-serif;
                     background: var(--bg-body);
                     color: var(--text-main);
+                    margin: 0;
+                    padding: 0;
                     line-height: 1.6;
                 }
 
-                header {
-                    background: var(--card-bg);
-                    border-bottom: 1px solid var(--border);
-                    position: sticky;
+                .bg-fixed-layer {
+                    position: fixed;
                     top: 0;
-                    z-index: 1000;
-                    padding: 0.75rem 0;
-                    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-                    min-height: 70px;
-                    display: flex;
-                    align-items: center;
-                }
-
-                .header-container {
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    padding: 0 2rem;
+                    left: 0;
                     width: 100%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
+                    height: 100%;
+                    z-index: -1;
+                    background-size: cover;
+                    background-position: center;
+                    background-attachment: fixed;
+                    pointer-events: none;
                 }
-
+            </style>
+            <style>
+                <%- include('partials/header-styles') %>
+            </style>
+            <style>
                 .container {
                     max-width: 1200px;
-                    margin: 2rem auto;
-                    padding: 0 2rem;
-                }
+                    margin: 0 auto;
+                    padding: 0.5rem;
 
-                .product-layout {
-                    display: grid;
-                    grid-template-columns: 1.2fr 1fr;
-                    gap: 4rem;
-                    background: #fff;
-                    padding: 3rem;
-                    border-radius: 1.5rem;
-                    border: 1px solid var(--border);
-                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
-                }
-
-                @media (max-width: 1024px) {
                     .product-layout {
-                        grid-template-columns: 1fr;
-                        gap: 2rem;
-                        padding: 1.5rem;
+                        display: grid;
+                        grid-template-columns: 1.2fr 1fr;
+                        gap: 4rem;
+                        background: #fff;
+                        padding: 3rem;
+                        border-radius: 1.5rem;
+                        border: 1px solid var(--border);
+                        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
                     }
 
-                    .container {
-                        padding: 0 1rem;
-                        margin: 1rem auto;
+                    @media (max-width: 1024px) {
+                        .product-layout {
+                            grid-template-columns: 1fr;
+                            gap: 2rem;
+                            padding: 1.5rem;
+                        }
                     }
 
-                }
+                    .image-gallery {
+                        /* position: sticky; */
+                        /* top: 100px; */
+                    }
 
-                .image-gallery {
-                    /* position: sticky; */
-                    /* top: 100px; */
-                }
+                    .main-image-container {
+                        background: #fff;
+                        border-radius: 1rem;
+                        padding: 2rem;
+                        border: 1px solid var(--border);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        position: relative;
+                    }
 
-                .main-image-container {
-                    background: #fff;
-                    border-radius: 1rem;
-                    padding: 2rem;
-                    border: 1px solid var(--border);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    position: relative;
-                }
+                    .main-image {
+                        max-width: 100%;
+                        max-height: 500px;
+                        object-fit: contain;
+                    }
 
-                .main-image {
-                    max-width: 100%;
-                    max-height: 500px;
-                    object-fit: contain;
-                }
+                    .sale-badge {
+                        position: absolute;
+                        top: 1.5rem;
+                        left: 1.5rem;
+                        background: var(--danger);
+                        color: #fff;
+                        padding: 0.5rem 1rem;
+                        border-radius: 2rem;
+                        font-weight: 700;
+                        font-size: 0.875rem;
+                        box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
+                        z-index: 10;
+                    }
 
-                .sale-badge {
-                    position: absolute;
-                    top: 1.5rem;
-                    left: 1.5rem;
-                    background: var(--danger);
-                    color: #fff;
-                    padding: 0.5rem 1rem;
-                    border-radius: 2rem;
-                    font-weight: 700;
-                    font-size: 0.875rem;
-                    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
-                    z-index: 10;
-                }
+                    .brand-name {
+                        color: var(--primary);
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 2px;
+                        font-size: 0.875rem;
+                        margin-bottom: 1rem;
+                        display: block;
+                    }
 
-                .brand-name {
-                    color: var(--primary);
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 2px;
-                    font-size: 0.875rem;
-                    margin-bottom: 1rem;
-                    display: block;
-                }
+                    .product-title {
+                        font-size: 2.5rem;
+                        font-weight: 800;
+                        line-height: 1.2;
+                        margin-bottom: 1.5rem;
+                        letter-spacing: -1px;
+                    }
 
-                .product-title {
-                    font-size: 2.5rem;
-                    font-weight: 800;
-                    line-height: 1.2;
-                    margin-bottom: 1.5rem;
-                    letter-spacing: -1px;
-                }
+                    .price-container {
+                        margin-bottom: 2rem;
+                        padding-bottom: 2rem;
+                        border-bottom: 1px solid var(--border);
+                    }
 
-                .price-container {
-                    margin-bottom: 2rem;
-                    padding-bottom: 2rem;
-                    border-bottom: 1px solid var(--border);
-                }
+                    .current-price {
+                        font-size: 3rem;
+                        font-weight: 800;
+                        color: var(--text-main);
+                    }
 
-                .current-price {
-                    font-size: 3rem;
-                    font-weight: 800;
-                    color: var(--text-main);
-                }
+                    .sale-price {
+                        color: var(--danger);
+                    }
 
-                .sale-price {
-                    color: var(--danger);
-                }
+                    .original-price {
+                        font-size: 1.5rem;
+                        color: #9ca3af;
+                        text-decoration: line-through;
+                        margin-left: 1rem;
+                    }
 
-                .original-price {
-                    font-size: 1.5rem;
-                    color: #9ca3af;
-                    text-decoration: line-through;
-                    margin-left: 1rem;
-                }
+                    .savings-badge {
+                        display: inline-block;
+                        background: var(--success);
+                        color: #fff;
+                        padding: 0.25rem 0.75rem;
+                        border-radius: 0.5rem;
+                        font-weight: 700;
+                        font-size: 0.875rem;
+                        margin-top: 0.5rem;
+                    }
 
-                .savings-badge {
-                    display: inline-block;
-                    background: var(--success);
-                    color: #fff;
-                    padding: 0.25rem 0.75rem;
-                    border-radius: 0.5rem;
-                    font-weight: 700;
-                    font-size: 0.875rem;
-                    margin-top: 0.5rem;
-                }
+                    .buy-now-btn {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.75rem;
+                        width: 100%;
+                        padding: 1.25rem;
+                        border-radius: 1rem;
+                        background: var(--primary);
+                        color: #1a1a1a;
+                        text-decoration: none;
+                        font-size: 1.125rem;
+                        font-weight: 700;
+                        box-shadow: 0 10px 20px rgba(255, 209, 92, 0.2);
+                        transition: all 0.2s;
+                    }
 
-                .buy-now-btn {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 0.75rem;
-                    width: 100%;
-                    padding: 1.25rem;
-                    border-radius: 1rem;
-                    background: var(--primary);
-                    color: #1a1a1a;
-                    text-decoration: none;
-                    font-size: 1.125rem;
-                    font-weight: 700;
-                    box-shadow: 0 10px 20px rgba(255, 209, 92, 0.2);
-                    transition: all 0.2s;
-                }
-
-                .buy-now-btn:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 15px 30px rgba(255, 209, 92, 0.3);
-                }
+                    .buy-now-btn:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 15px 30px rgba(255, 209, 92, 0.3);
+                    }
             </style>
 </head>
 
 <body>
-    <header
-        style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles.replace(/\/\*[\s\S]*?\*\//g, '') : '' %>">
-        <div class="header-container">
-            <div style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer;" onclick="location.href='/'">
-                <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
-                    <img src="<%= settings.logoUrl %>" alt="Logo"
-                        style="height: 40px; width: auto; max-width: 200px; object-fit: contain; display: block;">
-                    <% } %>
-                        <h1
-                            style="margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
-                            <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae'
-                                %>
-                        </h1>
-            </div>
-        </div>
-    </header>
+    <% if (typeof settings !=='undefined' && settings.bgImageUrl) { %>
+        <div class="bg-fixed-layer" style="background-image: url('<%= settings.bgImageUrl %>');"></div>
+        <% } %>
 
-    <div class="container">
-        <div class="product-layout">
-            <div class="image-gallery">
-                <div class="main-image-container">
-                    <% const isSale=checkIsSale(product.price, product.salePrice); const pVal=getNum(product.price);
-                        const sVal=getNum(product.salePrice); %>
-                        <% if (isSale) { %>
-                            <div class="sale-badge">SALE</div>
-                            <% } %>
-                                <img src="<%= product.storageImageUrl || product.imageUrl || '/placeholder.png' %>"
-                                    alt="<%= product.name %>" class="main-image">
-                </div>
-            </div>
+            <header
+                style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles : '' %>">
+                <%- include('partials/header') %>
+            </header>
 
-            <div class="product-content">
-                <span class="brand-name">
-                    <% if (brand && brand.affiliateHomeUrl) { %>
-                        <a href="<%= brand.affiliateHomeUrl %>" target="_blank" rel="noopener noreferrer"
-                            style="color: var(--primary); text-decoration: none; font-weight: 700;">
-                            <%= brand.name %>
-                        </a>
-                        <% } else { %>
-                            <%= brand ? brand.name : product.advertiserName %>
-                                <% } %>
-                </span>
-                <h1 class="product-title">
-                    <%= product.name %>
-                </h1>
 
-                <div class="price-container">
-                    <div style="display: flex; align-items: baseline;">
-                        <% if (isSale) { %>
-                            <span class="current-price sale-price">$<%= formatPrice(sVal) %></span>
-                            <span class="original-price">$<%= formatPrice(pVal) %></span>
-                            <% } else { %>
-                                <span class="current-price">$<%= formatPrice(pVal) %></span>
-                                <% } %>
-                    </div>
-                    <% if (isSale) { %>
-                        <div class="savings-badge">
-                            Save $<%= formatPrice(pVal - sVal) %> (<%= Math.round((1 - sVal/pVal) * 100) %>%)
+
+            <div class="container">
+                <div class="product-layout">
+                    <div class="image-gallery">
+                        <div class="main-image-container">
+                            <% const isSale=checkIsSale(product.price, product.salePrice); const
+                                pVal=getNum(product.price); const sVal=getNum(product.salePrice); %>
+                                <% if (isSale) { %>
+                                    <div class="sale-badge">SALE</div>
+                                    <% } %>
+                                        <img src="<%= product.storageImageUrl || product.imageUrl || '/placeholder.png' %>"
+                                            alt="<%= product.name %>" class="main-image">
                         </div>
-                        <% } %>
-                </div>
+                    </div>
 
-                <div class="product-description">
-                    <h3 style="margin-bottom: 1rem;">Product Details</h3>
-                    <p style="color: var(--text-secondary); line-height: 1.8;">
-                        <%= product.description || 'No detailed description available for this item.' %>
-                    </p>
-                </div>
+                    <div class="product-content">
+                        <span class="brand-name">
+                            <% if (brand) { %>
+                                <a href="/brand/<%= brand.id %>-<%= (brand.slug || brand.name.toLowerCase().replace(/\s+/g, '-')) %>"
+                                    style="color: var(--primary); text-decoration: none; font-weight: 700;">
+                                    <%= brand.name %>
+                                </a>
+                                <% } else { %>
+                                    <%= product.advertiserName %>
+                                        <% } %>
+                        </span>
+                        <h1 class="product-title">
+                            <%= product.name %>
+                        </h1>
 
-                <div style="margin-top: 2rem;">
-                    <a href="<%= product.buyUrl || product.link %>" target="_blank" class="buy-now-btn">
-                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                        More Details
-                    </a>
+                        <div class="price-container">
+                            <div style="display: flex; align-items: baseline;">
+                                <% if (isSale) { %>
+                                    <span class="current-price sale-price">$<%= formatPrice(sVal) %></span>
+                                    <span class="original-price">$<%= formatPrice(pVal) %></span>
+                                    <% } else { %>
+                                        <span class="current-price">$<%= formatPrice(pVal) %></span>
+                                        <% } %>
+                            </div>
+                            <% if (isSale) { %>
+                                <div class="savings-badge">
+                                    Save $<%= formatPrice(pVal - sVal) %> (<%= Math.round((1 - sVal/pVal) * 100) %>%)
+                                </div>
+                                <% } %>
+                        </div>
+
+                        <div class="product-description">
+                            <h3 style="margin-bottom: 1rem;">Product Details</h3>
+                            <p style="color: var(--text-secondary); line-height: 1.8;">
+                                <%= product.description || 'No detailed description available for this item.' %>
+                            </p>
+                        </div>
+
+                        <div style="margin-top: 2rem;">
+                            <a href="<%= product.buyUrl || product.link %>" target="_blank" class="buy-now-btn">
+                                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                                More Details
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <footer
-        style="margin-top: 5rem; padding: 2rem 1.5rem; background: linear-gradient(to bottom, #EF3E5C, #E42A53); color: white;">
-        <div
-            style="max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem;">
-            <!-- Logo Section -->
-            <div style="display: flex; align-items: center; gap: 0.25rem;">
-                <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
-                    <img src="<%= settings.logoUrl %>" alt="Logo"
-                        style="height: 48px; width: auto; max-width: 250px; object-fit: contain;">
-                    <% } %>
-                        <h2
-                            style="margin: 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.025em; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles.replace(/\/\*[\s\S]*?\*\//g, '') : '' %> color: white !important; filter: none !important; text-shadow: none !important;">
-                            <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae'
-                                %>
-                        </h2>
-            </div>
-
-            <!-- Copyright -->
-            <p style="margin: 0; font-size: 1rem; font-weight: 500; opacity: 0.9; font-style: italic;">&copy; 2026
-                OfferBae. All rights reserved.</p>
-
-            <!-- Legal Links -->
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-                <a href="#"
-                    style="color: white; text-decoration: none; font-size: 0.938rem; font-weight: 600; opacity: 0.8; transition: opacity 0.2s;"
-                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Legal Statement</a>
-                <a href="#"
-                    style="color: white; text-decoration: none; font-size: 0.938rem; font-weight: 600; opacity: 0.8; transition: opacity 0.2s;"
-                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Privacy Policy</a>
-                <a href="#"
-                    style="color: white; text-decoration: none; font-size: 0.938rem; font-weight: 600; opacity: 0.8; transition: opacity 0.2s;"
-                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Terms of Use</a>
-            </div>
-        </div>
-    </footer>
+            <%- include('partials/footer') %>
+                <%- include('partials/nav-scripts') %>
 </body>
 
 </html>

@@ -1,0 +1,168 @@
+:root {
+--header-height: 72px;
+}
+
+html, body {
+margin: 0;
+padding: 0;
+overflow-x: hidden;
+min-height: 100%;
+}
+
+header {
+background: var(--surface, #ffffff);
+border-bottom: 1px solid var(--border, #e5e7eb);
+position: sticky;
+top: 0;
+z-index: 1000;
+padding: 0;
+min-height: var(--header-height);
+display: flex;
+align-items: center;
+box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.header-container {
+width: 100%;
+max-width: 1280px;
+margin: 0 auto;
+padding: 0 1.5rem;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+.main-nav {
+display: flex;
+gap: 1.25rem;
+align-items: center;
+}
+
+.nav-link {
+text-decoration: none;
+color: #EF3E5C;
+font-weight: 700;
+font-size: 0.95rem;
+padding: 0.5rem 0;
+transition: all 0.2s;
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
+}
+
+.nav-link:hover {
+color: #E42A53;
+transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+.main-nav {
+display: none;
+}
+
+.mobile-menu-btn {
+display: block !important;
+}
+}
+
+.mobile-menu-btn {
+display: none;
+background: none;
+border: none;
+cursor: pointer;
+padding: 0;
+z-index: 1100;
+width: 32px;
+height: 32px;
+position: relative;
+margin-right: -4px;
+}
+
+.mobile-menu-btn span {
+display: block;
+width: 24px;
+height: 2.5px;
+background: #EF3E5C;
+position: absolute;
+left: 4px;
+transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+border-radius: 2px;
+}
+
+.mobile-menu-btn span:nth-child(1) { top: 8px; }
+.mobile-menu-btn span:nth-child(2) { top: 15px; }
+.mobile-menu-btn span:nth-child(3) { top: 22px; }
+
+.mobile-menu-btn.active span:nth-child(1) {
+top: 15px;
+transform: rotate(45deg);
+}
+
+.mobile-menu-btn.active span:nth-child(2) {
+opacity: 0;
+transform: translateX(-10px);
+}
+
+.mobile-menu-btn.active span:nth-child(3) {
+top: 15px;
+transform: rotate(-45deg);
+}
+
+.mobile-nav {
+position: fixed;
+top: var(--header-height);
+right: -105%; /* More robust off-screen */
+width: 100%;
+height: calc(100dvh - var(--header-height)); /* Use dvh for mobile address bars */
+background: white;
+z-index: 1001;
+display: none; /* Hidden by default */
+flex-direction: column;
+padding: 2rem;
+gap: 1.5rem;
+box-shadow: -5px 10px 15px rgba(0, 0, 0, 0.05);
+transition: right 0.3s ease-in-out;
+box-sizing: border-box;
+overflow-y: auto;
+}
+
+.mobile-nav.active {
+display: flex;
+right: 0;
+}
+
+.mobile-nav-link {
+text-decoration: none;
+color: #EF3E5C;
+font-weight: 700;
+font-size: 1.25rem;
+transition: color 0.2s;
+display: flex;
+align-items: center;
+gap: 0.75rem;
+}
+
+.nav-icon {
+width: 1.25em;
+height: 1.25em;
+flex-shrink: 0;
+}
+
+/* Background Image Fix for Mobile */
+.bg-fixed-layer {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+z-index: -1;
+background-size: cover;
+background-position: center;
+background-attachment: fixed;
+pointer-events: none;
+}
+@media (max-width: 768px) {
+.bg-fixed-layer {
+background-attachment: scroll; /* Fixed is buggy on mobile, sticky layer handles it */
+}
+}

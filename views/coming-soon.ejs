@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= (typeof title !=='undefined' ) ? title : ((typeof settings !=='undefined' && settings.logoText) ?
+            settings.logoText : 'OfferBae' ) + ' - Coming Soon' %>
+    </title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: <%=(typeof settings !=='undefined' && settings.defaultLinkColor) ? settings.defaultLinkColor: '#4f46e5' %>;
+            --bg: <%=(typeof settings !=='undefined' && settings.bgColor) ? settings.bgColor: '#f9fafb' %>;
+            --surface: #ffffff;
+            --text-main: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+
+            <% if (typeof settings !=='undefined' && settings.bgImageUrl) {
+                %>background-image: url('<%= settings.bgImageUrl %>');
+                background-size: cover;
+                background-attachment: fixed;
+                background-position: center;
+                <%
+            }
+
+            %>color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .header-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+    <style>
+        <%- include('partials/header-styles') %>
+    </style>
+    <style>
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .hero {
+            background: var(--surface);
+            padding: 4rem 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid var(--border);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), #ef3e5c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.875rem 2rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            filter: brightness(1.1);
+        }
+
+        footer {
+            padding: 2rem 1.5rem;
+            background: linear-gradient(to bottom, #EF3E5C, #E42A53);
+            color: white;
+            text-align: center;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .hero h1 {
+                font-size: 2.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles : '' %>">
+        <%- include('partials/header') %>
+    </header>
+
+
+
+    <main class="main-content">
+        <div class="hero">
+            <h1>
+                <%= (typeof title !=='undefined' ) ? title.split(' - ')[0] : ' Coming Soon' %>
+            </h1>
+            <p>
+                <%= (typeof message !=='undefined' ) ? message
+                    : "We're building something amazing. Our new homepage is under construction, but you can explore our partner brands in the meantime."
+                    %>
+            </p>
+            <a href="<%= (typeof btnLink !== 'undefined') ? btnLink : '/brands' %>" class="btn">
+                <%= (typeof btnText !=='undefined' ) ? btnText : 'View All Brands' %>
+            </a>
+        </div>
+    </main>
+
+    <%- include('partials/footer') %>
+        <%- include('partials/nav-scripts') %>
+</body>
+
+</html>

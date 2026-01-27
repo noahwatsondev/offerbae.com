@@ -1,0 +1,2 @@
+Mobile nav icons - same as header
+Footer icons in index.ejs, catalog.ejs, product.ejs - same solid versions

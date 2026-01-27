@@ -306,9 +306,19 @@ const getHomepage = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).send('Error loading homepage: ' + error.message);
+        res.status(500).send('Error loading brands page: ' + error.message);
     }
 };
+
+const getComingSoon = async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        res.render('coming-soon', { settings });
+    } catch (e) {
+        res.status(500).send('Error loading homepage: ' + e.message);
+    }
+};
+
 
 
 const refreshData = async (req, res) => {
@@ -317,7 +327,7 @@ const refreshData = async (req, res) => {
         console.log('Manual refresh triggered.');
         await dataSync.syncAll();
         console.log('Manual refresh complete.');
-        res.redirect('/');
+        res.redirect('/brands');
     } catch (error) {
         console.error('Error triggering refresh:', error);
         res.status(500).send('Error triggering refresh');
@@ -782,6 +792,7 @@ module.exports = {
     updateDescription,
     uploadLogoMiddleware,
     getHomepage,
+    getComingSoon,
     getArchitecture,
     getStyle,
     updateStyle,
