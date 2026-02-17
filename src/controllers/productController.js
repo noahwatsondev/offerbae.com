@@ -1,14 +1,5 @@
 const firebaseConfig = require('../config/firebase');
-
-const slugify = (text) => {
-    if (!text) return '';
-    return text.toString().toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w\-]+/g, '')
-        .replace(/\-\-+/g, '-')
-        .replace(/^-+/, '')
-        .replace(/-+$/, '');
-};
+const { getGlobalSettings, slugify } = require('../services/db');
 
 const getCatalogPage = async (req, res) => {
     try {
@@ -84,7 +75,6 @@ const getCategoryPage = async (req, res) => {
 
 const renderCatalog = async (req, res, context) => {
     const db = firebaseConfig.db;
-    const { getGlobalSettings } = require('../services/db');
     const settings = await getGlobalSettings();
     const page = parseInt(req.query.page) || 1;
     const limit = 50;
@@ -236,7 +226,6 @@ const getProductDetail = async (req, res) => {
         const brandSnap = await db.collection('advertisers').where('id', '==', product.advertiserId).limit(1).get();
         const brand = !brandSnap.empty ? brandSnap.docs[0].data() : null;
 
-        const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
         const ejsHelpers = require('../utils/ejsHelpers');
 
@@ -259,7 +248,6 @@ const getProductDetail = async (req, res) => {
 
 const getCategoriesPage = async (req, res) => {
     try {
-        const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
         res.render('coming-soon', {
             settings,
@@ -275,7 +263,6 @@ const getCategoriesPage = async (req, res) => {
 
 const getOffersListPage = async (req, res) => {
     try {
-        const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
         res.render('coming-soon', {
             settings,
@@ -291,7 +278,6 @@ const getOffersListPage = async (req, res) => {
 
 const getProductsListPage = async (req, res) => {
     try {
-        const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
         res.render('coming-soon', {
             settings,
@@ -320,7 +306,6 @@ const getOfferDetailPage = async (req, res) => {
         const brandSnap = await db.collection('advertisers').where('id', '==', String(offer.advertiserId)).limit(1).get();
         const brand = !brandSnap.empty ? brandSnap.docs[0].data() : null;
 
-        const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
 
         res.render('coming-soon', {
@@ -338,7 +323,6 @@ const getOfferDetailPage = async (req, res) => {
 
 const getCalendarListPage = async (req, res) => {
     try {
-        const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
         res.render('coming-soon', {
             settings,
@@ -355,7 +339,6 @@ const getCalendarListPage = async (req, res) => {
 const getCalendarEventPage = async (req, res) => {
     try {
         const { slug } = req.params;
-        const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
 
         // Convert slug to Title Case for the message
@@ -375,7 +358,6 @@ const getCalendarEventPage = async (req, res) => {
 
 const getJournalListPage = async (req, res) => {
     try {
-        const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
         res.render('coming-soon', {
             settings,
@@ -392,7 +374,6 @@ const getJournalListPage = async (req, res) => {
 const getJournalArticlePage = async (req, res) => {
     try {
         const { slug } = req.params;
-        const { getGlobalSettings } = require('../services/db');
         const settings = await getGlobalSettings();
 
         const articleName = slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');

@@ -4,10 +4,10 @@
             <img src="<%= settings.logoUrl %>" alt="Logo"
                 style="height: 40px; width: auto; max-width: 200px; object-fit: contain;">
             <% } %>
-                <h1
-                    style="margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
+                <span
+                    style="display: block; margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
                     <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae' %>
-                </h1>
+                </span>
     </div>
     <nav class="main-nav">
         <a href="/categories" class="nav-link"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg"

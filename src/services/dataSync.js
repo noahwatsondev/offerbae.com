@@ -94,6 +94,85 @@ const cacheImage = async (url, folder) => {
     }
 };
 
+/**
+ * Robust logo handling logic for all advertiser syncs.
+ * 1. Preserves manual uploads from Mission Control.
+ * 2. Caches native network logos.
+ * 3. Falls back to Brandfetch only if native logo is missing, respecting session limits.
+ */
+const handleAdvertiserLogo = async (network, adv, existingData) => {
+    // 1. Priority #1: Respect manual logos from Mission Control
+    if (existingData && existingData.isManualLogo) {
+        return {
+            logoUrl: existingData.logoUrl,
+            storageLogoUrl: existingData.storageLogoUrl,
+            isManualLogo: true
+        };
+    }
+
+    // 2. Priority #2: Native Logo from Affiliate Network
+    let logoUrl = adv.logoUrl || (existingData ? existingData.logoUrl : null);
+    let storageLogoUrl = existingData ? existingData.storageLogoUrl : null;
+    const logoChanged = !existingData || existingData.logoUrl !== logoUrl;
+
+    // If native logo shifted or is missing from storage, cache it now
+    if (logoUrl && (logoChanged || !storageLogoUrl)) {
+        const cached = await cacheImage(logoUrl, `advertisers/${network.toLowerCase()}`);
+        if (cached) storageLogoUrl = cached;
+    }
+
+    // 3. Priority #3: Brandfetch (Only if native logo is completely missing)
+    // This block is skipped if we have any valid storageLogoUrl (manual, cached native, or previous BF).
+    if (!storageLogoUrl && adv.url && (logoChanged || brandfetchSessionCount < MAX_BRANDFETCH_PER_SESSION)) {
+        const domain = brandfetch.extractDomain(adv.url);
+        if (domain) {
+            if (!logoChanged) brandfetchSessionCount++;
+
+            const bfLogoUrl = await brandfetch.fetchLogo(domain);
+            if (bfLogoUrl) {
+                logoUrl = bfLogoUrl;
+                storageLogoUrl = await cacheImage(logoUrl, `advertisers/${network.toLowerCase()}`);
+            }
+        }
+    }
+
+    return {
+        logoUrl: logoUrl || null,
+        storageLogoUrl: storageLogoUrl || null,
+        isManualLogo: false
+    };
+};
+
+/**
+ * Ensures categories are preserved and not overwritten by empty data from networks.
+ */
+const handleAdvertiserCategories = (network, adv, existingData) => {
+    // Priority 1: Respect already set categories if incoming is empty
+    const incomingCats = Array.isArray(adv.categories) ? adv.categories : [];
+    const internalCats = (existingData && Array.isArray(existingData.categories)) ? existingData.categories : [];
+
+    // If incoming data from network has categories, we use them (network-fresh data)
+    if (incomingCats.length > 0) {
+        return {
+            categories: incomingCats,
+            isManualCategory: !!(existingData && existingData.isManualCategory)
+        };
+    }
+
+    // If network data is empty, but we already have categories, keep ours!
+    if (internalCats.length > 0) {
+        return {
+            categories: internalCats,
+            isManualCategory: !!(existingData && existingData.isManualCategory)
+        };
+    }
+
+    return {
+        categories: [],
+        isManualCategory: false
+    };
+};
+
 const recalculateAdvertiserCounts = async (network, advertiserId) => {
     try {
         const db = firebaseConfig.db;
@@ -217,32 +296,8 @@ const syncRakutenAdvertisers = async () => {
         const network = 'Rakuten';
         const existingData = await getAdvertiser(network, advId);
 
-        let logoUrl = adv.logoUrl || (existingData ? existingData.logoUrl : null);
-        let storageLogoUrl = existingData ? existingData.storageLogoUrl : null;
-        const logoChanged = !existingData || existingData.logoUrl !== logoUrl;
-
-        if (logoUrl && !storageLogoUrl) {
-            console.log(`[SYNC] Recovering missing storage logo for ${adv.name}: ${logoUrl}`);
-            storageLogoUrl = await cacheImage(logoUrl, 'advertisers/rakuten');
-        }
-
-        if (!storageLogoUrl && adv.url && (logoChanged || brandfetchSessionCount < MAX_BRANDFETCH_PER_SESSION)) {
-            const domain = brandfetch.extractDomain(adv.url);
-            if (domain) {
-                if (!logoChanged) {
-                    brandfetchSessionCount++;
-                    console.log(`[SYNC] [${brandfetchSessionCount}/${MAX_BRANDFETCH_PER_SESSION}] Retry BF for ${adv.name} (${domain})`);
-                }
-                const bfLogoUrl = await brandfetch.fetchLogo(domain);
-                if (bfLogoUrl) {
-                    console.log(`[SYNC] Found BF logo for ${adv.name}: ${bfLogoUrl}`);
-                    logoUrl = bfLogoUrl;
-                    storageLogoUrl = await cacheImage(logoUrl, 'advertisers/rakuten');
-                }
-            }
-        }
-
-        const isManualLogo = existingData && existingData.isManualLogo;
+        const logoResults = await handleAdvertiserLogo(network, adv, existingData);
+        const catResults = handleAdvertiserCategories(network, adv, existingData);
         const affiliateHomeUrl = deepLinksMap[advId] || (existingData && existingData.affiliateHomeUrl) || null;
 
         const currentData = {
@@ -251,12 +306,13 @@ const syncRakutenAdvertisers = async () => {
             name: adv.name || '',
             status: 'Active',
             url: adv.url || '',
-            categories: adv.categories || [],
+            categories: catResults.categories,
+            isManualCategory: catResults.isManualCategory,
             country: adv.country || 'Unknown',
             description: adv.description || null,
-            logoUrl: isManualLogo ? (existingData.logoUrl || logoUrl) : (logoUrl || null),
-            storageLogoUrl: isManualLogo ? existingData.storageLogoUrl : (storageLogoUrl || null),
-            isManualLogo: isManualLogo || false,
+            logoUrl: logoResults.logoUrl,
+            storageLogoUrl: logoResults.storageLogoUrl,
+            isManualLogo: logoResults.isManualLogo,
             affiliateHomeUrl: affiliateHomeUrl,
             raw_data: JSON.parse(JSON.stringify(adv))
         };
@@ -413,40 +469,24 @@ const syncCJAdvertisers = async () => {
     console.log(`SYNC: Found ${cjAdvs.length} CJ advertisers.`);
     const activeIds = new Set();
     for (const adv of cjAdvs) {
-        const existingData = await getAdvertiser('CJ', adv.id);
-        let logoUrl = adv.logoUrl || (existingData ? existingData.logoUrl : null);
-        let storageLogoUrl = existingData ? existingData.storageLogoUrl : null;
-        const logoChanged = !existingData || existingData.logoUrl !== logoUrl;
-        if (logoUrl && !storageLogoUrl) {
-            // console.log(`[SYNC] Recovering missing storage logo for ${adv.name}: ${logoUrl}`); // Debug log
-            storageLogoUrl = await cacheImage(logoUrl, 'advertisers/cj');
-        }
-        if (!storageLogoUrl && adv.url && (logoChanged || brandfetchSessionCount < MAX_BRANDFETCH_PER_SESSION)) {
-            const domain = brandfetch.extractDomain(adv.url);
-            if (domain) {
-                if (!logoChanged) {
-                    brandfetchSessionCount++;
-                    // console.log(`[SYNC] [${brandfetchSessionCount}/${MAX_BRANDFETCH_PER_SESSION}] Retry BF for ${adv.name} (${domain})`); // Debug log
-                }
-                const bfLogoUrl = await brandfetch.fetchLogo(domain);
-                if (bfLogoUrl) {
-                    // console.log(`[SYNC] Found BF logo for ${adv.name}: ${bfLogoUrl}`); // Debug log
-                    logoUrl = bfLogoUrl;
-                    storageLogoUrl = await cacheImage(logoUrl, 'advertisers/cj');
-                }
-            }
-        }
+        const network = 'CJ';
+        const existingData = await getAdvertiser(network, adv.id);
+        const logoResults = await handleAdvertiserLogo(network, adv, existingData);
+        const catResults = handleAdvertiserCategories(network, adv, existingData);
+
         const result = await upsertAdvertiser({
             id: adv.id,
-            network: 'CJ',
+            network: network,
             name: adv.name,
             status: adv.status || 'joined',
             url: adv.url || '',
             description: adv.description || null,
-            categories: adv.categories || [],
+            categories: catResults.categories,
+            isManualCategory: catResults.isManualCategory,
             country: adv.country || 'Unknown',
-            logoUrl: logoUrl,
-            storageLogoUrl: storageLogoUrl,
+            logoUrl: logoResults.logoUrl,
+            storageLogoUrl: logoResults.storageLogoUrl,
+            isManualLogo: logoResults.isManualLogo,
             raw_data: JSON.parse(JSON.stringify(adv))
         }, existingData);
         activeIds.add(result.id);
@@ -576,40 +616,24 @@ const syncAWINAdvertisers = async () => {
     console.log(`SYNC: Found ${awinAdvs.length} AWIN advertisers.`);
     const activeIds = new Set();
     for (const adv of awinAdvs) {
-        const existingData = await getAdvertiser('AWIN', adv.id);
-        let logoUrl = adv.logoUrl || (existingData ? existingData.logoUrl : null);
-        let storageLogoUrl = existingData ? existingData.storageLogoUrl : null;
-        const logoChanged = !existingData || existingData.logoUrl !== logoUrl;
-        if (logoUrl && !storageLogoUrl) {
-            // console.log(`[SYNC] Recovering missing storage logo for ${adv.name}: ${logoUrl}`); // Debug log
-            storageLogoUrl = await cacheImage(logoUrl, 'advertisers/awin');
-        }
-        if (!storageLogoUrl && adv.url && (logoChanged || brandfetchSessionCount < MAX_BRANDFETCH_PER_SESSION)) {
-            const domain = brandfetch.extractDomain(adv.url);
-            if (domain) {
-                if (!logoChanged) {
-                    brandfetchSessionCount++;
-                    // console.log(`[SYNC] [${brandfetchSessionCount}/${MAX_BRANDFETCH_PER_SESSION}] Retry BF for ${adv.name} (${domain})`); // Debug log
-                }
-                const bfLogoUrl = await brandfetch.fetchLogo(domain);
-                if (bfLogoUrl) {
-                    // console.log(`[SYNC] Found BF logo for ${adv.name}: ${bfLogoUrl}`); // Debug log
-                    logoUrl = bfLogoUrl;
-                    storageLogoUrl = await cacheImage(logoUrl, 'advertisers/awin');
-                }
-            }
-        }
+        const network = 'AWIN';
+        const existingData = await getAdvertiser(network, adv.id);
+        const logoResults = await handleAdvertiserLogo(network, adv, existingData);
+        const catResults = handleAdvertiserCategories(network, adv, existingData);
+
         const result = await upsertAdvertiser({
             id: adv.id,
-            network: 'AWIN',
+            network: network,
             name: adv.name,
             status: adv.status || 'joined',
             url: adv.url || '',
             description: adv.description || null,
-            categories: adv.categories || [],
+            categories: catResults.categories,
+            isManualCategory: catResults.isManualCategory,
             country: adv.country || 'Unknown',
-            logoUrl: logoUrl,
-            storageLogoUrl: storageLogoUrl,
+            logoUrl: logoResults.logoUrl,
+            storageLogoUrl: logoResults.storageLogoUrl,
+            isManualLogo: logoResults.isManualLogo,
             raw_data: JSON.parse(JSON.stringify(adv))
         }, existingData);
         activeIds.add(result.id);
@@ -730,44 +754,24 @@ const syncPepperjamAdvertisers = async () => {
     console.log(`SYNC: Found ${advs.length} Pepperjam advertisers.`);
     const activeIds = new Set();
     for (const adv of advs) {
-        const existingData = await getAdvertiser('Pepperjam', adv.id);
-        let logoUrl = adv.logoUrl || (existingData ? existingData.logoUrl : null);
-        let storageLogoUrl = existingData ? existingData.storageLogoUrl : null;
-        const logoChanged = !existingData || existingData.logoUrl !== logoUrl;
-
-        if (logoUrl && !storageLogoUrl) {
-            console.log(`[SYNC] Recovering missing storage logo for ${adv.name}: ${logoUrl}`);
-            storageLogoUrl = await cacheImage(logoUrl, 'advertisers/pepperjam');
-            if (storageLogoUrl) console.log(`[SYNC] Successfully cached native logo for ${adv.name}`);
-        }
-
-        if (!storageLogoUrl && adv.url && (logoChanged || brandfetchSessionCount < MAX_BRANDFETCH_PER_SESSION)) {
-            const domain = brandfetch.extractDomain(adv.url);
-            if (domain) {
-                if (!logoChanged) {
-                    brandfetchSessionCount++;
-                    console.log(`[SYNC] [${brandfetchSessionCount}/${MAX_BRANDFETCH_PER_SESSION}] Retry BF for ${adv.name} (${domain})`);
-                }
-                const bfLogoUrl = await brandfetch.fetchLogo(domain);
-                if (bfLogoUrl) {
-                    console.log(`[SYNC] Found BF logo for ${adv.name}: ${bfLogoUrl}`);
-                    logoUrl = bfLogoUrl;
-                    storageLogoUrl = await cacheImage(logoUrl, 'advertisers/pepperjam');
-                }
-            }
-        }
+        const network = 'Pepperjam';
+        const existingData = await getAdvertiser(network, adv.id);
+        const logoResults = await handleAdvertiserLogo(network, adv, existingData);
+        const catResults = handleAdvertiserCategories(network, adv, existingData);
 
         const result = await upsertAdvertiser({
             id: adv.id,
-            network: 'Pepperjam',
+            network: network,
             name: adv.name,
             status: adv.status,
             url: adv.url || '',
-            categories: adv.categories || [],
+            categories: catResults.categories,
+            isManualCategory: catResults.isManualCategory,
             country: 'Unknown',
             description: adv.description || null,
-            logoUrl: logoUrl,
-            storageLogoUrl: storageLogoUrl,
+            logoUrl: logoResults.logoUrl,
+            storageLogoUrl: logoResults.storageLogoUrl,
+            isManualLogo: logoResults.isManualLogo,
             raw_data: JSON.parse(JSON.stringify(adv))
         }, existingData);
         activeIds.add(result.id);
@@ -848,21 +852,47 @@ const syncAll = async () => {
     if (isGlobalSyncRunning) return;
     isGlobalSyncRunning = true;
     try {
+        console.log('SYNC: Starting Global Full Sync...');
+
+        // Phase 1: Advertisers
+        syncState.Rakuten.status = 'running';
         await syncRakutenAdvertisers();
+        syncState.CJ.status = 'running';
         await syncCJAdvertisers();
+        syncState.AWIN.status = 'running';
         await syncAWINAdvertisers();
+        syncState.Pepperjam.status = 'running';
         await syncPepperjamAdvertisers();
+
+        // Phase 2: Offers
         await syncRakutenCoupons();
         await syncCJLinks();
         await syncAWINOffers();
         await syncPepperjamOffers();
+
+        // Phase 3: Products
         await syncRakutenProducts();
+        syncState.Rakuten.status = 'complete';
+
         await syncCJProducts();
+        syncState.CJ.status = 'complete';
+
         await syncAWINProducts();
+        syncState.AWIN.status = 'complete';
+
         await syncPepperjamProducts();
+        syncState.Pepperjam.status = 'complete';
+
         await reconcileAllProductCounts();
+        console.log('SYNC: Global Full Sync Complete.');
+    } catch (e) {
+        console.error('SYNC: Global Full Sync Failed:', e);
     } finally {
         isGlobalSyncRunning = false;
+        // Ensure all statuses are reset if they didn't reach complete
+        Object.keys(syncState).forEach(net => {
+            if (syncState[net].status === 'running') syncState[net].status = 'complete';
+        });
     }
 };
 

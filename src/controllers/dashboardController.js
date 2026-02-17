@@ -3,7 +3,7 @@ const dataSync = require('../services/dataSync');
 const imageStore = require('../services/imageStore');
 const multer = require('multer');
 const axios = require('axios');
-const { getAdvertiser, upsertAdvertiser, getGlobalSettings, updateGlobalSettings } = require('../services/db'); // Needed for updates
+const { getAdvertiser, upsertAdvertiser, getGlobalSettings, updateGlobalSettings, getEnrichedAdvertisers } = require('../services/db'); // Needed for updates
 
 // Configure Multer for memory storage
 const upload = multer({
@@ -95,65 +95,20 @@ const uploadStyleMiddleware = upload.fields([
 const getDashboardData = async (req, res) => {
     console.log('ENTER: getDashboardData');
     try {
-        console.log('Fetching data from Firestore...');
-
-        // Use lazy db getter
+        const advertisers = await getEnrichedAdvertisers();
         const db = firebaseConfig.db;
 
-        // Fetch Advertisers
-        console.log('Fetching advertisers collection...');
-        const advSnapshot = await db.collection('advertisers').get();
-        const advertisers = [];
-        advSnapshot.forEach(doc => {
-            advertisers.push(doc.data());
-        });
-        console.log(`Fetched ${advertisers.length} advertisers.`);
-
         // Fetch Product Count (Optimized)
-        console.log('Fetching product count...');
         const productsCountSnap = await db.collection('products').count().get();
         const totalProducts = productsCountSnap.data().count;
-        console.log(`Total products calculated: ${totalProducts}`);
-
-        const productCounts = {};
-        const saleProductCounts = {};
-
-        // TEMPORARY PERFORMANCE FIX: Counts are now read directly from Advertiser Doc (denormalized)
-        // See scripts/update_counts.js
-        console.log('Using denormalized counts from advertiser docs.');
-
-        // Total offers calculation (Optimized: Sum of denormalized)
-        // const offersCountSnap = await db.collection('offers').count().get();
-        // const totalOffers = offersCountSnap.data().count;
         const totalOffers = advertisers.reduce((sum, adv) => sum + (adv.offerCount || 0), 0);
 
         // Check if DB is empty
         if (advertisers.length === 0) {
-            console.log('Database empty. Triggering initial sync (this may take a while)...');
+            console.log('Database empty. Triggering initial sync...');
             await dataSync.syncAll();
             return getDashboardData(req, res);
         }
-
-        // Enrich advertisers
-        const enrichedAdvertisers = advertisers.map(a => {
-            return {
-                ...a,
-                ...a,
-                productCount: a.productCount || 0,
-                saleProductCount: a.saleProductCount || 0, // Not yet denormalized, keeping 0 or needing update
-                offerCount: a.offerCount || 0,
-                // Prioritize storageLogoUrl if exists, regardless of manual flag (logic handled in sync/upload)
-                logoUrl: a.storageLogoUrl || a.logoUrl || (a.raw_data && a.raw_data.logoUrl ? a.raw_data.logoUrl : null)
-            };
-        });
-
-        // Sort Advertisers: Product Count (Desc) -> Name (Asc)
-        enrichedAdvertisers.sort((a, b) => {
-            if (b.productCount !== a.productCount) {
-                return b.productCount - a.productCount;
-            }
-            return a.name.localeCompare(b.name);
-        });
 
         // Aggregate Stats by Network
         const networkStats = {
@@ -163,29 +118,22 @@ const getDashboardData = async (req, res) => {
             Pepperjam: { advertisers: 0, offers: 0, products: 0 }
         };
 
-        enrichedAdvertisers.forEach(adv => {
+        console.log(`[DEBUG] Aggregating ${advertisers.length} advertisers...`);
+        advertisers.forEach(adv => {
             const net = adv.network;
             if (networkStats[net]) {
                 networkStats[net].advertisers++;
                 networkStats[net].offers += (adv.offerCount || 0);
                 networkStats[net].products += (adv.productCount || 0);
+            } else {
+                console.log(`[DEBUG] Unknown network: "${net}" for advertiser: ${adv.name}`);
             }
         });
 
-        // Populate counts maps for the view (it still expects them)
-        const productCountsMap = {};
-        const offerCountsMap = {};
-        const saleProductCountsMap = {};
+        console.log(`[DEBUG] Network Stats:`, JSON.stringify(networkStats));
 
-        enrichedAdvertisers.forEach(adv => {
-            productCountsMap[adv.id] = adv.productCount || 0;
-            offerCountsMap[adv.id] = adv.offerCount || 0;
-            saleProductCountsMap[adv.id] = adv.saleProductCount || 0;
-        });
-
-        console.log('Rendering dashboard...');
         res.render('dashboard', {
-            advertisers: enrichedAdvertisers,
+            advertisers,
             offerCounts: {},
             productCounts: {},
             saleProductCounts: {},
@@ -196,12 +144,11 @@ const getDashboardData = async (req, res) => {
                 awin: networkStats.AWIN.advertisers,
                 pepperjam: networkStats.Pepperjam.advertisers,
                 totalProducts: totalProducts,
-                totalAdvertisers: enrichedAdvertisers.length,
+                totalAdvertisers: advertisers.length,
                 totalCoupons: totalOffers,
                 networkDetailed: networkStats
             }
         });
-        console.log('Dashboard rendered.');
     } catch (error) {
         console.error('Error loading dashboard:', error);
         res.status(500).send('Error loading dashboard: ' + error.message);
@@ -210,65 +157,10 @@ const getDashboardData = async (req, res) => {
 
 const getHomepage = async (req, res) => {
     console.log('ENTER: getHomepage');
-    // For now, reuse the exact logic but render 'index'
-    // In a real refactor, we might want to abstract the data fetching to a service
-    // to avoid this massive code duplication.
-    // For speed/risk reduction now, duplicate the logic.
-    // Default empty data structure
-    let advertisers = [];
-    let totalProducts = 0;
-    let totalOffers = 0;
-    let enrichedAdvertisers = [];
-    let networkStats = {
-        Rakuten: { advertisers: 0, offers: 0, products: 0 },
-        CJ: { advertisers: 0, offers: 0, products: 0 },
-        AWIN: { advertisers: 0, offers: 0, products: 0 },
-        Pepperjam: { advertisers: 0, offers: 0, products: 0 }
-    };
-
     try {
-        const db = firebaseConfig.db;
-
-        // Fetch Advertisers
-        console.log('Fetching Advertisers (LIMIT 10)...');
-        try {
-            // RESTORED:
-            const advSnapshot = await db.collection('advertisers').get(); // Removed limit for full list
-            // const advSnapshot = await db.collection('advertisers').limit(10).get();
-            // console.log('Advertisers snapshot received. Size:', advSnapshot.size);
-            advSnapshot.forEach(doc => advertisers.push(doc.data()));
-            console.log(`Advertisers array populated. Count: ${advertisers.length}`);
-        } catch (dbErr) {
-            console.error('Error fetching advertisers (Offline?):', dbErr.message);
-        }
-
-        // Fetch Product Count
-        try {
-            // const productsCountSnap = await db.collection('products').count().get();
-            // totalProducts = productsCountSnap.data().count;
-            totalProducts = 0;
-        } catch (dbErr) {
-            console.error('Error fetching products count:', dbErr.message);
-        }
-
-        // Per-advertiser counts
-        const productCounts = {}; // Deprecated in favor of denormalized fields
-        const offerCounts = {}; // Deprecated
-        const saleProductCounts = {}; // Deprecated but needed for render signature
-
-        // Use mutated advertisers directly
-        const enrichedAdvertisers = advertisers.map(a => ({
-            ...a,
-            productCount: a.productCount || 0,
-            saleProductCount: a.saleProductCount || 0, // Use pre-calculated count from DB
-            offerCount: a.offerCount || 0,
-            logoUrl: a.storageLogoUrl || a.logoUrl || (a.raw_data && a.raw_data.logoUrl ? a.raw_data.logoUrl : null)
-        }));
-
-        enrichedAdvertisers.sort((a, b) => {
-            if (b.productCount !== a.productCount) return b.productCount - a.productCount;
-            return a.name.localeCompare(b.name);
-        });
+        const advertisers = await getEnrichedAdvertisers();
+        const settings = await getGlobalSettings();
+        const totalOffers = advertisers.reduce((sum, adv) => sum + (adv.offerCount || 0), 0);
 
         const networkStats = {
             Rakuten: { advertisers: 0, offers: 0, products: 0 },
@@ -276,7 +168,8 @@ const getHomepage = async (req, res) => {
             AWIN: { advertisers: 0, offers: 0, products: 0 },
             Pepperjam: { advertisers: 0, offers: 0, products: 0 }
         };
-        enrichedAdvertisers.forEach(adv => {
+
+        advertisers.forEach(adv => {
             const net = adv.network;
             if (networkStats[net]) {
                 networkStats[net].advertisers++;
@@ -285,28 +178,78 @@ const getHomepage = async (req, res) => {
             }
         });
 
-        const settings = await getGlobalSettings();
-        // const settings = {}; // MOCKED
-
-        res.render('index', { // RENDER INDEX
-            advertisers: enrichedAdvertisers,
+        res.render('index', {
+            advertisers,
             offerCounts: {},
             productCounts: {},
             saleProductCounts: {},
-            settings: settings, // Pass settings to view
+            settings: settings,
             stats: {
                 rakuten: networkStats.Rakuten.advertisers,
                 cj: networkStats.CJ.advertisers,
                 awin: networkStats.AWIN.advertisers,
                 pepperjam: networkStats.Pepperjam.advertisers,
-                totalProducts: totalProducts,
-                totalAdvertisers: enrichedAdvertisers.length,
+                totalProducts: 0, // Not used in index currently but kept for interface stability
+                totalAdvertisers: advertisers.length,
                 totalCoupons: totalOffers,
                 networkDetailed: networkStats
             }
         });
     } catch (error) {
         res.status(500).send('Error loading brands page: ' + error.message);
+    }
+};
+
+const getNewHomepage = async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const db = firebaseConfig.db;
+
+        // Fetch a larger pool of products with savingsAmount
+        // This allows us to filter for brand diversity in memory
+        const productsSnapshot = await db.collection('products')
+            .where('savingsAmount', '>', 0)
+            .orderBy('savingsAmount', 'desc')
+            .limit(100) // Fetch more than we need to allow for filtering
+            .get();
+
+        console.log(`[Homepage] Fetched ${productsSnapshot.size} products for mixed grid`);
+
+        const topSaleProducts = [];
+        const brandCounts = {};
+        const MAX_PER_BRAND = 3;
+
+        productsSnapshot.forEach(doc => {
+            if (topSaleProducts.length >= 24) return;
+
+            const product = doc.data();
+            const brandId = product.advertiserId || 'unknown';
+
+            // Ensure brand diversity: skip if we already have enough from this store
+            if (brandCounts[brandId] >= MAX_PER_BRAND) {
+                return;
+            }
+
+            brandCounts[brandId] = (brandCounts[brandId] || 0) + 1;
+
+            topSaleProducts.push({
+                ...product,
+                id: doc.id,
+                price: parseFloat(product.price) || 0,
+                salePrice: parseFloat(product.salePrice) || 0,
+                savings: product.savingsAmount || 0
+            });
+        });
+
+        console.log(`[Homepage] Rendering ${topSaleProducts.length} mixed items across ${Object.keys(brandCounts).length} brands`);
+
+        res.render('home', {
+            settings,
+            topSaleProducts
+        });
+    } catch (e) {
+        console.error('Error loading homepage:', e);
+        res.status(500).send('Error loading homepage: ' + e.message);
     }
 };
 
@@ -324,10 +267,12 @@ const getComingSoon = async (req, res) => {
 const refreshData = async (req, res) => {
     console.log('ENTER: refreshData');
     try {
-        console.log('Manual refresh triggered.');
-        await dataSync.syncAll();
-        console.log('Manual refresh complete.');
-        res.redirect('/brands');
+        console.log('Manual global refresh triggered.');
+        // Run in background so UI doesn't hang
+        dataSync.syncAll().catch(err => console.error('Global Sync Error:', err));
+
+        // Redirect immediately
+        res.redirect('/mission-control');
     } catch (error) {
         console.error('Error triggering refresh:', error);
         res.status(500).send('Error triggering refresh');
@@ -680,46 +625,32 @@ const resetLogo = async (req, res) => {
 };
 
 
+// Helper to find an advertiser across all possible networks
+const findAdvertiser = async (id) => {
+    const networks = ['Rakuten', 'CJ', 'AWIN', 'Pepperjam'];
+    for (const net of networks) {
+        const adv = await getAdvertiser(net, id);
+        if (adv) return { adv, network: net };
+    }
+    return null;
+};
+
 const updateHomeLink = async (req, res) => {
     try {
         const { id } = req.params;
         const { homeLink } = req.body;
-        const adv = await getAdvertiser('Rakuten', id) || await getAdvertiser('CJ', id) || await getAdvertiser('AWIN', id); // Try to find by ID across networks. Ideally we pass network or have a better lookup.
-        // Actually, getAdvertiser needs network. 
-        // We can optimize this by passing network from frontend or searching.
-        // For now, let's search or rely on ID uniqueness if possible? 
-        // Wait, the rows in dashboard know their network. Let's pass it or look it up.
-        // Simplest: The ID in the route is the numeric ID. `getAdvertiser` needs `network` + `id`.
-        // BUT, `upsertAdvertiser` constructs the ID.
-        // Let's look up the doc directly if possible or iterate networks.
+        const result = await findAdvertiser(id);
 
-        // BETTER APPROACH: The frontend knows the network. Let's assume we can find it.
-        // Or, since we have the full doc ID constructed in `dataSync` as `Network-Id`, maybe we should assume the route param is just the ID.
-        // Let's try to find the document by querying the collection for the `id` field?
-        // Or just iterate standard networks.
-
-        let network = 'Rakuten'; // Default attempt
-        let existing = await getAdvertiser('Rakuten', id);
-        if (!existing) {
-            existing = await getAdvertiser('CJ', id);
-            network = 'CJ';
-        }
-        if (!existing) {
-            existing = await getAdvertiser('AWIN', id);
-            network = 'AWIN';
-        }
-
-        if (!existing) {
+        if (!result) {
             return res.status(404).json({ success: false, error: 'Advertiser not found' });
         }
 
         await upsertAdvertiser({
-            ...existing,
+            ...result.adv,
             manualHomeUrl: homeLink
-        }, existing);
+        }, result.adv);
 
         res.json({ success: true });
-
     } catch (error) {
         console.error('Error updating home link:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
@@ -730,26 +661,18 @@ const updateDescription = async (req, res) => {
     try {
         const { id } = req.params;
         const { description } = req.body;
-        // Logic similar to updateHomeLink
-        let existing = await getAdvertiser('Rakuten', id);
-        if (!existing) {
-            existing = await getAdvertiser('CJ', id);
-        }
-        if (!existing) {
-            existing = await getAdvertiser('AWIN', id);
-        }
+        const result = await findAdvertiser(id);
 
-        if (!existing) {
+        if (!result) {
             return res.status(404).json({ success: false, error: 'Advertiser not found' });
         }
 
         await upsertAdvertiser({
-            ...existing,
+            ...result.adv,
             manualDescription: description
-        }, existing);
+        }, result.adv);
 
         res.json({ success: true });
-
     } catch (error) {
         console.error('Error updating description:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
@@ -766,11 +689,13 @@ const proxyImage = async (req, res) => {
         const response = await axios({
             url,
             method: 'GET',
-            responseType: 'stream'
+            responseType: 'stream',
+            timeout: 5000
         });
 
         res.set('Content-Type', response.headers['content-type']);
-        res.set('Access-Control-Allow-Origin', '*'); // Allow all origins for this proxy
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Cache-Control', 'public, max-age=86400'); // 24 hour cache
         response.data.pipe(res);
     } catch (e) {
         console.error('Proxy error:', e.message);
@@ -792,6 +717,7 @@ module.exports = {
     updateDescription,
     uploadLogoMiddleware,
     getHomepage,
+    getNewHomepage,
     getComingSoon,
     getArchitecture,
     getStyle,

@@ -1349,6 +1349,7 @@
                 const rakutenEl = document.getElementById('rakuten-count');
                 const cjEl = document.getElementById('cj-count');
                 const awinEl = document.getElementById('awin-count');
+                const pepperjamEl = document.getElementById('pepperjam-count');
 
 
                 const closeAllSubTables = () => {
@@ -1386,6 +1387,7 @@
                     let rakutenCount = 0;
                     let cjCount = 0;
                     let awinCount = 0;
+                    let pepperjamCount = 0;
 
                     rows.forEach(row => {
                         const rowName = row.dataset.name;
@@ -1404,6 +1406,7 @@
                             if (rowNetwork === 'Rakuten') rakutenCount++;
                             if (rowNetwork === 'CJ') cjCount++;
                             if (rowNetwork === 'AWIN') awinCount++;
+                            if (rowNetwork === 'Pepperjam') pepperjamCount++;
 
                             // HIGHLIGHTING LOGIC
                             if (categoryCell) {
@@ -1436,6 +1439,7 @@
                     rakutenEl.textContent = rakutenCount;
                     cjEl.textContent = cjCount;
                     awinEl.textContent = awinCount;
+                    if (pepperjamEl) pepperjamEl.textContent = pepperjamCount;
                 };
 
                 searchInput.addEventListener('input', filterTable);

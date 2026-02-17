@@ -173,6 +173,20 @@ const upsertProduct = async (productData, existingData = null) => {
             productData.slug = `${baseSlug}-${shortId}`;
         }
 
+        // Calculate Savings Amount for the Homepage grid
+        const getNum = (v) => {
+            if (typeof v === 'number') return v;
+            if (!v) return 0;
+            return parseFloat(String(v).replace(/[^0-9.-]+/g, "")) || 0;
+        };
+        const price = getNum(productData.price);
+        const salePrice = getNum(productData.salePrice);
+        if (price > salePrice && salePrice > 0) {
+            productData.savingsAmount = price - salePrice;
+        } else {
+            productData.savingsAmount = 0;
+        }
+
         await ref.set({
             ...productData,
             updatedAt: new Date()
@@ -329,6 +343,44 @@ const updateGlobalSettings = async (settings) => {
     }
 };
 
+const getEnrichedAdvertisers = async () => {
+    try {
+        console.log('[DEBUG] getEnrichedAdvertisers: Fetching from Firestore...');
+        const advSnapshot = await firebase.db.collection(COLLECTIONS.ADVERTISERS).get();
+        console.log(`[DEBUG] getEnrichedAdvertisers: Found ${advSnapshot.size} documents.`);
+
+        const advertisers = [];
+        const networkCounts = {};
+
+        advSnapshot.forEach(doc => {
+            const data = doc.data();
+            networkCounts[data.network] = (networkCounts[data.network] || 0) + 1;
+            advertisers.push({
+                ...data,
+                productCount: data.productCount || 0,
+                saleProductCount: data.saleProductCount || 0,
+                offerCount: data.offerCount || 0,
+                logoUrl: data.storageLogoUrl || data.logoUrl || (data.raw_data && data.raw_data.logoUrl ? data.raw_data.logoUrl : null)
+            });
+        });
+
+        console.log(`[DEBUG] getEnrichedAdvertisers: Network breakdown:`, JSON.stringify(networkCounts));
+
+        // Sort: Product Count (Desc) -> Name (Asc)
+        advertisers.sort((a, b) => {
+            if (b.productCount !== a.productCount) {
+                return b.productCount - a.productCount;
+            }
+            return (a.name || '').localeCompare(b.name || '');
+        });
+
+        return advertisers;
+    } catch (e) {
+        console.error('Error fetching enriched advertisers:', e);
+        throw e;
+    }
+};
+
 module.exports = {
     upsertAdvertiser,
     upsertOffer,
@@ -340,5 +392,7 @@ module.exports = {
     getSyncHistory,
     pruneStaleRecords,
     getGlobalSettings,
-    updateGlobalSettings
+    updateGlobalSettings,
+    getEnrichedAdvertisers,
+    slugify
 };

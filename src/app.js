@@ -203,7 +203,7 @@ app.get('/api/sync-history/:network', async (req, res) => {
 // Routes
 // Routes
 // Routes
-app.get('/', dashboardController.getComingSoon);
+app.get('/', dashboardController.getNewHomepage);
 app.get('/mission-control/architecture', dashboardController.getArchitecture);
 app.get('/mission-control/style', dashboardController.getStyle);
 app.post('/mission-control/style', (req, res, next) => {

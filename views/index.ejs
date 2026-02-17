@@ -17,6 +17,8 @@
             --text-main: #111827;
             --text-secondary: #6b7280;
             --border: #e5e7eb;
+            --danger: #ef4444;
+            --success: #10b981;
         }
 
         * {
@@ -62,9 +64,27 @@
         }
 
         .container {
-            max-width: 1200px;
             margin: 0 auto;
-            padding: 0.5rem;
+            /* padding: 1rem; */
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding: 0.5rem !important;
+                /* Screen efficiency */
+            }
+        }
+
+        main {
+            position: relative;
+            background: rgba(255, 255, 255, .8);
+            padding: 1rem;
+            /* border-radius: .75rem; */
+            /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); */
+            padding-bottom: 3rem;
         }
 
         /* Filter Section */
@@ -81,6 +101,30 @@
             flex-wrap: wrap;
             margin-bottom: 1.5rem;
             justify-content: center;
+        }
+
+        /* Mobile specific scroll for categories */
+        @media (max-width: 768px) {
+            .category-links {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                justify-content: flex-start;
+                padding: 0.5rem 0;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                /* Hide scrollbar Firefox */
+                margin-bottom: 1rem;
+            }
+
+            .category-links::-webkit-scrollbar {
+                display: none;
+                /* Hide scrollbar Chrome/Safari */
+            }
+
+            .category-link {
+                flex-shrink: 0;
+                white-space: nowrap;
+            }
         }
 
         .category-link {
@@ -102,8 +146,10 @@
         }
 
         .category-link.active-category {
-            color: white;
+            color: white !important;
             background-color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             <%- (typeof settings !=='undefined' && settings.categorySelectedStyles) ? settings.categorySelectedStyles: '' %>
         }
 
@@ -112,6 +158,17 @@
             gap: 1rem;
             align-items: center;
             flex-wrap: wrap;
+        }
+
+        @media (max-width: 576px) {
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-wrapper {
+                min-width: 0 !important;
+            }
         }
 
         .search-wrapper {
@@ -281,123 +338,141 @@
             padding-right: 2.5rem;
         }
 
-        /* Brand Cards */
-        .brands-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+        /* Brands Grid (from home.ejs) */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+            gap: .5rem;
+            margin-top: 2rem;
         }
 
-        .brand-card {
+        .brand-card-wrapper {
             background: #ffffff;
             border-radius: 1rem;
             border: 1px solid var(--border);
             overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-
-        .brand-card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .brand-header {
-            padding: 1.25rem 1.5rem;
-            display: grid;
-            grid-template-columns: auto 1fr;
-            grid-template-areas:
-                "logo info"
-                "categories categories";
-            gap: 0.5rem 1.5rem;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .brand-logo {
-            width: 80px;
-            height: 80px;
-            flex-shrink: 0;
-            background: #f9fafb;
-            border-radius: 0.75rem;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            border: 1px solid #f3f4f6;
-            box-shadow: 0 2px 1px rgba(0, 0, 0, .25);
-        }
-
-        .brand-logo img {
-            width: 100%;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
             height: 100%;
-            object-fit: contain;
-            padding: 8px;
-        }
-
-        .brand-info {
-            grid-area: info;
+            position: relative;
+            width: 100%;
             min-width: 0;
         }
 
-        .brand-name {
-            font-size: 1.125rem;
+        .brand-card-wrapper:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .brand-logo-container {
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* padding: 1rem; */
+            aspect-ratio: 1/1;
+            width: 100%;
+        }
+
+        .brand-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .brand-card-info {
+            padding: 0.75rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .brand-card-name {
+            font-size: 0.65rem;
             font-weight: 700;
             color: var(--primary);
-            text-decoration: none;
-            display: block;
+            text-transform: uppercase;
             margin-bottom: 0.25rem;
-            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .brand-categories {
-            grid-area: categories;
-            display: block;
-            margin-top: 0.5rem;
+        .brand-card-categories {
+            font-size: 0.813rem;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-main);
+            margin-bottom: 0.75rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 2.6em;
         }
 
-        .category-pill {
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-
-        .brand-actions {
+        .brand-card-actions {
             display: flex;
-            gap: 0.75rem;
-            padding: 0.5rem 0.5rem;
-            border-top: 1px solid #f3f4f6;
-            flex-wrap: wrap;
-            background: rgba(0, 0, 0, 0.01);
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-top: auto;
         }
 
-        .action-btn {
+        .brand-action-mini-btn {
             flex: 1;
-            min-width: 140px;
-            padding: 0.625rem 1rem;
-            border-radius: 0.625rem;
+            padding: 0.4rem 0.25rem;
+            border-radius: 0.5rem;
             border: 1px solid var(--border);
             background: #fff;
             color: var(--text-main);
-            font-size: 0.813rem;
-            font-weight: 600;
+            font-size: 0.65rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
-            display: flex !important;
+            display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            position: relative;
+            justify-content: space-between;
+            gap: 0.25rem;
+            text-decoration: none;
+            min-width: 0;
+            overflow: hidden;
         }
 
-        .action-btn:hover {
+        @media (max-width: 640px) {
+            .brand-action-mini-btn {
+                padding: 0.6rem 0.5rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        .brand-action-mini-btn:hover:not(:disabled) {
             border-color: var(--primary);
             color: var(--primary);
             background: rgba(79, 70, 229, 0.02);
         }
 
-        .action-btn.active {
+        .brand-action-mini-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .brand-action-mini-btn.active {
             background: rgba(79, 70, 229, 0.06);
             border-color: var(--primary);
             color: var(--primary);
+        }
+
+        .badge-mini {
+            font-size: 0.5rem;
+            padding: 1px 3px;
+            border-radius: 2px;
+            font-weight: 800;
         }
 
         .badge-sale,
@@ -406,7 +481,7 @@
             padding: 0.125rem 0.375rem;
             border-radius: 0.25rem;
             font-weight: 800;
-            margin-left: 4px;
+            flex-shrink: 0;
         }
 
         .badge-sale {
@@ -419,102 +494,55 @@
             color: white;
         }
 
-        .action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            border-color: var(--border);
-            color: var(--text-secondary);
-        }
-
-        .action-btn:disabled:hover {
-            background: #fff;
-            border-color: var(--border);
-            color: var(--text-secondary);
-        }
-
-        /* Expanded Sections */
         .expanded-section {
             display: none;
             background: #f9fafb;
             border-top: 1px solid var(--border);
             padding: 0.5rem;
+            grid-column: 1 / -1;
+            width: 100%;
         }
 
-        .expanded-row-content {
-            max-width: 100%;
+        @media (max-width: 1200px) {
+            .products-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
         }
 
-        footer {
-            border-top: 1px solid var(--border);
-            padding: 3rem 0;
-            margin-top: 4rem;
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            background-color: var(--surface);
+        @media (max-width: 992px) {
+            .products-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
-        footer a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            margin: 0 0.5rem;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         @media (max-width: 480px) {
-            .brand-actions {
-                display: flex;
-                gap: 0.75rem;
-                padding: .5rem .5rem;
-                flex-wrap: wrap;
-            }
-
-            .brand-header {
-                padding: .75rem;
-                display: grid;
-                grid-template-columns: auto 1fr;
-                grid-template-areas:
-                    "logo info"
-                    "categories categories";
-                gap: 0.5rem 1.5rem;
-                align-items: center;
-                cursor: pointer;
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
         @media (max-width: 640px) {
-            .brand-header {
-                gap: 0.5rem 1rem;
+            .brand-card-name {
+                font-size: 0.875rem !important;
+                /* Slightly larger for brand names */
             }
 
-            .brand-logo {
-                width: 64px;
-                height: 64px;
+            .brand-card-categories {
+                font-size: 0.75rem !important;
+                height: auto !important;
+                max-height: 3.2em;
             }
 
-            .brand-name {
-                font-size: 1.25rem;
+            .products-grid {
+                gap: 0.75rem !important;
+                /* More breathing room */
             }
-
-            .controls-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0.5rem;
-        }
-
-        .product-layout {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 1.5rem;
         }
 
         .offer-row:hover,
@@ -538,133 +566,108 @@
             </header>
 
             <div class="container">
-                <!-- Filter & Search Section -->
-                <div class="filter-section">
-                    <div class="category-links" id="category-links">
-                        <a href="javascript:void(0)" class="category-link active-category" data-category="all"
-                            onclick="selectCategory('all')">All Brands</a>
-                        <% categories.forEach(c=> { %>
-                            <a href="javascript:void(0)" class="category-link" data-category="<%= c %>"
-                                onclick="selectCategory('<%= c %>')">
-                                <%= c %>
-                            </a>
+                <main>
+                    <!-- Filter & Search Section -->
+                    <div class="filter-section">
+                        <div class="category-links" id="category-links">
+                            <a href="javascript:void(0)" class="category-link active-category" data-category="all"
+                                onclick="selectCategory('all')">All Brands</a>
+                            <% categories.forEach(c=> { %>
+                                <a href="javascript:void(0)" class="category-link" data-category="<%= c %>"
+                                    onclick="selectCategory('<%= c %>')">
+                                    <%= c %>
+                                </a>
+                                <% }); %>
+                        </div>
+
+                        <div class="controls-row">
+                            <div class="search-wrapper">
+                                <span class="search-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </span>
+                                <input type="text" id="brand-search" placeholder="Search brands and items..."
+                                    oninput="handleSearchInput(this)">
+                                <div id="global-search-results" class="global-search-results"></div>
+                            </div>
+
+                            <div class="sort-wrapper">
+                                <select id="sort-order" onchange="applyFiltersAndSort()">
+                                    <option value="name-asc">Brand (A-Z)</option>
+                                    <option value="name-desc">Brand (Z-A)</option>
+                                    <option value="offers-desc">Top Offers</option>
+                                    <option value="products-desc">Most Products</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Brands List -->
+                    <div class="products-grid" id="brands-container">
+                        <% advertisers.forEach(adv=> { %>
+                            <div class="brand-card" data-id="<%= adv.id %>" data-name="<%= adv.name.toLowerCase() %>"
+                                data-slug="<%= adv.slug || adv.name.toLowerCase().replace(/\s+/g, '-') %>"
+                                data-categories='<%= JSON.stringify(adv.categories || []).toLowerCase() %>'
+                                data-offers="<%= adv.offerCount || 0 %>" data-products="<%= adv.productCount || 0 %>">
+
+                                <div class="brand-card-wrapper">
+                                    <div class="brand-logo-container"
+                                        onclick="toggleDetails('<%= adv.id %>', 'offers')">
+                                        <% if (adv.logoUrl) { %>
+                                            <img src="<%= adv.logoUrl %>" alt="<%= adv.name %>" class="brand-logo-img">
+                                            <% } else { %>
+                                                <span style="color: #9ca3af; font-size: 2rem;">?</span>
+                                                <% } %>
+                                    </div>
+
+                                    <div class="brand-card-info">
+                                        <% var brandUrl='/brand/' + adv.id + '-' + (adv.slug ||
+                                            adv.name.toLowerCase().replace(/\s+/g, '-' )); %>
+                                            <a href="<%= brandUrl %>" class="brand-card-name">
+                                                <%= adv.name %>
+                                            </a>
+
+                                            <div class="brand-card-categories">
+                                                <%= (adv.categories || []).sort().join(', ') %>
+                                            </div>
+
+                                            <div class="brand-card-actions">
+                                                <button class="brand-action-mini-btn toggle-offers-btn"
+                                                    data-adv-id="<%= adv.id %>"
+                                                    onclick="toggleDetails(' <%=adv.id %>', 'offers')"
+                                                    <%=(adv.offerCount || 0)===0 ? 'disabled' : '' %>>
+                                                        <span>
+                                                            <%= (adv.offerCount || 0) %> Offers
+                                                        </span>
+                                                        <% if (adv.hasPromoCodes) { %>
+                                                            <span class="badge-code">CODES</span>
+                                                            <% } %>
+                                                                </button>
+
+                                                                <button
+                                                                    class="brand-action-mini-btn toggle-products-btn"
+                                                                    data-adv-id="<%= adv.id %>"
+                                                                    onclick="toggleDetails('<%= adv.id %>', 'products')"
+                                                                    <%=(adv.productCount || 0)===0 ? 'disabled' : '' %>>
+                                                                    <span>
+                                                                        <%= (adv.productCount || 0) %> Products
+                                                                    </span>
+                                                                    <% if (adv.saleProductCount> 0) { %>
+                                                                        <span class="badge-sale">SALE</span>
+                                                                        <% } %>
+                                                                </button>
+                                            </div>
+                                    </div>
+                                </div>
+
+                                <!-- Expanded Content (Removed inline, now in Modal) -->
+                            </div>
                             <% }); %>
                     </div>
-
-                    <div class="controls-row">
-                        <div class="search-wrapper">
-                            <span class="search-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </span>
-                            <input type="text" id="brand-search" placeholder="Search brands and items..."
-                                oninput="handleSearchInput(this)">
-                            <div id="global-search-results" class="global-search-results"></div>
-                        </div>
-
-                        <div class="sort-wrapper">
-                            <select id="sort-order" onchange="applyFiltersAndSort()">
-                                <option value="name-asc">Brand (A-Z)</option>
-                                <option value="name-desc">Brand (Z-A)</option>
-                                <option value="offers-desc">Top Offers</option>
-                                <option value="products-desc">Most Products</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Brands List -->
-                <div class="brands-list" id="brands-container">
-                    <% advertisers.forEach(adv=> { %>
-                        <div class="brand-card" data-id="<%= adv.id %>" data-name="<%= adv.name.toLowerCase() %>"
-                            data-slug="<%= adv.slug || adv.name.toLowerCase().replace(/\s+/g, '-') %>"
-                            data-categories='<%= JSON.stringify(adv.categories || []).toLowerCase() %>'
-                            data-offers="<%= adv.offerCount || 0 %>" data-products="<%= adv.productCount || 0 %>">
-
-                            <div class="brand-header" onclick="toggleDetails('<%= adv.id %>', 'offers')">
-                                <div class="brand-logo">
-                                    <% if (adv.logoUrl) { %>
-                                        <img src="<%= adv.logoUrl %>" alt="<%= adv.name %>">
-                                        <% } else { %>
-                                            <span style="color: #9ca3af; font-size: 1.5rem;">?</span>
-                                            <% } %>
-                                </div>
-
-                                <div class="brand-info">
-                                    <% var brandUrl='/brand/' + adv.id + '-' + (adv.slug ||
-                                        adv.name.toLowerCase().replace(/\s+/g, '-' )); %>
-                                        <a href="<%= brandUrl %>" class="brand-name" onclick="event.stopPropagation()">
-                                            <%= adv.name %>
-                                        </a>
-                                </div>
-
-                                <div class="brand-categories">
-                                    <% (adv.categories || []).sort().forEach(cat=> { %>
-                                        <span class="category-pill">
-                                            <%= cat %>
-                                        </span>
-                                        <% }); %>
-                                </div>
-                            </div>
-
-                            <div class="brand-actions">
-                                <button class="action-btn toggle-offers-btn" data-adv-id="<%= adv.id %>"
-                                    onclick="toggleDetails('<%= adv.id %>', 'offers')" <%=(adv.offerCount || 0)===0
-                                    ? 'disabled' : '' %>>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                                    </svg>
-                                    <span>
-                                        <%= (adv.offerCount || 0).toLocaleString() %>
-                                            <%= (adv.offerCount===1) ? 'Offer' : 'Offers' %>
-                                    </span>
-                                    <% if (adv.hasPromoCodes) { %>
-                                        <span class="badge-code">CODE</span>
-                                        <% } %>
-                                </button>
-
-                                <button class="action-btn toggle-products-btn" data-adv-id="<%= adv.id %>"
-                                    onclick="toggleDetails('<%= adv.id %>', 'products')" <%=(adv.productCount || 0)===0
-                                    ? 'disabled' : '' %>>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                    </svg>
-                                    <span>
-                                        <%= (adv.productCount || 0).toLocaleString() %>
-                                            <%= (adv.productCount===1) ? 'Product' : 'Products' %>
-                                    </span>
-                                    <% if (adv.saleProductCount> 0) { %>
-                                        <span class="badge-sale">SALE</span>
-                                        <% } %>
-                                </button>
-                            </div>
-
-                            <!-- Expanded Content -->
-                            <div id="offers-section-<%= adv.id %>" class="expanded-section offers-section">
-                                <div id="offers-content-<%= adv.id %>" class="expanded-row-content">
-                                    <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
-                                        Loading
-                                        offers...</div>
-                                </div>
-                            </div>
-
-                            <div id="products-section-<%= adv.id %>" class="expanded-section products-section">
-                                <div id="products-content-<%= adv.id %>" class="expanded-row-content">
-                                    <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
-                                        Loading
-                                        products...</div>
-                                </div>
-                            </div>
-                        </div>
-                        <% }); %>
-                </div>
+                </main>
             </div>
 
             <%- include('partials/footer') %>
@@ -687,6 +690,37 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Details Modal (Offers/Products) -->
+                <div id="detailsModal"
+                    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; overflow-y: auto;">
+                    <div class="modal-inner-p"
+                        style="padding: 2rem; position: relative; max-width: 1200px; margin: 0 auto; min-height: 100vh;">
+                        <button onclick="closeDetailsModal()" class="modal-close-btn"
+                            style="position: fixed; top: 1rem; right: 2rem; background: #fff; border: 1px solid var(--border); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2001; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: var(--text-main);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <div id="detailsModalContent"></div>
+                    </div>
+                </div>
+
+                <style>
+                    @media (max-width: 768px) {
+                        .modal-inner-p {
+                            padding: 1rem !important;
+                            padding-top: 4rem !important;
+                        }
+
+                        .modal-close-btn {
+                            right: 1rem !important;
+                            top: 0.5rem !important;
+                        }
+                    }
+                </style>
 
                 <script>
                     let currentAdvId = null;
@@ -867,10 +901,10 @@
                             document.querySelectorAll('.brand-card').forEach(card => {
                                 const name = (card.dataset.name || '').toLowerCase();
                                 if (name.includes(searchTerm)) {
-                                    const logo = card.querySelector('.brand-logo img');
+                                    const logo = card.querySelector('.brand-logo-img');
                                     matchingBrands.push({
                                         id: card.dataset.id,
-                                        name: card.querySelector('.brand-name').innerText.trim(),
+                                        name: card.querySelector('.brand-card-name').innerText.trim(),
                                         slug: card.dataset.slug,
                                         logoUrl: logo ? logo.src : null
                                     });
@@ -975,7 +1009,9 @@
                     const productCache = new Map(); // Cache for pre-fetched pages
 
                     const loadProductsPage = async (advId, page = 1) => {
-                        const contentDiv = document.getElementById(`products-content-${advId}`);
+                        let contentDiv = document.getElementById(`products-content-${advId}`);
+                        if (!contentDiv) contentDiv = document.getElementById('detailsModalContent');
+                        if (!contentDiv) return;
                         const searchInput = contentDiv.querySelector('.prod-search');
                         const q = searchInput ? searchInput.value.trim() : '';
                         const cacheKey = `${advId}-${page}-${q}`;
@@ -1068,7 +1104,7 @@
                         if (products.length === 0) {
                             html += '<div style="padding:4rem 2rem; text-align:center; color:var(--text-secondary); background:var(--bg-main); border-radius:0.75rem; border:1px dashed var(--border);">No products found matching your search.</div>';
                         } else {
-                            html += '<div class="prod-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); grid-auto-rows: 1fr; gap: 1rem;">';
+                            html += '<div class="prod-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); grid-auto-rows: 1fr; gap: 1rem;">';
                             products.forEach(p => {
                                 const price = getNum(p.price); const sale = getNum(p.salePrice);
                                 const priceHtml = p._isSale ? `
@@ -1081,13 +1117,16 @@
                                 const productUrl = `/product/${brandSlug}/${p.slug || (slugify(p.name) + '-' + (p.sku || '').substring(0, 5))}`;
 
                                 html += `
-                    <div class="prod-card" data-sale="${p._isSale}" onclick="location.href='${productUrl}'" style="background: white; border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem; display: flex; gap: 1rem; cursor: pointer; transition: background 0.2s, transform 0.2s; box-shadow: 0 1px 1px rgba(0, 0, 0, .25); height: 100%; box-sizing: border-box;">
-                        <div style="width: 80px; height: 80px; flex-shrink: 0; background: #f9fafb; border-radius: 0.5rem; overflow: hidden; border: 1px solid #eee;">
+                    <div class="prod-card" data-sale="${p._isSale}" onclick="location.href='${productUrl}'" style="background: white; border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem; display: flex; gap: 1rem; cursor: pointer; transition: background 0.2s, transform 0.2s; box-shadow: 0 1px 1px rgba(0, 0, 0, .25); height: 100%; box-sizing: border-box; position: relative;">
+                        ${p._isSale ? `
+                        <div style="position: absolute; top: 0; left: 0; background: var(--danger); color: white; padding: 0.25rem 0.625rem; border-radius: 0.75rem 0 0.75rem 0; font-size: 0.688rem; font-weight: 800; z-index: 1; letter-spacing: 0.05em;">SALE</div>
+                        ` : ''}
+                        <div style="width: 80px; height: 80px; flex-shrink: 0; background: #f9fafb; border-radius: 0.5rem; overflow: hidden; border: 1px solid #eee; position: relative;">
                             <img src="${p.storageImageUrl || p.imageUrl || ''}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.src='https://placehold.co/80x80?text=?'">
                         </div>
                         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
                             <div style="font-weight: 600; font-size: 0.938rem; color: var(--text-main); line-height: 1.3; margin-bottom: 0.5rem;">${p.name || ''}</div>
-                            <div style="margin-top: auto; font-size: 0.875rem; text-align: right; background: linear-gradient(to left, whitesmoke, transparent); padding: 10px; border-radius: 0.75rem;">${priceHtml}</div>
+                            <div style="margin-top: auto; font-size: 0.875rem; text-align: right; background: linear-gradient(to left, #f8f9fa, transparent); padding: 8px 10px; border-radius: 0.75rem;">${priceHtml}</div>
                         </div>
                     </div>`;
                             });
@@ -1128,51 +1167,48 @@
                         update();
                     };
 
-                    window.toggleDetails = async (advId, type) => {
+                    window.closeDetailsModal = () => {
+                        document.getElementById('detailsModal').style.display = 'none';
+                        document.body.style.overflow = '';
+                    };
+
+                    window.toggleDetails = async (rawId, type) => {
+                        const advId = String(rawId).trim();
+                        const modal = document.getElementById('detailsModal');
+                        const contentDiv = document.getElementById('detailsModalContent');
                         const card = document.querySelector(`.brand-card[data-id="${advId}"]`);
-                        if (!card) return;
+                        const brandName = card ? card.querySelector('.brand-card-name').innerText.trim() : 'Brand';
 
-                        const offersSection = document.getElementById(`offers-section-${advId}`);
-                        const productsSection = document.getElementById(`products-section-${advId}`);
-                        const offersBtn = card.querySelector('.toggle-offers-btn');
-                        const productsBtn = card.querySelector('.toggle-products-btn');
+                        modal.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                        contentDiv.innerHTML = `
+                            <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                                <h2 style="margin: 0; color: var(--text-main); font-size: 1.5rem;">${brandName} ${type === 'offers' ? 'Offers' : 'Products'}</h2>
+                            </div>
+                            <div style="text-align: center; color: var(--text-secondary); padding: 4rem;">Loading...</div>
+                        `;
 
-                        const targetSection = type === 'offers' ? offersSection : productsSection;
-                        const otherSection = type === 'offers' ? productsSection : offersSection;
-                        const targetBtn = type === 'offers' ? offersBtn : productsBtn;
-                        const otherBtn = type === 'offers' ? productsBtn : offersBtn;
+                        try {
+                            const res = await fetch(`/api/advertiser/${advId}/${type}`);
+                            const data = await res.json();
 
-                        // Close other
-                        if (otherSection) {
-                            otherSection.style.display = 'none';
-                            if (otherBtn) otherBtn.classList.remove('active');
-                        }
-
-                        // Toggle
-                        const isHidden = targetSection.style.display === 'none' || targetSection.style.display === '';
-                        if (isHidden) {
-                            targetSection.style.display = 'block';
-                            targetBtn.classList.add('active');
-                        } else {
-                            targetSection.style.display = 'none';
-                            targetBtn.classList.remove('active');
-                            return;
-                        }
-
-                        if (targetBtn.dataset.loaded !== 'true') {
-                            try {
-                                const contentDiv = document.getElementById(`${type}-content-${advId}`);
-                                const res = await fetch(`/api/advertiser/${advId}/${type}`);
-                                const data = await res.json();
-
-                                if (data.success) {
-                                    if (type === 'offers') renderOffersTable(contentDiv, data.offers, advId);
-                                    else renderProductsTable(contentDiv, data.products, advId, data.pagination);
-                                    targetBtn.dataset.loaded = 'true';
-                                }
-                            } catch (err) {
-                                console.error('Error loading data:', err);
+                            if (data.success) {
+                                // Clear loading but keep header
+                                contentDiv.innerHTML = `
+                                    <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                                        <h2 style="margin: 0; color: var(--text-main); font-size: 1.5rem;">${brandName} ${type === 'offers' ? 'Offers' : 'Products'}</h2>
+                                    </div>
+                                    <div id="modalInnerContent"></div>
+                                `;
+                                const innerContent = document.getElementById('modalInnerContent');
+                                if (type === 'offers') renderOffersTable(innerContent, data.offers, advId);
+                                else renderProductsTable(innerContent, data.products, advId, data.pagination);
+                            } else {
+                                contentDiv.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 4rem;">Failed to load data.</div>';
                             }
+                        } catch (err) {
+                            console.error('Error loading data:', err);
+                            contentDiv.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 4rem;">Error loading data.</div>';
                         }
                     };
 
@@ -1194,18 +1230,7 @@
                         cards.forEach(card => {
                             const cats = JSON.parse(card.dataset.categories);
                             const matchesCategory = currentCategory === 'all' || cats.includes(currentCategory.toLowerCase());
-
                             card.style.display = matchesCategory ? 'block' : 'none';
-
-                            // Highlight pills
-                            card.querySelectorAll('.category-pill').forEach(pill => {
-                                const pillText = pill.innerText.toLowerCase();
-                                const isActive = currentCategory !== 'all' && pillText.includes(currentCategory.toLowerCase());
-                                pill.style.background = isActive ? '#FFD15C' : 'transparent';
-                                pill.style.padding = isActive ? '0.125rem 0.375rem' : '0';
-                                pill.style.borderRadius = isActive ? '0.25rem' : '0';
-                                pill.style.color = isActive ? '#000' : 'var(--text-secondary)';
-                            });
                         });
 
                         cards.sort((a, b) => {
