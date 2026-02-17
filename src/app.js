@@ -242,13 +242,13 @@ app.get('/journal/:slug', productController.getJournalArticlePage);
 
 // 404 Handler
 app.use((req, res) => {
-    res.status(404).render('404', { message: "We couldn't find what you were looking for." });
+    res.status(404).render('404', { message: "We couldn't find what you were looking for.", pageH1: 'Not Found' });
 });
 
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error('GLOBAL ERROR:', err);
-    res.status(500).render('404', { message: "Internal Server Error: " + err.message });
+    res.status(500).render('404', { message: "Internal Server Error: " + err.message, pageH1: 'Error' });
 });
 
 // Initialize and Start Server

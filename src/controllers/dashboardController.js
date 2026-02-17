@@ -16,7 +16,7 @@ const upload = multer({
 const getStyle = async (req, res) => {
     try {
         const settings = await getGlobalSettings();
-        res.render('style', { settings });
+        res.render('style', { settings, pageH1: 'Mission Control' });
     } catch (e) {
         res.status(500).send('Error loading style page: ' + e.message);
     }
@@ -147,7 +147,8 @@ const getDashboardData = async (req, res) => {
                 totalAdvertisers: advertisers.length,
                 totalCoupons: totalOffers,
                 networkDetailed: networkStats
-            }
+            },
+            pageH1: 'Mission Control'
         });
     } catch (error) {
         console.error('Error loading dashboard:', error);
@@ -184,6 +185,7 @@ const getHomepage = async (req, res) => {
             productCounts: {},
             saleProductCounts: {},
             settings: settings,
+            pageH1: 'Brands',
             stats: {
                 rakuten: networkStats.Rakuten.advertisers,
                 cj: networkStats.CJ.advertisers,
@@ -230,7 +232,8 @@ const getNewHomepage = async (req, res) => {
 
         res.render('home', {
             settings,
-            topSaleProducts
+            topSaleProducts,
+            pageH1: 'Best Deals'
         });
     } catch (e) {
         console.error('Error loading homepage:', e);
@@ -241,7 +244,7 @@ const getNewHomepage = async (req, res) => {
 const getComingSoon = async (req, res) => {
     try {
         const settings = await getGlobalSettings();
-        res.render('coming-soon', { settings });
+        res.render('coming-soon', { settings, pageH1: 'OfferBae' });
     } catch (e) {
         res.status(500).send('Error loading homepage: ' + e.message);
     }
@@ -266,7 +269,7 @@ const refreshData = async (req, res) => {
 
 const getArchitecture = async (req, res) => {
     try {
-        res.render('architecture');
+        res.render('architecture', { pageH1: 'Mission Control' });
     } catch (error) {
         res.status(500).send('Error loading architecture page: ' + error.message);
     }

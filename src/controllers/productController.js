@@ -37,7 +37,7 @@ const getCatalogPage = async (req, res) => {
             });
         }
 
-        res.status(404).render('404', { message: 'Brand not found' });
+        res.status(404).render('404', { message: 'Brand not found', pageH1: 'Not Found' });
 
     } catch (error) {
         console.error('Catalog Error:', error);
@@ -66,7 +66,7 @@ const getCategoryPage = async (req, res) => {
             });
         }
 
-        res.status(404).render('404', { message: 'Category not found' });
+        res.status(404).render('404', { message: 'Category not found', pageH1: 'Not Found' });
     } catch (error) {
         console.error('Category Page Error:', error);
         res.status(500).send('Server Error');
@@ -179,6 +179,7 @@ const renderCatalog = async (req, res, context) => {
             products,
             offers,
             page,
+            pageH1: context.type === 'brand' ? 'Brand' : 'Category',
             sort: req.query.sort || 'newest',
             filters: req.query,
             settings,
@@ -217,7 +218,7 @@ const getProductDetail = async (req, res) => {
                 .get();
 
             if (searchSnap.empty) {
-                return res.status(404).render('404', { message: 'Product not found' });
+                return res.status(404).render('404', { message: 'Product not found', pageH1: 'Not Found' });
             }
             pSnap = searchSnap;
         }
@@ -232,6 +233,7 @@ const getProductDetail = async (req, res) => {
         res.render('product', {
             product,
             brand,
+            pageH1: 'Product',
             title: `${product.name} | ${brand ? brand.name : 'Offerbae'}`,
             description: product.description || `Get the best deal on ${product.name}. Shop now on Offerbae.`,
             settings,
@@ -251,6 +253,7 @@ const getCategoriesPage = async (req, res) => {
         const settings = await getGlobalSettings();
         res.render('coming-soon', {
             settings,
+            pageH1: 'Categories',
             title: 'Categories - Coming Soon',
             message: "We're organizing our categories to help you find the best deals faster. This section will be live shortly!",
             btnText: 'Back to Brands',
@@ -266,6 +269,7 @@ const getOffersListPage = async (req, res) => {
         const settings = await getGlobalSettings();
         res.render('coming-soon', {
             settings,
+            pageH1: 'Offers',
             title: 'Daily Offers & Coupons - Coming Soon',
             message: "Our real-time offer discovery engine is being optimized. Soon you'll be able to browse all active coupons in one place!",
             btnText: 'Explore Brands',
@@ -281,6 +285,7 @@ const getProductsListPage = async (req, res) => {
         const settings = await getGlobalSettings();
         res.render('coming-soon', {
             settings,
+            pageH1: 'Products',
             title: 'Product Discovery - Coming Soon',
             message: "We're indexing thousands of products to bring you the best prices. Check back soon for our full product catalog!",
             btnText: 'View Brands',
@@ -299,7 +304,7 @@ const getOfferDetailPage = async (req, res) => {
 
         const searchSnap = await db.collection('offers').where('id', '==', offerId).limit(1).get();
         if (searchSnap.empty) {
-            return res.status(404).render('404', { message: 'Offer not found' });
+            return res.status(404).render('404', { message: 'Offer not found', pageH1: 'Not Found' });
         }
 
         const offer = searchSnap.docs[0].data();
@@ -310,6 +315,7 @@ const getOfferDetailPage = async (req, res) => {
 
         res.render('coming-soon', {
             settings,
+            pageH1: 'Offer',
             title: `${offer.description || 'Offer'} | ${brand ? brand.name : 'Offerbae'}`,
             message: `You've found a great deal for ${brand ? brand.name : 'this brand'}! This detailed offer page is coming soon.`,
             btnText: `View all ${brand ? brand.name : 'Brand'} Deals`,
@@ -326,6 +332,7 @@ const getCalendarListPage = async (req, res) => {
         const settings = await getGlobalSettings();
         res.render('coming-soon', {
             settings,
+            pageH1: 'Calendar',
             title: 'OfferBae Calendar - Coming Soon',
             message: "Our annual calendar of specialty sales, holiday events, and exclusive shopping dates is currently being curated. Stay tuned for the ultimate shopping timeline!",
             btnText: 'Back to Brands',
@@ -346,6 +353,7 @@ const getCalendarEventPage = async (req, res) => {
 
         res.render('coming-soon', {
             settings,
+            pageH1: 'Calendar',
             title: `${eventName} Deals & Events | OfferBae`,
             message: `The ${eventName} event page is under construction. We are gathering the best offers and exclusive products for this date. Check back soon!`,
             btnText: 'View Current Brands',
@@ -361,6 +369,7 @@ const getJournalListPage = async (req, res) => {
         const settings = await getGlobalSettings();
         res.render('coming-soon', {
             settings,
+            pageH1: 'Journal',
             title: 'OfferBae Journal - Premium Shopping Insights',
             message: "Our editorial team is preparing deep dives into shopping trends, brand histories, and expert saving strategies. The Journal is coming soon.",
             btnText: 'Explore Brands',
@@ -380,6 +389,7 @@ const getJournalArticlePage = async (req, res) => {
 
         res.render('coming-soon', {
             settings,
+            pageH1: 'Journal',
             title: `${articleName} | OfferBae Journal`,
             message: `This Journal article is being finalized by our editors. We'll have world-class insights on "${articleName}" live very soon!`,
             btnText: 'Back to Journal',
