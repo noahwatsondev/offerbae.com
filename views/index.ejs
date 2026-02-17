@@ -113,7 +113,7 @@
             padding: 0.4rem 1rem;
             border-radius: 2rem;
             color: var(--primary);
-            font-weight: 700;
+            font-weight: 400;
             font-size: 0.75rem;
             cursor: pointer;
             align-items: center;
@@ -163,8 +163,10 @@
         .category-link.active-category {
             color: white !important;
             background-color: var(--primary);
-            border-color: var(--primary);
+            /* border-color: var(--primary); */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(to right, #EF3E5C, #8b5cf6);
+            color: white;
             <%- (typeof settings !=='undefined' && settings.categorySelectedStyles) ? settings.categorySelectedStyles: '' %>
         }
 
@@ -598,23 +600,7 @@
             }
         }
 
-        @media (max-width: 640px) {
-            .brand-card-name {
-                font-size: 0.875rem !important;
-                /* Slightly larger for brand names */
-            }
 
-            .brand-card-categories {
-                font-size: 0.75rem !important;
-                height: auto !important;
-                max-height: 3.2em;
-            }
-
-            .products-grid {
-                gap: 0.75rem !important;
-                /* More breathing room */
-            }
-        }
 
         .offer-row:hover,
         .prod-card:hover {
@@ -624,6 +610,10 @@
         @media (max-width: 640px) {
             .products-grid {
                 gap: 0.5rem !important;
+            }
+
+            .brand-card-name {
+                font-size: 1rem;
             }
         }
     </style>
@@ -699,57 +689,54 @@
                                 data-categories='<%= JSON.stringify(adv.categories || []).toLowerCase() %>'
                                 data-offers="<%= adv.offerCount || 0 %>" data-products="<%= adv.productCount || 0 %>">
 
-                                <div class="brand-card-wrapper">
-                                    <div class="brand-logo-container"
-                                        onclick="toggleDetails('<%= adv.id %>', 'offers')">
+                                <a href="<%= '/brand/' + adv.id + '-' + (adv.slug || adv.name.toLowerCase().replace(/\s+/g, '-')) %>"
+                                    class="brand-card-wrapper">
+                                    <div class="brand-logo-container">
                                         <% if (adv.logoUrl) { %>
                                             <img src="<%= adv.logoUrl %>" alt="<%= adv.name %>" class="brand-logo-img">
                                             <% } else { %>
-                                                <span style="color: #9ca3af; font-size: 2rem;">?</span>
+                                                <span
+                                                    style="color: #9ca3af; font-size: 2rem; font-weight: 700;">?</span>
                                                 <% } %>
                                     </div>
 
                                     <div class="brand-card-info">
-                                        <% var brandUrl='/brand/' + adv.id + '-' + (adv.slug ||
-                                            adv.name.toLowerCase().replace(/\s+/g, '-' )); %>
-                                            <a href="<%= brandUrl %>" class="brand-card-name">
-                                                <%= adv.name %>
-                                            </a>
+                                        <div class="brand-card-name">
+                                            <%= adv.name %>
+                                        </div>
 
-                                            <div class="brand-card-categories">
-                                                <%= (adv.categories || []).sort().join(', ') %>
-                                            </div>
+                                        <div class="brand-card-categories">
+                                            <%= (adv.categories || []).sort().join(', ') %>
+                                        </div>
 
-                                            <div class="brand-card-actions">
-                                                <button class="brand-action-mini-btn toggle-offers-btn"
-                                                    data-adv-id="<%= adv.id %>"
-                                                    onclick="toggleDetails(' <%=adv.id %>', 'offers')"
-                                                    <%=(adv.offerCount || 0)===0 ? 'disabled' : '' %>>
-                                                        <span>
-                                                            <%= (adv.offerCount || 0) %> Offers
-                                                        </span>
-                                                        <% if (adv.hasPromoCodes) { %>
-                                                            <span class="badge-code">CODES</span>
-                                                            <% } %>
-                                                                </button>
+                                        <div class="brand-card-actions">
+                                            <button class="brand-action-mini-btn toggle-offers-btn"
+                                                data-adv-id="<%= adv.id %>"
+                                                onclick="event.preventDefault(); toggleDetails(' <%=adv.id %>',
+                                                'offers')"
+                                                <%=(adv.offerCount || 0)===0 ? 'disabled' : '' %>>
+                                                    <span>
+                                                        <%= (adv.offerCount || 0) %> Offers
+                                                    </span>
+                                                    <% if (adv.hasPromoCodes) { %>
+                                                        <span class="badge-code">CODES</span>
+                                                        <% } %>
+                                                            </button>
 
-                                                                <button
-                                                                    class="brand-action-mini-btn toggle-products-btn"
-                                                                    data-adv-id="<%= adv.id %>"
-                                                                    onclick="toggleDetails('<%= adv.id %>', 'products')"
-                                                                    <%=(adv.productCount || 0)===0 ? 'disabled' : '' %>>
-                                                                    <span>
-                                                                        <%= (adv.productCount || 0) %> Products
-                                                                    </span>
-                                                                    <% if (adv.saleProductCount> 0) { %>
-                                                                        <span class="badge-sale">SALE</span>
-                                                                        <% } %>
-                                                                </button>
-                                            </div>
+                                                            <button class="brand-action-mini-btn toggle-products-btn"
+                                                                data-adv-id="<%= adv.id %>"
+                                                                onclick="event.preventDefault(); toggleDetails('<%= adv.id %>', 'products')"
+                                                                <%=(adv.productCount || 0)===0 ? 'disabled' : '' %>>
+                                                                <span>
+                                                                    <%= (adv.productCount || 0) %> Products
+                                                                </span>
+                                                                <% if (adv.saleProductCount> 0) { %>
+                                                                    <span class="badge-sale">SALE</span>
+                                                                    <% } %>
+                                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <!-- Expanded Content (Removed inline, now in Modal) -->
+                                </a>
                             </div>
                             <% }); %>
                     </div>
