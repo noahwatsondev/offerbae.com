@@ -103,6 +103,26 @@
             flex-wrap: wrap;
             margin-bottom: 1.5rem;
             justify-content: center;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            position: relative;
+        }
+
+        .category-links.collapsed {
+            max-height: 110px;
+            /* Adjust based on pill height approx 3 rows */
+            overflow: hidden;
+        }
+
+        .category-links.collapsed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+            pointer-events: none;
         }
 
         .category-expand-btn {
@@ -133,10 +153,6 @@
         }
 
         @media (max-width: 768px) {
-            .category-links.collapsed .category-link:nth-child(n+9) {
-                display: none;
-            }
-
             .category-expand-btn {
                 display: flex;
             }
@@ -1295,16 +1311,36 @@
                     window.toggleCategories = () => {
                         const container = document.getElementById('category-links');
                         const btn = document.getElementById('category-expand-btn');
-                        const isCollapsed = container.classList.toggle('collapsed');
 
-                        if (isCollapsed) {
-                            btn.querySelector('span').textContent = 'Show More Categories';
-                            btn.querySelector('svg').style.transform = 'rotate(0deg)';
-                        } else {
+                        if (container.classList.contains('collapsed')) {
+                            // Expand
+                            container.classList.remove('collapsed');
+                            container.style.maxHeight = container.scrollHeight + "px";
                             btn.querySelector('span').textContent = 'Show Less Categories';
                             btn.querySelector('svg').style.transform = 'rotate(180deg)';
+                        } else {
+                            // Collapse
+                            container.style.maxHeight = "110px"; // Match the CSS collapsed height
+                            setTimeout(() => {
+                                container.classList.add('collapsed');
+                                container.style.maxHeight = ""; // Clear inline style after transition to let CSS take over
+                            }, 300); // Wait for transition
+                            btn.querySelector('span').textContent = 'Show More Categories';
+                            btn.querySelector('svg').style.transform = 'rotate(0deg)';
                         }
                     };
+
+                    // Initialize collapsed state on load if needed (e.g., if many categories)
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const container = document.getElementById('category-links');
+                        if (container.scrollHeight > 120) { // If content is taller than collapsed height
+                            container.classList.add('collapsed');
+                        } else {
+                            // Hide button if no need to expand
+                            const btn = document.getElementById('category-expand-btn');
+                            if (btn) btn.style.display = 'none';
+                        }
+                    });
 
                     // Initialize collapsed state on mobile
                     if (window.innerWidth <= 768) {
