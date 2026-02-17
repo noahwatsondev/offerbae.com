@@ -210,7 +210,7 @@ const getNewHomepage = async (req, res) => {
         const productsSnapshot = await db.collection('products')
             .where('savingsAmount', '>', 0)
             .orderBy('savingsAmount', 'desc')
-            .limit(100) // Fetch more than we need to allow for filtering
+            .limit(500) // Fetch more than we need to allow for filtering
             .get();
 
         console.log(`[Homepage] Fetched ${productsSnapshot.size} products for mixed grid`);
