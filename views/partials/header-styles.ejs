@@ -167,13 +167,17 @@ background-attachment: scroll; /* Fixed is buggy on mobile, sticky layer handles
 }
 
 #page-h1 {
+font-size: 1.25rem;
+margin: 0;
 margin-left: 5px;
-vertical-align: text-bottom;
-height: 100%;
+margin-top: 7px; /* Slight adjustment for alignment */
+vertical-align: baseline;
 display: inline-block;
+color: #4f46e5; /* Using primary color instead of 'blue' for better look, or keep blue if requested. Let's stick to a
+nice blue or the variable. */
+/* re-using existing logic but refining */
 color: blue;
 font-style: italic;
-/* line-height: 1rem; */
-margin-top: 10px;
 font-weight: 200;
+line-height: 1;
 }
