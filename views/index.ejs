@@ -85,7 +85,7 @@
 
         @media (max-width: 768px) {
             main {
-                padding: 1rem 1.5rem;
+                padding: .5rem;
             }
         }
 
@@ -355,11 +355,12 @@
             background: #fff;
             cursor: pointer;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234F46E5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 0.75rem center;
             background-size: 1rem;
             padding-right: 2.5rem;
+            color: var(--primary);
         }
 
         /* Brands Grid (from home.ejs) */
@@ -428,9 +429,8 @@
             color: var(--primary);
             text-transform: uppercase;
             margin-bottom: 0.25rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: normal;
+            text-decoration: none;
         }
 
         .brand-card-categories {
@@ -439,12 +439,6 @@
             line-height: 1.3;
             color: var(--text-main);
             margin-bottom: 0.75rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            height: 2.6em;
         }
 
         .brand-card-actions {
@@ -584,10 +578,6 @@
                 font-size: 1rem !important;
                 margin-bottom: 0.25rem;
                 white-space: normal;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
             }
 
             .brand-card-categories {
@@ -1272,7 +1262,11 @@
                         modal.style.display = 'block';
                         document.body.style.overflow = 'hidden';
                         contentDiv.innerHTML = `
-                            <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                            <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
+                                <img src="/placeholder.png" data-src="${card?.querySelector('img')?.src || ''}" 
+                                     onerror="this.style.display='none'" 
+                                     style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border);"
+                                     onload="this.src=this.dataset.src">
                                 <h2 style="margin: 0; color: var(--text-main); font-size: 1.5rem;">${brandName} ${type === 'offers' ? 'Offers' : 'Products'}</h2>
                             </div>
                             <div style="text-align: center; color: var(--text-secondary); padding: 4rem;">Loading...</div>
@@ -1285,7 +1279,10 @@
                             if (data.success) {
                                 // Clear loading but keep header
                                 contentDiv.innerHTML = `
-                                    <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                                    <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
+                                        <img src="${card?.querySelector('img')?.src || ''}" 
+                                             onerror="this.style.display='none'" 
+                                             style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border);">
                                         <h2 style="margin: 0; color: var(--text-main); font-size: 1.5rem;">${brandName} ${type === 'offers' ? 'Offers' : 'Products'}</h2>
                                     </div>
                                     <div id="modalInnerContent"></div>
