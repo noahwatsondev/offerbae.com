@@ -108,12 +108,14 @@
             position: relative;
         }
 
-        .category-links.collapsed {
-            max-height: 110px;
-            /* Adjust based on pill height approx 3 rows */
-            overflow: hidden;
-            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+        @media (max-width: 768px) {
+            .category-links.collapsed {
+                max-height: 110px;
+                /* Adjust based on pill height approx 3 rows */
+                overflow: hidden;
+                -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+                mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            }
         }
 
         .category-expand-btn {
