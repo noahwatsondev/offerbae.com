@@ -74,7 +74,7 @@
         main {
             position: relative;
             background: rgba(255, 255, 255, .8);
-            padding: 1rem 10rem;
+            padding: 1rem 5rem;
             /* border-radius: .75rem; */
             /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); */
             padding-bottom: 3rem;
@@ -85,7 +85,7 @@
 
         @media (max-width: 768px) {
             main {
-                padding: 1rem 0.75rem;
+                padding: 1rem 1.5rem;
             }
         }
 
@@ -205,6 +205,12 @@
             background: #fff;
             transition: border-color 0.2s, box-shadow 0.2s;
             box-sizing: border-box;
+            color: var(--primary);
+        }
+
+        .search-wrapper input::placeholder {
+            color: var(--primary);
+            opacity: 1;
         }
 
         .search-wrapper input:focus {
@@ -218,7 +224,7 @@
             left: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-secondary);
+            color: var(--primary);
             pointer-events: none;
         }
 
@@ -647,7 +653,7 @@
                     <div class="filter-section">
                         <div class="category-links" id="category-links">
                             <a href="javascript:void(0)" class="category-link active-category" data-category="all"
-                                onclick="selectCategory('all')">All Brands</a>
+                                onclick="selectCategory('all')">All Categories</a>
                             <% categories.forEach(c=> { %>
                                 <a href="javascript:void(0)" class="category-link" data-category="<%= c %>"
                                     onclick="selectCategory('<%= c %>')">
