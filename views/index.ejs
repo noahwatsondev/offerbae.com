@@ -1172,19 +1172,19 @@
                         };
 
                         let html = `
-            <div style="display: flex; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
-                <strong style="color: var(--text-main); white-space: nowrap;">${(pagination ? pagination.total : products.length) === 1 ? 'Product' : 'Products'} (${pagination ? pagination.total : products.length})</strong>
-                <div style="position: relative; flex: 1; min-width: 200px;">
-                    <input type="text" placeholder="Search ${brandName}..." 
-                        class="prod-search" 
-                        value="${currentSearch.replace(/"/g, '&quot;')}" 
-                        style="padding: 0.5rem 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); font-size: 0.813rem; width: 100%; box-sizing: border-box; color: var(--primary);">
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem;">
+                    <strong style="color: var(--text-main); white-space: nowrap;">${(pagination ? pagination.total : products.length) === 1 ? 'Product' : 'Products'} (${pagination ? pagination.total : products.length})</strong>
                     ${(hasSaleItems) ? `
                     <label style="display: flex; align-items: center; font-size: 0.813rem; color: var(--danger); cursor: pointer; user-select: none; white-space: nowrap;">
                         <input type="checkbox" class="sale-toggle" checked style="margin-right: 4px;"> On Sale
                     </label>` : ''}
+                </div>
+                <div style="position: relative; width: 100%;">
+                    <input type="text" placeholder="Search ${brandName}..." 
+                        class="prod-search" 
+                        value="${currentSearch.replace(/"/g, '&quot;')}" 
+                        style="padding: 0.625rem 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); font-size: 0.875rem; width: 100%; box-sizing: border-box; display: block; color: var(--primary);">
                 </div>
             </div>
             ${getPaginationHtml('top')}`;
