@@ -551,7 +551,8 @@
 
             <header
                 style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles.replace(/\/\*[\s\S]*?\*\//g, '') : '' %>">
-                <%- include('partials/header') %>
+                <%- include('partials/header', { pageH1: (typeof pageH1 !=='undefined' ? pageH1 : 'Brands' ), settings:
+                    (typeof settings !=='undefined' ? settings : {}) }) %>
             </header>
 
             <div class="container">
@@ -812,7 +813,7 @@
                                                     </div>
                                                     <% } else { %>
                                                         <span class="current-price">$<%= h.formatPrice(p.price) %>
-                                                                </span>
+                                                        </span>
                                                         <% } %>
                                             </div>
                                         </div>

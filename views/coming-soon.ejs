@@ -143,7 +143,8 @@
 
 <body>
     <header style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles : '' %>">
-        <%- include('partials/header') %>
+        <%- include('partials/header', { pageH1: (typeof pageH1 !=='undefined' ? pageH1 : 'Brands' ), settings: (typeof
+            settings !=='undefined' ? settings : {}) }) %>
     </header>
 
 
