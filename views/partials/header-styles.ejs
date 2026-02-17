@@ -25,10 +25,16 @@ box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 .header-container {
 width: 100%;
 margin: 0 auto;
-padding: 0 1.5rem;
+padding: 0 5rem;
 display: flex;
 align-items: center;
 justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+.header-container {
+padding: 0 1.5rem;
+}
 }
 
 .main-nav {
