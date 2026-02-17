@@ -1099,7 +1099,7 @@
 
                     const loadProductsPage = async (advId, page = 1) => {
                         let contentDiv = document.getElementById(`products-content-${advId}`);
-                        if (!contentDiv) contentDiv = document.getElementById('detailsModalContent');
+                        if (!contentDiv) contentDiv = document.getElementById('modalInnerContent');
                         if (!contentDiv) return;
                         const searchInput = contentDiv.querySelector('.prod-search');
                         const q = searchInput ? searchInput.value.trim() : '';
