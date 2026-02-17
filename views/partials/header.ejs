@@ -8,9 +8,28 @@
                     style="display: block; margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; <%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
                     <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae' %>
                 </span>
-                <h1 id="page-h1">
-                    <%= (typeof pageH1 !=='undefined' ) ? pageH1 : 'Brands' %>
-                </h1>
+                <h1 id="page-h1"></h1>
+                <script>
+                    (function () {
+                        try {
+                            const path = window.location.pathname;
+                            if (path === '/' || path === '') {
+                                // Homepage - leave empty or set specific text if desired
+                                document.getElementById('page-h1').innerText = '';
+                            } else {
+                                // Get first segment
+                                const segment = path.split('/')[1];
+                                if (segment) {
+                                    // Replace hyphens with spaces and Capitalize Words
+                                    const title = segment.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                                    document.getElementById('page-h1').innerText = title;
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error setting page title:', e);
+                        }
+                    })();
+                </script>
     </div>
     <nav class="main-nav">
         <a href="/categories" class="nav-link"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg"
