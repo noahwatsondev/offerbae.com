@@ -103,11 +103,40 @@
             justify-content: center;
         }
 
-        /* Allow categories to wrap on mobile so they are all visible */
+        .category-expand-btn {
+            display: none;
+            margin: -0.5rem auto 1.5rem;
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .category-expand-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        .category-expand-btn svg {
+            transition: transform 0.3s;
+        }
+
         @media (max-width: 768px) {
-            .category-links {
-                justify-content: center;
-                /* Keep them centered when wrapping */
+            .category-links.collapsed .category-link:nth-child(n+9) {
+                display: none;
+            }
+
+            .category-expand-btn {
+                display: flex;
             }
         }
 
@@ -623,6 +652,14 @@
                                 </a>
                                 <% }); %>
                         </div>
+
+                        <button id="category-expand-btn" class="category-expand-btn" onclick="toggleCategories()">
+                            <span>Show More</span>
+                            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
 
                         <div class="controls-row">
                             <div class="search-wrapper">
@@ -1255,6 +1292,25 @@
                             contentDiv.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 4rem;">Error loading data.</div>';
                         }
                     };
+
+                    window.toggleCategories = () => {
+                        const container = document.getElementById('category-links');
+                        const btn = document.getElementById('category-expand-btn');
+                        const isCollapsed = container.classList.toggle('collapsed');
+
+                        if (isCollapsed) {
+                            btn.querySelector('span').textContent = 'Show More';
+                            btn.querySelector('svg').style.transform = 'rotate(0deg)';
+                        } else {
+                            btn.querySelector('span').textContent = 'Show Less';
+                            btn.querySelector('svg').style.transform = 'rotate(180deg)';
+                        }
+                    };
+
+                    // Initialize collapsed state on mobile
+                    if (window.innerWidth <= 768) {
+                        document.getElementById('category-links').classList.add('collapsed');
+                    }
 
                     window.selectCategory = (cat) => {
                         currentCategory = cat;
