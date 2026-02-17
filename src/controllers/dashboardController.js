@@ -210,38 +210,23 @@ const getNewHomepage = async (req, res) => {
         const productsSnapshot = await db.collection('products')
             .where('savingsAmount', '>', 0)
             .orderBy('savingsAmount', 'desc')
-            .limit(500) // Fetch more than we need to allow for filtering
+            .limit(24)
             .get();
 
-        console.log(`[Homepage] Fetched ${productsSnapshot.size} products for mixed grid`);
+        console.log(`[Homepage] Fetched ${productsSnapshot.size} top savings products`);
 
-        const topSaleProducts = [];
-        const brandCounts = {};
-        const MAX_PER_BRAND = 3;
-
-        productsSnapshot.forEach(doc => {
-            if (topSaleProducts.length >= 24) return;
-
+        const topSaleProducts = productsSnapshot.docs.map(doc => {
             const product = doc.data();
-            const brandId = product.advertiserId || 'unknown';
-
-            // Ensure brand diversity: skip if we already have enough from this store
-            if (brandCounts[brandId] >= MAX_PER_BRAND) {
-                return;
-            }
-
-            brandCounts[brandId] = (brandCounts[brandId] || 0) + 1;
-
-            topSaleProducts.push({
+            return {
                 ...product,
                 id: doc.id,
                 price: parseFloat(product.price) || 0,
                 salePrice: parseFloat(product.salePrice) || 0,
                 savings: product.savingsAmount || 0
-            });
+            };
         });
 
-        console.log(`[Homepage] Rendering ${topSaleProducts.length} mixed items across ${Object.keys(brandCounts).length} brands`);
+        console.log(`[Homepage] Rendering ${topSaleProducts.length} top products`);
 
         res.render('home', {
             settings,
