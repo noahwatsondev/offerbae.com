@@ -408,7 +408,7 @@
             <%- include('partials/footer') %>
                 <%- include('partials/nav-scripts') %>
                     <script>
-                        const advertisersData = <% - JSON.stringify(advertisers || []) %>;
+                        const advertisersData = <%- JSON.stringify(advertisers || []) %>;
 
                         const slugify = text => text.toString().toLowerCase()
                             .replace(/\s+/g, '-')
