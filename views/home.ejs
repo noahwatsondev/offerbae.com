@@ -401,7 +401,7 @@
             <%- include('partials/footer') %>
                 <%- include('partials/nav-scripts') %>
                     <script>
-                        const advertisersData = <%- JSON.stringify(advertisers || []) %>;
+                        const advertisersData = <% - JSON.stringify(advertisers || []) %>;
 
                         const slugify = text => text.toString().toLowerCase()
                             .replace(/\s+/g, '-')
@@ -526,8 +526,8 @@
                             }
                         });
 
-                        // Dynamic Image Height Alignment
-                        function alignImageHeights() {
+                        // Dynamic Grid Alignment
+                        function alignProductGrid() {
                             const cards = Array.from(document.querySelectorAll('.product-card'));
                             if (!cards.length) return;
 
@@ -535,6 +535,10 @@
                             cards.forEach(card => {
                                 const container = card.querySelector('.product-image-container');
                                 if (container) container.style.height = 'auto';
+                                const brand = card.querySelector('.product-brand');
+                                if (brand) brand.style.height = 'auto';
+                                const name = card.querySelector('.product-name');
+                                if (name) name.style.height = 'auto';
                             });
 
                             // Group by Row (offsetTop)
@@ -547,33 +551,45 @@
 
                             // Set Max Height per Row
                             rows.forEach((rowCards) => {
-                                let maxHeight = 0;
+                                let maxImgHeight = 0;
+                                let maxBrandHeight = 0;
+                                let maxNameHeight = 0;
+
                                 rowCards.forEach(card => {
                                     const container = card.querySelector('.product-image-container');
-                                    if (container) {
-                                        const h = container.offsetHeight;
-                                        if (h > maxHeight) maxHeight = h;
-                                    }
+                                    if (container && container.offsetHeight > maxImgHeight) maxImgHeight = container.offsetHeight;
+
+                                    const brand = card.querySelector('.product-brand');
+                                    if (brand && brand.offsetHeight > maxBrandHeight) maxBrandHeight = brand.offsetHeight;
+
+                                    const name = card.querySelector('.product-name');
+                                    if (name && name.offsetHeight > maxNameHeight) maxNameHeight = name.offsetHeight;
                                 });
 
                                 rowCards.forEach(card => {
                                     const container = card.querySelector('.product-image-container');
-                                    if (container) container.style.height = `${maxHeight}px`;
+                                    if (container) container.style.height = `${maxImgHeight}px`;
+
+                                    const brand = card.querySelector('.product-brand');
+                                    if (brand) brand.style.height = `${maxBrandHeight}px`;
+
+                                    const name = card.querySelector('.product-name');
+                                    if (name) name.style.height = `${maxNameHeight}px`;
                                 });
                             });
                         }
 
                         // Run on load and resize
-                        window.addEventListener('load', alignImageHeights);
-                        window.addEventListener('resize', alignImageHeights);
+                        window.addEventListener('load', alignProductGrid);
+                        window.addEventListener('resize', alignProductGrid);
                         // Run after a short delay to ensure rendering
-                        setTimeout(alignImageHeights, 100);
+                        setTimeout(alignProductGrid, 100);
                         // Run when images load
                         document.querySelectorAll('.product-image').forEach(img => {
                             if (img.complete) {
-                                alignImageHeights();
+                                alignProductGrid();
                             } else {
-                                img.addEventListener('load', alignImageHeights);
+                                img.addEventListener('load', alignProductGrid);
                             }
                         });
                     </script>
