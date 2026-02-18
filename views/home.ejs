@@ -401,6 +401,7 @@
             <%- include('partials/footer') %>
                 <%- include('partials/nav-scripts') %>
                     <script>
+                        // DO NOT ADD SPACE IN EJS TAG BELOW - IT BREAKS SYNTAX
                         const advertisersData = <% - JSON.stringify(advertisers || []) %>;
 
                         const slugify = text => text.toString().toLowerCase()
