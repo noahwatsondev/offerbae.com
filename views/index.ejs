@@ -695,7 +695,7 @@
                                 <select id="sort-order" onchange="applyFiltersAndSort()">
                                     <option value="name-asc">Brand (A-Z)</option>
                                     <option value="name-desc">Brand (Z-A)</option>
-                                    <option value="offers-desc">Top Offers</option>
+                                    <option value="offers-desc">Most Offers</option>
                                     <option value="products-desc">Most Products</option>
                                 </select>
                             </div>
@@ -1395,7 +1395,51 @@
                         });
 
                         cards.forEach(card => container.appendChild(card));
+                        // Re-align grid after sorting/filtering changes DOM order/visibility
+                        setTimeout(alignBrandGrid, 50);
                     };
+
+                    function alignBrandGrid() {
+                        const cards = Array.from(document.querySelectorAll('.brand-card')).filter(c => c.style.display !== 'none');
+                        if (!cards.length) return;
+
+                        // Reset heights
+                        cards.forEach(card => {
+                            const name = card.querySelector('.brand-card-name');
+                            if (name) name.style.height = 'auto';
+                            const cats = card.querySelector('.brand-card-categories');
+                            if (cats) cats.style.height = 'auto';
+                        });
+
+                        const rows = new Map();
+                        cards.forEach(card => {
+                            const top = card.offsetTop;
+                            if (!rows.has(top)) rows.set(top, []);
+                            rows.get(top).push(card);
+                        });
+
+                        rows.forEach(rowCards => {
+                            let maxName = 0; // Brand Name Height
+                            let maxCats = 0; // Categories Height
+
+                            rowCards.forEach(card => {
+                                const name = card.querySelector('.brand-card-name');
+                                if (name && name.offsetHeight > maxName) maxName = name.offsetHeight;
+                                const cats = card.querySelector('.brand-card-categories');
+                                if (cats && cats.offsetHeight > maxCats) maxCats = cats.offsetHeight;
+                            });
+
+                            rowCards.forEach(card => {
+                                const name = card.querySelector('.brand-card-name');
+                                if (name) name.style.height = `${maxName}px`;
+                                const cats = card.querySelector('.brand-card-categories');
+                                if (cats) cats.style.height = `${maxCats}px`;
+                            });
+                        });
+                    }
+
+                    window.addEventListener('load', alignBrandGrid);
+                    window.addEventListener('resize', alignBrandGrid);
                 </script>
                 <%- include('partials/nav-scripts') %>
                     <script>
