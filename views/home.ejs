@@ -355,6 +355,9 @@
                             These are OfferBae's on-sale products with the highest savings amount among our exclusive
                             brands.
                             Click around to find more!</p>
+                    </div>
+
+                    <div class="brand-header-mobile-pad" style="padding-top: 0;">
                         <div class="search-wrapper">
                             <span class="search-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
@@ -408,7 +411,7 @@
             <%- include('partials/footer') %>
                 <%- include('partials/nav-scripts') %>
                     <script>
-                        const advertisersData = <%- JSON.stringify(advertisers || []) %>;
+                        const advertisersData = <% - JSON.stringify(advertisers || []) %>;
 
                         const slugify = text => text.toString().toLowerCase()
                             .replace(/\s+/g, '-')
