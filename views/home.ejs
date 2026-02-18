@@ -400,9 +400,11 @@
 
             <%- include('partials/footer') %>
                 <%- include('partials/nav-scripts') %>
+                    <div id="advertisers-data" style="display:none;"
+                        data-json="<%= JSON.stringify(advertisers || []) %>"></div>
                     <script>
-                        // DO NOT ADD SPACE IN EJS TAG BELOW - IT BREAKS SYNTAX
-                        const advertisersData = <% - JSON.stringify(advertisers || []) %>;
+                        const advertisersDataEl = document.getElementById('advertisers-data');
+                        const advertisersData = advertisersDataEl ? JSON.parse(advertisersDataEl.getAttribute('data-json')) : [];
 
                         const slugify = text => text.toString().toLowerCase()
                             .replace(/\s+/g, '-')
