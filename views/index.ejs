@@ -222,6 +222,7 @@
         .search-wrapper input::placeholder {
             color: var(--primary);
             opacity: 1;
+            font-style: italic;
         }
 
         .search-wrapper input:focus {
@@ -233,7 +234,7 @@
         .search-icon {
             position: absolute;
             left: 1rem;
-            top: 50%;
+            top: 55%;
             transform: translateY(-50%);
             color: var(--primary);
             pointer-events: none;
@@ -476,7 +477,8 @@
             gap: 0.25rem;
             text-decoration: none;
             min-width: 0;
-            overflow: hidden;
+            overflow: visible;
+            position: relative;
         }
 
         @media (max-width: 640px) {
@@ -516,7 +518,11 @@
             padding: 0.125rem 0.375rem;
             border-radius: 0.25rem;
             font-weight: 800;
-            flex-shrink: 0;
+            position: absolute;
+            top: -8px;
+            right: -5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 10;
         }
 
         .badge-sale {
@@ -680,7 +686,7 @@
                                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </span>
-                                <input type="text" id="brand-search" placeholder="Search brands and items..."
+                                <input type="text" id="brand-search" placeholder="Search brands and products..."
                                     oninput="handleSearchInput(this)">
                                 <div id="global-search-results" class="global-search-results"></div>
                             </div>
