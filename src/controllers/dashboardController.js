@@ -230,9 +230,12 @@ const getNewHomepage = async (req, res) => {
 
         console.log(`[Homepage] Rendering ${topSaleProducts.length} top products`);
 
+        const advertisers = await getEnrichedAdvertisers();
+
         res.render('home', {
             settings,
             topSaleProducts,
+            advertisers,
             pageH1: 'Best Deals'
         });
     } catch (e) {

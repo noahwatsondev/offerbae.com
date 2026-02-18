@@ -225,6 +225,109 @@
         .brand-header-mobile-pad {
             padding: 1rem;
         }
+
+        .search-wrapper {
+            position: relative;
+            margin-top: 1.5rem;
+            max-width: 600px;
+        }
+
+        .search-wrapper input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            padding-left: 2.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            font-size: 0.938rem;
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+            color: var(--primary);
+        }
+
+        .search-wrapper input::placeholder {
+            color: var(--primary);
+            opacity: 1;
+        }
+
+        .search-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            pointer-events: none;
+        }
+
+        /* Global Search Results Dropdown */
+        .global-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            margin-top: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .search-result-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: contain;
+            background: #fff;
+            border: 1px solid #eee;
+            flex-shrink: 0;
+        }
+
+        .search-result-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .search-result-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .search-result-brand {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
     </style>
     <style>
         <%- include('partials/header-styles') %>
@@ -245,13 +348,25 @@
             <div class="container">
                 <main>
                     <div class="brand-header-mobile-pad">
-                        <h1 class="brand-heading" style="margin-bottom: 0px;">Our Biggest On-Sale Savings Today
+                        <h1 class="brand-heading" style="margin-bottom: 0px;">Today's Biggest Savings
                         </h1>
                         <p
                             style="color: var(--text-secondary); font-weight: 500; font-size: 1rem; margin-bottom: 0px; max-width: 800px;">
                             These are OfferBae's on-sale products with the highest savings amount among our exclusive
                             brands.
                             Click around to find more!</p>
+                        <div class="search-wrapper">
+                            <span class="search-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </span>
+                            <input type="text" id="brand-search" placeholder="Search brands and items..."
+                                oninput="handleSearchInput(this)">
+                            <div id="global-search-results" class="global-search-results"></div>
+                        </div>
                     </div>
 
                     <div class="products-grid">
@@ -292,6 +407,132 @@
 
             <%- include('partials/footer') %>
                 <%- include('partials/nav-scripts') %>
+                    <script>
+                        const advertisersData = <% - JSON.stringify(advertisers || []) %>;
+
+                        const slugify = text => text.toString().toLowerCase()
+                            .replace(/\s+/g, '-')
+                            .replace(/[^\w\-]+/g, '')
+                            .replace(/\-\-+/g, '-')
+                            .replace(/^-+/, '')
+                            .replace(/-+$/, '');
+
+                        let searchTimeout = null;
+
+                        window.handleSearchInput = (input) => {
+                            const q = input.value.trim();
+                            const resultsDiv = document.getElementById('global-search-results');
+
+                            clearTimeout(searchTimeout);
+
+                            if (q.length < 1) {
+                                resultsDiv.style.display = 'none';
+                                resultsDiv.innerHTML = '';
+                                return;
+                            }
+
+                            // Initial UI: Show matching brands immediately (from passed data)
+                            const matchingBrands = [];
+                            if (q.length >= 2) {
+                                const searchTerm = q.toLowerCase();
+                                advertisersData.forEach(adv => {
+                                    const name = (adv.name || '').toLowerCase();
+                                    if (name.includes(searchTerm)) {
+                                        matchingBrands.push({
+                                            id: adv.id,
+                                            name: adv.name,
+                                            slug: adv.slug || slugify(adv.name),
+                                            logoUrl: adv.logoUrl || adv.storageLogoUrl
+                                        });
+                                    }
+                                });
+                            }
+
+                            if (q.length < 2) {
+                                resultsDiv.style.display = 'none';
+                                return;
+                            }
+
+                            // Render initially with just brands if any
+                            if (matchingBrands.length > 0) {
+                                renderGlobalSearchResults([], matchingBrands);
+                                resultsDiv.style.display = 'block';
+                            }
+
+                            searchTimeout = setTimeout(async () => {
+                                try {
+                                    const res = await fetch(`/api/products/search?q=${encodeURIComponent(q)}`);
+                                    const data = await res.json();
+                                    if (data.success && input.value.trim().length >= 2) {
+                                        renderGlobalSearchResults(data.products, matchingBrands);
+                                    } else {
+                                        if (matchingBrands.length === 0) resultsDiv.style.display = 'none';
+                                    }
+                                } catch (err) {
+                                    console.error('Search error:', err);
+                                }
+                            }, 300);
+                        };
+
+                        const renderGlobalSearchResults = (products, brands = []) => {
+                            const resultsDiv = document.getElementById('global-search-results');
+                            if (products.length === 0 && brands.length === 0) {
+                                resultsDiv.style.display = 'none';
+                                return;
+                            }
+
+                            let html = '';
+
+                            // Brands Section
+                            if (brands.length > 0) {
+                                html += brands.map(b => `
+                        <div class="search-result-item" onclick="location.href='/brand/${b.id}-${b.slug}'">
+                            <div class="search-result-thumb" style="display:flex; align-items:center; justify-content:center; background:#f3f4f6;">
+                                ${b.logoUrl ? `<img src="${b.logoUrl}" style="max-width:100%; max-height:100%; object-fit:contain;">` : '<span style="font-size:12px; color:#9ca3af;">?</span>'}
+                            </div>
+                            <div class="search-result-info">
+                                <div class="search-result-name" style="font-weight: 700; color: var(--primary);">${b.name}</div>
+                                <div class="search-result-brand">Brand</div>
+                            </div>
+                        </div>
+                    `).join('');
+                            }
+
+                            if (brands.length > 0 && products.length > 0) {
+                                html += '<div style="height: 1px; background: var(--border); margin: 4px 0;"></div>';
+                            }
+
+                            // Products Section
+                            if (products.length > 0) {
+                                html += products.map(p => {
+                                    const brandName = p.advertiserName || 'brand';
+                                    const brandSlug = brandName.toLowerCase().replace(/\s+/g, '-');
+                                    const productUrl = `/product/${brandSlug}/${p.slug || (slugify(p.name) + '-' + (p.sku || '').substring(0, 5))}`;
+                                    return `
+                        <div class="search-result-item" onclick="location.href='${productUrl}'">
+                            <img src="${p.storageImageUrl || p.imageUrl || ''}" class="search-result-thumb" onerror="this.src='https://placehold.co/40x40?text=?'">
+                            <div class="search-result-info">
+                                <div class="search-result-name">${p.name}</div>
+                                <div class="search-result-brand" style="font-weight: 700; color: var(--primary);">${p.advertiserName || ''}</div>
+                            </div>
+                        </div>
+                    `;
+                                }).join('');
+                            }
+
+                            resultsDiv.innerHTML = html;
+                            resultsDiv.style.display = 'block';
+                        };
+
+                        // Close search results when clicking outside
+                        document.addEventListener('click', (e) => {
+                            const resultsDiv = document.getElementById('global-search-results');
+                            const searchInput = document.getElementById('brand-search');
+                            if (resultsDiv && !resultsDiv.contains(e.target) && e.target !== searchInput) {
+                                resultsDiv.style.display = 'none';
+                            }
+                        });
+                    </script>
 </body>
 
 </html>
