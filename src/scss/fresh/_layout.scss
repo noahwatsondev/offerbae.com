@@ -67,7 +67,7 @@ body {
 
 .fresh-context-wrapper {
     grid-area: context;
-    padding: 0 2rem;
+    padding: 0 1rem;
     background-color: transparent;
 
     .fresh-context-inner {
@@ -281,8 +281,8 @@ body {
         display: flex;
         gap: 0.75rem;
         overflow-x: auto;
-        padding: 0.5rem 4rem .5rem 2rem;
-        margin: 0 -1rem;
+        padding: 0.5rem 1rem;
+        margin: 0;
         scrollbar-width: none; // Firefox
         -ms-overflow-style: none; // IE/Edge
         scroll-behavior: smooth;
@@ -327,7 +327,7 @@ body {
 .fresh-breadcrumbs-wrapper {
     grid-area: breadcrumbs;
     background-color: transparent;
-    padding: 2rem 2rem 0;
+    padding: 1.5rem 1rem 0;
 
     .fresh-breadcrumbs-inner {
         max-width: 1200px;

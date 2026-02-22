@@ -5,6 +5,12 @@
     grid-area: main;
     padding: 1.5rem;
     flex-grow: 1;
+    max-width: 100%;
+    box-sizing: border-box;
+
+    @media (max-width: 768px) {
+        padding: 1rem;
+    }
 
     .fresh-content-section {
         margin-bottom: 2.5rem;
@@ -23,7 +29,8 @@
 
             .fresh-section-title-area {
                 flex: 1;
-                min-width: 280px;
+                flex: 1;
+                min-width: 0;
 
                 h2 {
                     font-size: 1.5rem;
@@ -100,6 +107,10 @@
             display: grid;
             grid-template-columns: repeat(6, 1fr); // 6 across desktop
             gap: 1.5rem;
+
+            @media (max-width: 768px) {
+                gap: 1rem;
+            }
 
             .product-card-wrapper {
                 text-decoration: none !important;
