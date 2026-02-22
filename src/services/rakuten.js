@@ -1,4 +1,5 @@
 const axios = require('axios');
+const btoa = require('btoa');
 const { Parser } = require('xml2js');
 const config = require('../config/env');
 
@@ -19,7 +20,7 @@ const getRakutenToken = async () => {
     }
 
     try {
-        const tokenKey = Buffer.from(`${config.rakuten.clientId}:${config.rakuten.clientSecret}`).toString('base64');
+        const tokenKey = btoa(`${config.rakuten.clientId}:${config.rakuten.clientSecret}`);
         const response = await axios.post(
             'https://api.linksynergy.com/token',
             `scope=${config.rakuten.siteId}`,

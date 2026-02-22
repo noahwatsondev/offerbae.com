@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae' %> - Best Deals &
+            Offers
+    </title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: <%=(typeof settings !=='undefined' && settings.defaultLinkColor) ? settings.defaultLinkColor: '#4f46e5' %>;
+            --primary-light: #eef2ff;
+            --primary-border: #818cf8;
+            --primary-text: #4338ca;
+            --text-main: #111827;
+            --text-secondary: #6b7280;
+            --bg-body: <%=(typeof settings !=='undefined' && settings.bgColor) ? settings.bgColor: '#f9fafb' %>;
+            --card-bg: #FFFFFF;
+            --border: #e5e7eb;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        .bg-fixed-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            pointer-events: none;
+        }
+
+        .container {
+            margin: 0 auto;
+            /* padding: 1rem; */
+            display: grid;
+            grid-template-columns: 1fr;
+            /* Single column layout for home */
+            gap: 1rem;
+        }
+
+        main {
+            position: relative;
+            background: rgba(255, 255, 255, .8);
+            padding: 1rem;
+            /* border-radius: .75rem; */
+            /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); */
+            padding-bottom: 3rem;
+        }
+
+        .brand-heading {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, var(--primary), #ef3e5c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: .5rem;
+            margin-top: 2rem;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            height: 100%;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .product-savings {
+            background: #dcfce7;
+            color: #166534;
+            padding: 0.25rem 0.5rem;
+            border-radius: .75rem .75rem 0 0;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            pointer-events: none;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .product-image-container {
+            background: #fff;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            /* padding: 1rem; */
+        }
+
+        .product-image {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .product-info {
+            padding: 0.75rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-brand {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #6B7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .product-name {
+            font-size: 0.813rem;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-main);
+            margin-bottom: 0.75rem;
+        }
+
+        .product-prices {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .product-sale-price {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--danger);
+        }
+
+        .product-regular-price {
+            text-decoration: line-through;
+            color: #9ca3af;
+            font-size: 0.75rem;
+        }
+
+        @media (max-width: 1600px) {
+            .products-grid {
+                grid-template-columns: repeat(8, 1fr);
+            }
+        }
+
+        @media (max-width: 1280px) {
+            .products-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .products-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .brand-heading {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            main {
+                padding: .5rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .brand-header-mobile-pad {
+            padding: 1rem;
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-top: 1.5rem;
+            max-width: 600px;
+            z-index: 1001;
+            transition: box-shadow 0.2s;
+            border-radius: 24px;
+        }
+
+        .search-wrapper input {
+            width: 100%;
+            height: 48px;
+            padding: 0 1rem;
+            padding-left: 3rem;
+            border-radius: 24px;
+            border: 1px solid #dfe1e5;
+            font-size: 1rem;
+            background: #fff;
+            transition: all 0.2s;
+            box-sizing: border-box;
+            color: #202124;
+            outline: none;
+        }
+
+        .search-wrapper input::placeholder {
+            color: #70757a;
+            opacity: 1;
+        }
+
+        .search-wrapper:hover input,
+        .search-wrapper:focus-within input {
+            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+            border-color: rgba(223, 225, 229, 0);
+        }
+
+        /* Seamless integration when results are active */
+        .search-wrapper.has-results {
+            box-shadow: 0 4px 12px rgba(32, 33, 36, 0.28);
+            background: #fff;
+        }
+
+        .search-wrapper.has-results input {
+            border-color: transparent !important;
+            box-shadow: none !important;
+            border-radius: 24px 24px 0 0;
+        }
+
+        .search-wrapper.has-results::after {
+            content: '';
+            position: absolute;
+            top: 48px;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background: #e8eaed;
+            z-index: 1002;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9aa0a6;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* Global Search Results Dropdown */
+        .global-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: none;
+            border-radius: 0 0 24px 24px;
+            margin-top: 0;
+            z-index: 1000;
+            display: none;
+            max-height: 450px;
+            overflow-y: auto;
+            padding: 8px 0 12px 0;
+            box-shadow: 0 4px 12px rgba(32, 33, 36, 0.28);
+        }
+
+        .search-result-header {
+            padding: 12px 20px 8px;
+            font-size: 0.688rem;
+            font-weight: 500;
+            color: #70757a;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .search-result-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .search-result-icon {
+            color: #9aa0a6;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            width: 20px;
+        }
+
+        .search-result-thumb {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            object-fit: contain;
+            background: #fff;
+            border: 1px solid #f1f3f4;
+            flex-shrink: 0;
+        }
+
+        .search-result-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-result-name {
+            font-size: 1rem;
+            color: #202124;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 400;
+        }
+
+        .search-result-brand {
+            font-size: 0.75rem;
+            color: #70757a;
+        }
+    </style>
+    <style>
+        <%- include('partials/header-styles') %>
+    </style>
+</head>
+
+<body>
+    <% if (typeof settings !=='undefined' && settings.bgImageUrl) { %>
+        <div class="bg-fixed-layer" style="background-image: url('<%= settings.bgImageUrl %>');"></div>
+        <% } %>
+
+            <header
+                style="<%= (typeof settings !== 'undefined' && settings.headerStyles) ? settings.headerStyles : '' %>">
+                <%- include('partials/header', { pageH1: (typeof pageH1 !=='undefined' ? pageH1 : 'Brands' ), settings:
+                    (typeof settings !=='undefined' ? settings : {}) }) %>
+            </header>
+
+            <div class="container">
+                <main>
+                    <div class="brand-header-mobile-pad">
+                        <h1 class="brand-heading" style="margin-bottom: 0px;">Today's Biggest Savings
+                        </h1>
+                        <p
+                            style="color: var(--text-secondary); font-weight: 500; font-size: 1rem; margin-bottom: 0px; max-width: 800px;">
+                            These are OfferBae's on-sale products with the highest savings amount among our exclusive
+                            brands.
+                            Click around to find more!</p>
+                    </div>
+
+                    <div class="brand-header-mobile-pad" style="padding: 0;">
+                        <div class="search-wrapper">
+                            <span class="search-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </span>
+                            <input type="text" id="brand-search" placeholder="Search brands and products..."
+                                oninput="handleSearchInput(this)">
+                            <div id="global-search-results" class="global-search-results"></div>
+                        </div>
+                    </div>
+
+                    <div class="products-grid">
+                        <% topSaleProducts.forEach(product=> { %>
+                            <% var productUrl='/product/' + (product.advertiserName || product.brandName || 'brand'
+                                ).toLowerCase().replace(/\s+/g, '-' ) + '/' + product.id + '-' + (product.name
+                                || 'product' ).toLowerCase().replace(/[^a-z0-9]+/g, '-' ); %>
+                                <a href="<%= productUrl %>" class="product-card">
+                                    <div class="product-savings">
+                                        <strong>$<%= product.savings.toFixed(2) %></strong> Off!
+                                    </div>
+                                    <div class="product-image-container">
+                                        <img src="<%= product.storageImageUrl || product.imageUrl || '/placeholder.png' %>"
+                                            alt="<%= product.name %>" class="product-image"
+                                            onerror="this.src='/placeholder.png'" loading="lazy">
+                                    </div>
+                                    <div class="product-info">
+                                        <div class="product-details-content">
+                                            <div class="product-brand">
+                                                <%= product.advertiserName || product.brandName || 'Store' %>
+                                            </div>
+                                            <div class="product-name" title="<%= product.name %>">
+                                                <%= product.name %>
+                                            </div>
+                                            <div class="product-prices">
+                                                <span class="product-sale-price">$<%= product.salePrice.toFixed(2) %>
+                                                </span>
+                                                <span class="product-regular-price">$<%= product.price.toFixed(2) %>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                                <% }); %>
+                    </div>
+                </main>
+            </div>
+
+            <%- include('partials/footer') %>
+                <%- include('partials/nav-scripts') %>
+                    <div id="advertisers-data" style="display:none;"
+                        data-json="<%= JSON.stringify(advertisers || []) %>"></div>
+                    <script>
+                        const advertisersDataEl = document.getElementById('advertisers-data');
+                        const advertisersData = advertisersDataEl ? JSON.parse(advertisersDataEl.getAttribute('data-json')) : [];
+
+                        const slugify = text => text.toString().toLowerCase()
+                            .replace(/\s+/g, '-')
+                            .replace(/[^\w\-]+/g, '')
+                            .replace(/\-\-+/g, '-')
+                            .replace(/^-+/, '')
+                            .replace(/-+$/, '');
+
+                        let searchTimeout = null;
+
+                        window.handleSearchInput = (input) => {
+                            const q = input.value.trim();
+                            const resultsDiv = document.getElementById('global-search-results');
+
+                            clearTimeout(searchTimeout);
+
+                            if (q.length < 1) {
+                                resultsDiv.style.display = 'none';
+                                resultsDiv.innerHTML = '';
+                                input.parentElement.classList.remove('has-results');
+                                return;
+                            }
+
+                            // Initial UI: Show matching brands immediately (from passed data)
+                            const matchingBrands = [];
+                            if (q.length >= 2) {
+                                const searchTerm = q.toLowerCase();
+                                advertisersData.forEach(adv => {
+                                    const name = (adv.name || '').toLowerCase();
+                                    if (name.includes(searchTerm)) {
+                                        matchingBrands.push({
+                                            id: adv.id,
+                                            name: adv.name,
+                                            slug: adv.slug || slugify(adv.name),
+                                            logoUrl: adv.logoUrl || adv.storageLogoUrl
+                                        });
+                                    }
+                                });
+                            }
+
+                            if (q.length < 2) {
+                                resultsDiv.style.display = 'none';
+                                input.parentElement.classList.remove('has-results');
+                                return;
+                            }
+
+                            // Render initially with just brands if any
+                            if (matchingBrands.length > 0) {
+                                renderGlobalSearchResults([], matchingBrands);
+                                resultsDiv.style.display = 'block';
+                            }
+
+                            searchTimeout = setTimeout(async () => {
+                                try {
+                                    const res = await fetch(`/api/products/search?q=${encodeURIComponent(q)}`);
+                                    const data = await res.json();
+                                    if (data.success && input.value.trim().length >= 2) {
+                                        renderGlobalSearchResults(data.products, matchingBrands);
+                                        if (data.products.length > 0 || matchingBrands.length > 0) {
+                                            input.parentElement.classList.add('has-results');
+                                        } else {
+                                            input.parentElement.classList.remove('has-results');
+                                        }
+                                    } else {
+                                        if (matchingBrands.length === 0) {
+                                            resultsDiv.style.display = 'none';
+                                            input.parentElement.classList.remove('has-results');
+                                        }
+                                    }
+                                } catch (err) {
+                                    console.error('Search error:', err);
+                                }
+                            }, 300);
+                        };
+
+                        const renderGlobalSearchResults = (products, brands = []) => {
+                            const resultsDiv = document.getElementById('global-search-results');
+                            if (products.length === 0 && brands.length === 0) {
+                                resultsDiv.style.display = 'none';
+                                document.getElementById('brand-search').parentElement.classList.remove('has-results');
+                                return;
+                            }
+
+                            let html = '';
+
+                            // Brands Section
+                            if (brands.length > 0) {
+                                html += '<div class="search-result-header">Brands</div>';
+                                html += brands.map(b => `
+                        <div class="search-result-item" onclick="location.href='/brand/${b.id}-${b.slug}'">
+                            <div class="search-result-thumb">
+                                ${b.logoUrl ? `<img src="${b.logoUrl}" style="max-width:100%; max-height:100%; object-fit:contain;">` : '<span style="font-size:10px; color:#9ca3af;">?</span>'}
+                            </div>
+                            <div class="search-result-info">
+                                <div class="search-result-name">${b.name}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                            }
+
+                            // Products Section
+                            if (products.length > 0) {
+                                html += '<div class="search-result-header">Products</div>';
+                                html += products.map(p => {
+                                    const brandName = p.advertiserName || 'brand';
+                                    const brandSlug = brandName.toLowerCase().replace(/\s+/g, '-');
+                                    const productUrl = `/product/${brandSlug}/${p.slug || (slugify(p.name) + '-' + (p.sku || '').substring(0, 5))}`;
+                                    return `
+                        <div class="search-result-item" onclick="location.href='${productUrl}'">
+                            <img src="${p.storageImageUrl || p.imageUrl || ''}" class="search-result-thumb" onerror="this.src='https://placehold.co/40x40?text=?'">
+                            <div class="search-result-info">
+                                <div class="search-result-name">${p.name}</div>
+                                <div class="search-result-brand">${p.advertiserName || ''}</div>
+                            </div>
+                        </div>
+                    `;
+                                }).join('');
+                            }
+
+                            resultsDiv.innerHTML = html;
+                            resultsDiv.style.display = 'block';
+                        };
+
+                        // Close search results when clicking outside
+                        document.addEventListener('click', (e) => {
+                            const resultsDiv = document.getElementById('global-search-results');
+                            const searchInput = document.getElementById('brand-search');
+                            if (resultsDiv && !resultsDiv.contains(e.target) && e.target !== searchInput) {
+                                resultsDiv.style.display = 'none';
+                                resultsDiv.parentElement.classList.remove('has-results');
+                            }
+                        });
+
+                        // Dynamic Grid Alignment
+                        function alignProductGrid() {
+                            const cards = Array.from(document.querySelectorAll('.product-card'));
+                            if (!cards.length) return;
+
+                            // Reset heights to auto first
+                            cards.forEach(card => {
+                                const container = card.querySelector('.product-image-container');
+                                if (container) container.style.height = 'auto';
+                                const brand = card.querySelector('.product-brand');
+                                if (brand) brand.style.height = 'auto';
+                                const name = card.querySelector('.product-name');
+                                if (name) name.style.height = 'auto';
+                            });
+
+                            // Group by Row (offsetTop)
+                            const rows = new Map();
+                            cards.forEach(card => {
+                                const top = card.offsetTop;
+                                if (!rows.has(top)) rows.set(top, []);
+                                rows.get(top).push(card);
+                            });
+
+                            // Set Max Height per Row
+                            rows.forEach((rowCards) => {
+                                let maxImgHeight = 0;
+                                let maxBrandHeight = 0;
+                                let maxNameHeight = 0;
+
+                                rowCards.forEach(card => {
+                                    const container = card.querySelector('.product-image-container');
+                                    if (container && container.offsetHeight > maxImgHeight) maxImgHeight = container.offsetHeight;
+
+                                    const brand = card.querySelector('.product-brand');
+                                    if (brand && brand.offsetHeight > maxBrandHeight) maxBrandHeight = brand.offsetHeight;
+
+                                    const name = card.querySelector('.product-name');
+                                    if (name && name.offsetHeight > maxNameHeight) maxNameHeight = name.offsetHeight;
+                                });
+
+                                rowCards.forEach(card => {
+                                    const container = card.querySelector('.product-image-container');
+                                    if (container) container.style.height = `${maxImgHeight}px`;
+
+                                    const brand = card.querySelector('.product-brand');
+                                    if (brand) brand.style.height = `${maxBrandHeight}px`;
+
+                                    const name = card.querySelector('.product-name');
+                                    if (name) name.style.height = `${maxNameHeight}px`;
+                                });
+                            });
+                        }
+
+                        // Run on load and resize
+                        window.addEventListener('load', alignProductGrid);
+                        window.addEventListener('resize', alignProductGrid);
+                        // Run after a short delay to ensure rendering
+                        setTimeout(alignProductGrid, 100);
+                        // Run when images load
+                        document.querySelectorAll('.product-image').forEach(img => {
+                            if (img.complete) {
+                                alignProductGrid();
+                            } else {
+                                img.addEventListener('load', alignProductGrid);
+                            }
+                        });
+                    </script>
+</body>
+
+</html>

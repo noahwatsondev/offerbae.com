@@ -1,0 +1,11 @@
+<script>
+    function toggleMobileMenu() {
+        const nav = document.getElementById('mobile-nav');
+        const btn = document.querySelector('.mobile-menu-btn');
+        if (nav && btn) {
+            nav.classList.toggle('active');
+            btn.classList.toggle('active');
+            document.body.style.overflow = nav.classList.contains('active') ? 'hidden' : '';
+        }
+    }
+</script>
