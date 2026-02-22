@@ -817,6 +817,18 @@ body {
   width: 100%;
   flex: 1;
 }
+@media (max-width: 480px) {
+  .fresh-content .fresh-content-section .fresh-offer-grid .fresh-offer-card {
+    padding: 1rem;
+    gap: 1rem;
+  }
+}
+@media (max-width: 380px) {
+  .fresh-content .fresh-content-section .fresh-offer-grid .fresh-offer-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
 .fresh-content .fresh-content-section .fresh-offer-grid .fresh-offer-card:hover {
   background: rgba(255, 255, 255, 0.9);
   transform: translateY(-2px);
