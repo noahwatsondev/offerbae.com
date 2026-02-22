@@ -351,8 +351,28 @@ body {
     display: flex;
     flex-direction: column;
   }
-  .fresh-sidebar {
-    display: none;
+  .fresh-layout .fresh-header {
+    order: 1;
+  }
+  .fresh-layout .fresh-breadcrumbs-wrapper {
+    order: 2;
+  }
+  .fresh-layout .fresh-context-wrapper {
+    order: 3;
+  }
+  .fresh-layout .fresh-categories-wrapper {
+    order: 4;
+  }
+  .fresh-layout .fresh-content {
+    order: 5;
+  }
+  .fresh-layout .fresh-sidebar {
+    order: 6;
+    display: flex;
+    padding: 1rem;
+  }
+  .fresh-layout .fresh-footer {
+    order: 7;
   }
   .bg-fixed-layer {
     /* Remove background-attachment: scroll since we use a fixed positioning approach */

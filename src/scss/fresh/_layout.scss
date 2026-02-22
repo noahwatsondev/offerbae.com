@@ -386,12 +386,38 @@ body {
     .fresh-layout {
         display: flex;
         flex-direction: column;
+
+        .fresh-header {
+            order: 1;
+        }
+
+        .fresh-breadcrumbs-wrapper {
+            order: 2;
+        }
+
+        .fresh-context-wrapper {
+            order: 3;
+        }
+
+        .fresh-categories-wrapper {
+            order: 4;
+        }
+
+        .fresh-content {
+            order: 5;
+        }
+
+        .fresh-sidebar {
+            order: 6;
+            display: flex;
+            padding: 1rem;
+        }
+
+        .fresh-footer {
+            order: 7;
+        }
     }
 
-    // Sidebar hidden by default on mobile, handled via JS/CSS toggle later
-    .fresh-sidebar {
-        display: none;
-    }
 
     .bg-fixed-layer {
         /* Remove background-attachment: scroll since we use a fixed positioning approach */
