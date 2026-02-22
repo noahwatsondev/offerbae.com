@@ -33,14 +33,29 @@ const resetState = (network) => {
 // Helpers for Promo Code Detection
 const isRealCode = (code) => {
     if (!code) return false;
-    const clean = String(code).trim().toUpperCase();
+    const clean = String(code).trim().toLowerCase();
+
+    // Catch common patterns indicating no actual promo code exists
+    const noCodePattern = /^(no\s+code|none|n\/?a|null|false|0)$/i;
+    // Robust "no coupon code" patterns as requested
+    const looseNoCodePattern = /(no\s+code|no\s+coupon|no\s+promo|no\s+discount|code\s+needed|code\s+required)/i;
+
+    if (noCodePattern.test(clean) || (clean.includes('no') && (clean.includes('code') || clean.includes('coupon'))) || looseNoCodePattern.test(clean)) {
+        if (!/^[A-Z0-9]{3,}$/i.test(clean)) { // If it's not a standard short alphanumeric code
+            return false;
+        }
+    }
+
     const nonCodes = [
-        'N/A', 'NONE', 'NO CODE', 'NO CODE REQUIRED', 'NO COUPON CODE', 'NO COUPON CODE REQUIRED',
-        'NO COUPON REQUIRED', 'NO PROMO CODE REQUIRED', 'NO PROMO REQUIRED',
-        'SEE SITE', 'CLICK TO REVEAL', 'AUTO-APPLIED', 'ONLINE ONLY', 'NULL', 'UNDEFINED', '',
-        'NO COUPON CODE NEEDED', 'NO CODE NEEDED', 'NO PROMO CODE NEEDED'
+        'see site', 'click to reveal', 'auto-applied', 'online only', 'undefined', '', 'no code required', 'no coupon code needed'
     ];
     return !nonCodes.includes(clean);
+};
+
+const cleanOfferCode = (code) => {
+    if (!code) return null;
+    if (isRealCode(code)) return code.trim();
+    return null;
 };
 
 const extractCodeFromDescription = (desc) => {
@@ -348,6 +363,7 @@ const syncRakutenCoupons = async () => {
         for (const coupon of coupons) {
             const result = await upsertOffer({
                 ...coupon,
+                code: cleanOfferCode(coupon.code),
                 advertiserId: String(coupon.advertiserId),
                 network: 'Rakuten'
             });
@@ -511,6 +527,7 @@ const syncCJLinks = async () => {
         for (const link of links) {
             const result = await upsertOffer({
                 ...link,
+                code: cleanOfferCode(link.code),
                 advertiserId: String(link.advertiserId),
                 network: 'CJ'
             });
@@ -655,6 +672,7 @@ const syncAWINOffers = async () => {
         for (const offer of offers) {
             const result = await upsertOffer({
                 ...offer,
+                code: cleanOfferCode(offer.code),
                 advertiserId: String(offer.advertiserId),
                 network: 'AWIN'
             });
@@ -790,7 +808,11 @@ const syncPepperjamOffers = async () => {
         const offerCountsMap = {};
         const hasCodesMap = {};
         for (const offer of offers) {
-            const result = await upsertOffer({ ...offer, network: 'Pepperjam' });
+            const result = await upsertOffer({
+                ...offer,
+                code: cleanOfferCode(offer.code),
+                network: 'Pepperjam'
+            });
             activeIds.add(result.id);
             const aid = String(offer.advertiserId);
             const isExpired = offer.endDate && new Date(offer.endDate) < new Date();
@@ -916,5 +938,7 @@ module.exports = {
     syncPepperjamProducts,
     getGlobalSyncState,
     getSyncHistory,
-    recalculateAdvertiserCounts
+    recalculateAdvertiserCounts,
+    isRealCode,
+    cleanOfferCode
 };

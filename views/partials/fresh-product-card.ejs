@@ -1,0 +1,34 @@
+<a href="<%= product.affiliateUrl %>" target="_blank" class="product-card-wrapper" data-price="<%= product.price %>"
+    data-sale-price="<%= product.salePrice %>" data-savings="<%= product.price - product.salePrice %>">
+    <article class="fresh-product-card">
+        <div class="product-badge">
+            <%= product.discountPercent %>% OFF
+        </div>
+        <div class="product-image-container">
+            <% if (product.imageUrl) { %>
+                <img src="<%= product.imageUrl %>" alt="<%= product.name %>" loading="lazy">
+                <% } else { %>
+                    <div class="image-placeholder"></div>
+                    <% } %>
+        </div>
+        <div class="product-info">
+            <div class="product-brand">
+                <%= product.advertiserName || 'Top Brand' %>
+            </div>
+            <h3 class="product-title" title="<%= product.name %>">
+                <%= product.name %>
+            </h3>
+            <div class="product-pricing">
+                <span class="sale-price">$<%= product.salePrice.toFixed(2) %></span>
+                <% if (product.price> product.salePrice) { %>
+                    <span class="original-price">$<%= product.price.toFixed(2) %></span>
+                    <% } %>
+            </div>
+            <% if (product.price> product.salePrice) { %>
+                <div class="product-savings">
+                    $<%= (product.price - product.salePrice).toFixed(2) %> Off!
+                </div>
+                <% } %>
+        </div>
+    </article>
+</a>

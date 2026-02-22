@@ -24,19 +24,36 @@ const getStyle = async (req, res) => {
 
 const updateStyle = async (req, res) => {
     try {
-        const { logoText, logoStyles, headerStyles, filterInputStyles, categorySelectedStyles, categoryLinkStyles, categoryHoverStyles, bgColor, defaultLinkColor, offersCtaStyles, productsCtaStyles, offersCtaCountStyles, productsCtaCountStyles, categoriesHeading, categoriesHeadingStyles, offerRowStyles, offerImageStyles, offerPromoCodeStyles, offerTitleStyles, offerTimeLeftStyles, productRowStyles, productImageStyles, productTitleStyles, productPriceStyles, productSalePriceStyles } = req.body;
+        const {
+            logoText, logoStyles, headerStyles, headerNavLinksColor, footerStyles,
+            filterInputStyles, categorySelectedStyles, categoryLinkStyles, categoryHoverStyles,
+            bgColor, defaultLinkColor,
+            colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorViolet,
+            offersCtaStyles, productsCtaStyles, offersCtaCountStyles, productsCtaCountStyles,
+            categoriesHeading, categoriesHeadingStyles,
+            offerRowStyles, offerImageStyles, offerPromoCodeStyles, offerTitleStyles, offerTimeLeftStyles,
+            productRowStyles, productImageStyles, productTitleStyles, productPriceStyles, productSalePriceStyles
+        } = req.body;
         const files = req.files || {};
 
         let settings = {
             logoText,
             logoStyles,
             headerStyles,
+            headerNavLinksColor,
+            footerStyles,
             filterInputStyles,
             categorySelectedStyles,
             categoryLinkStyles,
             categoryHoverStyles,
             bgColor,
             defaultLinkColor,
+            colorRed,
+            colorOrange,
+            colorYellow,
+            colorGreen,
+            colorBlue,
+            colorViolet,
             offersCtaStyles,
             productsCtaStyles,
             offersCtaCountStyles,

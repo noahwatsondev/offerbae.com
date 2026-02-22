@@ -1,0 +1,15 @@
+// Main entry point for fresh build styles
+@use 'variables' as vars;
+@use 'layout';
+@use 'header';
+@use 'sidebar';
+@use 'content';
+@use 'footer';
+@use 'brand';
+
+body {
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    margin: 0;
+    color: vars.$text-color;
+    background-color: vars.$bg-color;
+}

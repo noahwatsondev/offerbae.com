@@ -1,0 +1,16 @@
+:root {
+    --primary-color: #000000;
+    --primary-rgb: 0, 0, 0;
+    --secondary-color: #f1f5f9;
+    --accent-color: #3b82f6;
+    --bg-color: #FAFAFA;
+    --text-color: #1f2937;
+    --border-color: #e2e8f0;
+    --sidebar-width: 250px;
+    --header-height: 70px;
+}
+
+$primary-color: var(--primary-color);
+$text-color: #111827;
+$bg-color: var(--bg-color);
+$border-color: #e5e7eb;

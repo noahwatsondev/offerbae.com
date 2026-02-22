@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fresh Build</title>
+    <% const cssVersion=Date.now(); %>
+        <link rel="preload" href="/css/fresh/main.css?v=<%= cssVersion %>" as="style">
+        <link rel="stylesheet" href="/css/fresh/main.css?v=<%= cssVersion %>">
+
+        <% if (typeof settings !=='undefined' ) { %>
+            <style>
+                :root {
+                    /* Fallback to default SCSS variables if not set */
+                    --primary-color: <%=settings.defaultLinkColor || '#4f46e5' %>;
+                    --bg-color: <%=settings.bgColor || '#f9fafb' %>;
+                    --nav-link-color: <%=settings.headerNavLinksColor || '#111827' %>;
+
+                    /* Color Spectrum */
+                    --color-red: <%=settings.colorRed || '#ef4444' %>;
+                    --color-orange: <%=settings.colorOrange || '#f97316' %>;
+                    --color-yellow: <%=settings.colorYellow || '#eab308' %>;
+                    --color-green: <%=settings.colorGreen || '#22c55e' %>;
+                    --color-blue: <%=settings.colorBlue || '#3b82f6' %>;
+                    --color-violet: <%=settings.colorViolet || '#8b5cf6' %>;
+                }
+
+                body {
+                    background-color: var(--bg-color);
+                }
+            </style>
+            <% } %>
+
+                <%- include('fresh-header-scripts') %>
+</head>
+
+<body>
+    <% if (typeof settings !=='undefined' && settings.bgImageUrl) { %>
+        <!--<div class="bg-fixed-layer" style="background-image: url('<%= settings.bgImageUrl %>');"></div> -->
+        <div class="bg-fixed-layer"></div>
+        <% } %>
+
+            <div class="fresh-layout">
+                <%- include('fresh-header', { settings: typeof settings !=='undefined' ? settings : {} }) %>
+                    <%- include('fresh-breadcrumbs') %>
+                        <%- include('fresh-context') %>
+                            <%- include('fresh-categories') %>
+                                <%- include('fresh-sidebar') %>
+                                    <%- include(typeof mainPartial !=='undefined' ? mainPartial : 'fresh-main' ) %>
+                                        <%- include('fresh-footer') %>
+            </div>
+            <%- include('fresh-footer-scripts') %>
+</body>
+
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= typeof brand !=='undefined' ? brand.name : 'Brand Hub' %> | OfferBae
+    </title>
+    <link rel="stylesheet" href="/css/fresh/main.css?v=<%= Date.now() %>">
+    <% if (typeof settings !=='undefined' ) { %>
+        <style>
+            :root {
+                /* Applied Dynamic Style Variables */
+                --primary-color: <%=settings.defaultLinkColor || '#4f46e5' %>;
+                --bg-color: <%=settings.bgColor || '#f9fafb' %>;
+                --nav-link-color: <%=settings.headerNavLinksColor || '#111827' %>;
+            }
+
+            <% if (settings.headerStyles) {
+                %>.fresh-header {
+                    <%- settings.headerStyles %>
+                }
+
+                <%
+            }
+
+            %>
+        </style>
+        <% } %>
+</head>
+
+<body>
+    <div class="brand-hub-page-wrapper">
+        <!-- Header Injection -->
+        <%- include('partials/fresh-header') %>
+
+            <!-- Breadcrumbs & Context -->
+            <div class="brand-hub-context">
+                <nav class="breadcrumbs" aria-label="breadcrumb">
+                    <ol>
+                        <li><a href="/">Home</a></li>
+                        <li><span class="separator">&gt;</span></li>
+                        <li><a href="/brands">Brands</a></li>
+                        <li><span class="separator">&gt;</span></li>
+                        <li aria-current="page">
+                            <%= typeof brand !=='undefined' ? brand.name : 'Brand Name' %>
+                        </li>
+                    </ol>
+                </nav>
+                <h1 class="brand-h1">
+                    <%= typeof brand !=='undefined' ? brand.name : 'Brand' %> Products, Deals & Offers
+                </h1>
+            </div>
+
+            <div class="brand-hub-container">
+                <!-- Sidebar (Desktop-Only visually, ordered first in DOM for semantics/mobile stacking if needed) -->
+                <aside class="brand-hub-sidebar">
+                    <div class="sidebar-widget">
+                        <h3>Quick Filters</h3>
+                        <ul class="filter-list">
+                            <li><label><input type="checkbox"> Category 1</label></li>
+                            <li><label><input type="checkbox"> Category 2</label></li>
+                            <li><label><input type="checkbox"> 20%+ Off</label></li>
+                            <li><label><input type="checkbox"> 50%+ Off</label></li>
+                        </ul>
+                    </div>
+
+                    <div class="sidebar-widget">
+                        <h3>Related Brands</h3>
+                        <ul class="related-brands-list">
+                            <!-- Example placeholder items -->
+                            <li><a href="#">Competitor A</a></li>
+                            <li><a href="#">Competitor B</a></li>
+                            <li><a href="#">Competitor C</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="sidebar-widget sticky-conversion">
+                        <h3>Price Drop Alerts</h3>
+                        <p class="text-sm text-muted">Get notified when <%= typeof brand !=='undefined' ? brand.name
+                                : 'this brand' %> goes on sale.</p>
+                        <form class="alert-form" onsubmit="event.preventDefault(); alert('Subscribed!');">
+                            <input type="email" placeholder="Your email address" required>
+                            <button type="submit">Subscribe</button>
+                        </form>
+                    </div>
+                </aside>
+
+                <!-- Main Content (Primary Column) -->
+                <main class="brand-hub-main">
+
+                    <% if (typeof offers !=='undefined' && offers.length> 0) { %>
+                        <!-- Offers Section -->
+                        <section class="offers-dense-list">
+                            <% offers.forEach(function(offer) { %>
+                                <article class="offer-card">
+                                    <div class="offer-card__badge">
+                                        <%= offer.discountBadge || 'DEAL' %>
+                                    </div>
+                                    <div class="offer-card__content">
+                                        <h3 class="offer-card__title">
+                                            <%= offer.title %>
+                                        </h3>
+                                        <span class="offer-card__verified">Last Verified: <%= offer.lastVerified
+                                                || 'Today' %></span>
+                                    </div>
+                                    <div class="offer-card__action">
+                                        <% if (offer.code && offer.code !=='N/A' ) { %>
+                                            <button class="promo-code-btn" data-code="<%= offer.code %>"
+                                                data-url="<%= offer.affiliateUrl || '#' %>">
+                                                <span class="promo-code-box">
+                                                    <%= offer.code %>
+                                                </span>
+                                                <span class="promo-copy-hint">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                        class="lucide lucide-copy">
+                                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                                        <path
+                                                            d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                                    </svg>
+                                                    <span class="copy-text">Copy/Redeem</span>
+                                                </span>
+                                            </button>
+                                            <% } else { %>
+                                                <button class="btn-copy-go" data-url="<%= offer.affiliateUrl || '#' %>">
+                                                    View Deal
+                                                </button>
+                                                <% } %>
+                                    </div>
+                                </article>
+                                <% }); %>
+                        </section>
+                        <% } else { %>
+                            <!-- Placeholder Offers for styling -->
+                            <section class="offers-dense-list">
+                                <article class="offer-card">
+                                    <div class="offer-card__badge">20% OFF</div>
+                                    <div class="offer-card__content">
+                                        <h3 class="offer-card__title">20% Off Major Appliances</h3>
+                                        <span class="offer-card__verified">Last Verified: Today</span>
+                                    </div>
+                                    <div class="offer-card__action">
+                                        <button class="promo-code-btn" data-code="SPRING20" data-url="/go/123">
+                                            <span class="promo-code-box">SPRING20</span>
+                                            <span class="promo-copy-hint">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                    class="lucide lucide-copy">
+                                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                                </svg>
+                                                <span class="copy-text">Copy/Redeem</span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </article>
+                                <article class="offer-card">
+                                    <div class="offer-card__badge">SITEWIDE</div>
+                                    <div class="offer-card__content">
+                                        <h3 class="offer-card__title">Free Shipping on Orders Over $50</h3>
+                                        <span class="offer-card__verified">Last Verified: Yesterday</span>
+                                    </div>
+                                    <div class="offer-card__action">
+                                        <button class="btn-copy-go" data-code="" data-url="/go/124">View Deal</button>
+                                    </div>
+                                </article>
+                            </section>
+                            <% } %>
+
+                                <% if (typeof products !=='undefined' && products.length> 0) { %>
+                                    <!-- Products Section -->
+                                    <section class="products-grid">
+                                        <h2 class="section-heading">Top Products</h2>
+                                        <div class="grid-container">
+                                            <% products.forEach(function(product) { %>
+                                                <article class="product-card">
+                                                    <div class="product-card__img-wrap">
+                                                        <img src="<%= product.imageUrl %>" alt="<%= product.name %>"
+                                                            loading="lazy">
+                                                    </div>
+                                                    <div class="product-card__info">
+                                                        <h3 class="product-card__title">
+                                                            <%= product.name %>
+                                                        </h3>
+                                                        <div class="product-card__price">
+                                                            <span class="current-price">$<%= product.price %></span>
+                                                            <% if (product.originalPrice) { %>
+                                                                <span class="original-price">$<%= product.originalPrice
+                                                                        %></span>
+                                                                <% } %>
+                                                        </div>
+                                                        <a href="<%= product.affiliateUrl || '#' %>" target="_blank"
+                                                            class="btn-view-product">View Deal</a>
+                                                    </div>
+                                                </article>
+                                                <% }); %>
+                                        </div>
+                                    </section>
+                                    <% } else { %>
+                                        <!-- Placeholder Products for styling -->
+                                        <section class="products-grid">
+                                            <h2 class="section-heading">Top Products</h2>
+                                            <div class="grid-container">
+                                                <% for(let i=0; i<4; i++) { %>
+                                                    <article class="product-card">
+                                                        <div class="product-card__img-wrap">
+                                                            <div
+                                                                style="width: 100%; height: 180px; background: #eee; display: flex; align-items: center; justify-content: center; color: #aaa;">
+                                                                Image Placeholder</div>
+                                                        </div>
+                                                        <div class="product-card__info">
+                                                            <h3 class="product-card__title">Example <%= typeof brand
+                                                                    !=='undefined' ? brand.name : 'Brand' %> Product
+                                                            </h3>
+                                                            <div class="product-card__price">
+                                                                <span class="current-price">$499.00</span>
+                                                                <span class="original-price">$599.00</span>
+                                                            </div>
+                                                            <a href="#" target="_blank" class="btn-view-product">View
+                                                                Deal</a>
+                                                        </div>
+                                                    </article>
+                                                    <% } %>
+                                            </div>
+                                        </section>
+                                        <% } %>
+                </main>
+            </div>
+
+            <!-- Footer Injection -->
+            <%- include('partials/fresh-footer') %>
+    </div>
+
+    <!-- Minimal JS for Copy & Go Functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const offersList = document.querySelector('.offers-dense-list');
+            if (offersList) {
+                // Event delegation for performance
+                offersList.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.btn-copy-go, .promo-code-btn');
+                    if (!btn) return;
+
+                    const code = btn.dataset.code;
+                    const url = btn.dataset.url;
+
+                    if (code) {
+                        navigator.clipboard.writeText(code).then(() => {
+                            // Immediate Visual Feedback
+                            const isPromoBtn = btn.classList.contains('promo-code-btn');
+                            const textElem = isPromoBtn ? btn.querySelector('.copy-text') : btn;
+                            const originalText = textElem.textContent;
+
+                            textElem.textContent = "Copied!";
+                            btn.classList.add('is-copied');
+
+                            // Trigger redirect in new tab
+                            if (url && url !== '#') {
+                                window.open(url, '_blank');
+                            }
+
+                            // Reset state gracefully
+                            setTimeout(() => {
+                                textElem.textContent = originalText;
+                                btn.classList.remove('is-copied');
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('Could not copy text: ', err);
+                            // Fallback if clipboard fails (e.g. not HTTPS)
+                            if (url && url !== '#') {
+                                window.open(url, '_blank');
+                            }
+                        });
+                    } else {
+                        // No code to copy, just deal url
+                        if (url && url !== '#') {
+                            window.open(url, '_blank');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

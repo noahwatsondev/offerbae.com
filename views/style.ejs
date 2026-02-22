@@ -286,6 +286,30 @@
                         <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Enter raw CSS
                             rules for the header container.</p>
                     </div>
+
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label for="headerNavLinksColor">Header Nav Links Color</label>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <input type="color" id="headerNavLinksColor" name="headerNavLinksColor"
+                                value="<%= settings.headerNavLinksColor || '#111827' %>">
+                            <span id="headerNavLinksColorHex"
+                                style="font-family: monospace; color: var(--text-secondary);">
+                                <%= settings.headerNavLinksColor || '#111827' %>
+                            </span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                            Color for the navigation links in the header.
+                        </p>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label for="footerStyles">Footer Styles</label>
+                        <textarea id="footerStyles" name="footerStyles" rows="4"
+                            style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.5rem; font-family: monospace; font-size: 0.8rem;"
+                            placeholder="background-color: #f3f4f6;&#10;border-top: 2px solid #ccc;"><%= settings.footerStyles || "" %></textarea>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Enter raw CSS
+                            rules for the footer container.</p>
+                    </div>
                 </div>
             </div>
 
@@ -315,6 +339,37 @@
                             <%= settings.bgColor || '#f9fafb' %>
                         </span>
                     </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 2rem;">
+                    <label
+                        style="font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; display: block; color: var(--primary);">Color
+                        Spectrum</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                        <% const spectrum=[ { id: 'colorRed' , name: 'Red' , default: '#ef4444' }, { id: 'colorOrange' ,
+                            name: 'Orange' , default: '#f97316' }, { id: 'colorYellow' , name: 'Yellow' ,
+                            default: '#eab308' }, { id: 'colorGreen' , name: 'Green' , default: '#22c55e' }, {
+                            id: 'colorBlue' , name: 'Blue' , default: '#3b82f6' }, { id: 'colorViolet' , name: 'Violet'
+                            , default: '#8b5cf6' } ]; %>
+                            <% spectrum.forEach(color=> { %>
+                                <div class="color-spectrum-item">
+                                    <label for="<%= color.id %>">
+                                        <%= color.name %>
+                                    </label>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <input type="color" id="<%= color.id %>" name="<%= color.id %>"
+                                            value="<%= settings[color.id] || color.default %>">
+                                        <span id="<%= color.id %>Hex"
+                                            style="font-family: monospace; color: var(--text-secondary); font-size: 0.8rem;">
+                                            <%= settings[color.id] || color.default %>
+                                        </span>
+                                    </div>
+                                </div>
+                                <% }); %>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 1rem;">
+                        Establishes the default spectrum used across the CSS.
+                    </p>
                 </div>
 
                 <div class="form-group">
@@ -635,14 +690,34 @@
             }
 
             // Attach listeners
+            const headerNavLinksColor = document.getElementById('headerNavLinksColor');
+            const headerNavLinksColorHex = document.getElementById('headerNavLinksColorHex');
+
             [logoText, logoStyles, bgColor, headerStyles].forEach(el => {
                 if (el) el.addEventListener('input', updatePreview);
             });
+
+            if (headerNavLinksColor && headerNavLinksColorHex) {
+                headerNavLinksColor.addEventListener('input', (e) => {
+                    headerNavLinksColorHex.textContent = e.target.value;
+                });
+            }
 
             const offersCtaStyles = document.getElementById('offersCtaStyles');
             const productsCtaStyles = document.getElementById('productsCtaStyles');
             const offersCtaCountStyles = document.getElementById('offersCtaCountStyles');
             const productsCtaCountStyles = document.getElementById('productsCtaCountStyles');
+
+            const spectrumIds = ['colorRed', 'colorOrange', 'colorYellow', 'colorGreen', 'colorBlue', 'colorViolet'];
+            spectrumIds.forEach(id => {
+                const el = document.getElementById(id);
+                const hex = document.getElementById(id + 'Hex');
+                if (el && hex) {
+                    el.addEventListener('input', (e) => {
+                        hex.textContent = e.target.value.toUpperCase();
+                    });
+                }
+            });
 
             [filterInputStyles, categorySelectedStyles, categoryLinkStyles, categoryHoverStyles, offersCtaStyles, productsCtaStyles, offersCtaCountStyles, productsCtaCountStyles, categoriesHeading, categoriesHeadingStyles].forEach(el => {
                 if (el) el.addEventListener('input', updateHomepagePreview);

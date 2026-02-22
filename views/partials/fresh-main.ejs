@@ -1,0 +1,201 @@
+<main class="fresh-content">
+
+    <section class="fresh-content-section">
+        <div class="fresh-section-header">
+            <div class="fresh-section-title-area">
+                <h2>Top On-Sale Prices</h2>
+                <p class="section-description">Discover the absolute best price drops on top-rated products.</p>
+            </div>
+            <div class="fresh-section-actions">
+                <div class="fresh-section-filters">
+                    <select class="fresh-select-mini">
+                        <option>Sort by: Popular</option>
+                        <option>Sort by: Discount</option>
+                    </select>
+                </div>
+                <a href="/products" class="fresh-section-link">See All On-Sale Products &rarr;</a>
+            </div>
+        </div>
+        <div class="fresh-product-grid">
+            <% if (typeof topSaleProducts !=='undefined' && topSaleProducts.length> 0) { %>
+                <% topSaleProducts.forEach(product=> { %>
+                    <%- include('fresh-product-card', { product }) %>
+                        <% }) %>
+                            <% } else { %>
+                                <p>No sale products found.</p>
+                                <% } %>
+        </div>
+    </section>
+
+    <section class="fresh-content-section">
+        <div class="fresh-section-header">
+            <div class="fresh-section-title-area">
+                <h2>Top Offer Savings</h2>
+                <p class="section-description">Exclusive promo codes and heavy discounts to maximize your budget.</p>
+            </div>
+            <div class="fresh-section-actions">
+                <div class="fresh-section-filters">
+                    <label class="fresh-checkbox-mini">
+                        <input type="checkbox" checked> Promo Codes Only
+                    </label>
+                </div>
+                <a href="/offers" class="fresh-section-link">See All Offers &rarr;</a>
+            </div>
+        </div>
+        <div class="fresh-offer-grid" id="fresh-offer-grid">
+            <% if (typeof topOffers !=='undefined' && topOffers.length> 0) { %>
+                <% topOffers.forEach(offer=> { %>
+                    <%- include('fresh-offer-card', { offer }) %>
+                        <% }) %>
+                            <% } else { %>
+                                <div class="empty-state">No offers available at the moment.</div>
+                                <% } %>
+        </div>
+        <div class="fresh-load-more-container">
+            <button id="load-more-offers" class="fresh-btn-load-more" data-offset="3">
+                Load More Offers
+                <span class="spinner" style="display: none;"></span>
+            </button>
+        </div>
+    </section>
+
+    <section class="fresh-content-section">
+        <div class="fresh-section-header">
+            <div class="fresh-section-title-area">
+                <h2>Top Brands with On-Sale Products and Offer Codes</h2>
+                <p class="section-description">Discover the most popular brands offering substantial discounts and
+                    exclusive codes.</p>
+            </div>
+            <div class="fresh-section-actions">
+                <a href="/brands" class="fresh-section-link">See All Brands &rarr;</a>
+            </div>
+        </div>
+        <div class="fresh-brand-grid">
+            <% if (typeof brands !=='undefined' && brands.length> 0) { %>
+                <% brands.forEach(brand=> { %>
+                    <%- include('fresh-brand-card', { brand: brand, categoryLimit: 3 }) %>
+                        <% }) %>
+                            <% } else { %>
+                                <p>No performance brands found yet.</p>
+                                <% } %>
+        </div>
+    </section>
+
+    <section class="fresh-content-section">
+        <div class="fresh-section-header">
+            <div class="fresh-section-title-area">
+                <h2>Shopping Journal: Latest Articles</h2>
+                <p class="section-description">Expert buying guides, reviews, and money-saving tips.</p>
+            </div>
+            <div class="fresh-section-actions">
+                <a href="/shopping-journal" class="fresh-section-link">Read All Articles &rarr;</a>
+            </div>
+        </div>
+        <div class="fresh-article-grid">
+            <!-- Simulating 2 Article Cards Placeholder -->
+            <% const dummyArticles=[ { title: "The Ultimate Guide to Saving on Appliances" ,
+                summary: "If you're in the market for a new refrigerator or washer, timing is everything. Discover the hidden sale cycles that retailers don't want you to know about."
+                , tags: ["Guide", "Deals" ], url: "#" }, { title: "Top 10 Budget-Friendly Travel Tips for 2026" ,
+                summary: "Travel doesn't have to break the bank. We've compiled the best strategies for finding cheap flights and off-the-beaten-path accommodations."
+                , tags: ["Travel", "Budget" ], url: "#" } ]; %>
+                <% dummyArticles.forEach(article=> { %>
+                    <%- include('fresh-article-card', { article: article }) %>
+                        <% }) %>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const loadMoreBtn = document.getElementById('load-more-offers');
+        const offerGrid = document.getElementById('fresh-offer-grid');
+
+        if (!loadMoreBtn || !offerGrid) return;
+
+        loadMoreBtn.addEventListener('click', async function () {
+            const offset = parseInt(this.getAttribute('data-offset'));
+            const spinner = this.querySelector('.spinner');
+
+            this.disabled = true;
+            if (spinner) spinner.style.display = 'inline-block';
+
+            try {
+                const response = await fetch(`/api/fresh/offers?limit=9&offset=${offset}`);
+                const data = await response.json();
+
+                if (data.offers && data.offers.length > 0) {
+                    data.offers.forEach(offer => {
+                        const card = createOfferCard(offer);
+                        offerGrid.appendChild(card);
+                    });
+
+                    const newOffset = offset + data.offers.length;
+                    this.setAttribute('data-offset', newOffset);
+
+                    if (!data.hasMore) {
+                        this.style.display = 'none';
+                    }
+                } else {
+                    this.style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Error loading more offers:', err);
+            } finally {
+                this.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+            }
+        });
+
+        function createOfferCard(offer) {
+            const wrapper = document.createElement('a');
+            wrapper.href = offer.link || offer.clickUrl;
+            wrapper.target = '_blank';
+            wrapper.className = 'offer-card-wrapper';
+            wrapper.setAttribute('data-code', offer.code || '');
+            wrapper.setAttribute('data-is-code', offer.isPromoCode || false);
+            wrapper.setAttribute('data-discount', offer.discountValue || 0);
+            wrapper.setAttribute('data-updated', offer.updatedAtTime || 0);
+
+            const article = document.createElement('article');
+            article.className = 'fresh-offer-card';
+
+            article.innerHTML = `
+                <div class="offer-icon-wrapper">
+                    <div class="offer-brand-logo">
+                        ${offer.brandLogo
+                    ? `<img src="${offer.brandLogo}" alt="${offer.advertiser}" loading="lazy">`
+                    : `<div class="offer-icon ${offer.isPromoCode ? 'is-code' : 'is-deal'}">
+                                ${offer.isPromoCode
+                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.91 8.84 8.56 2.23a1.93 1.93 0 0 0-1.81 0L3.1 4.13a2.12 2.12 0 0 0-.05 3.69l12.22 6.73a1.47 1.47 0 0 0 1.39 0l3.7-2.04a2.12 2.12 0 0 0 .55-3.67z" /><path d="m3 13 13.5 7.7a2 2 0 0 0 1.8 0L21 19" /><path d="M16 11V7" /><path d="M9 13v4" /></svg>`
+                        : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5 1.5 1.5L18 5" /><path d="m11 9-2 2 2 2 2-2-2-2Z" /><path d="M13 3.8a2 2 0 1 0-2 0V9l2 2-2 2v5.2a2 2 0 1 0 2 0V13l-2-2 2-2V3.8Z" /></svg>`
+                    }
+                               </div>`
+                }
+                    </div>
+                </div>
+                <div class="offer-content">
+                    <div class="offer-brand">${offer.advertiser || 'Brand Deal'}</div>
+                    <h3 class="offer-title">${offer.description}</h3>
+                    <div class="offer-meta">
+                        <span class="offer-expiry">Expires: ${offer.expiresAt}</span>
+                    </div>
+                    ${offer.isPromoCode && offer.code && offer.code !== 'N/A'
+                    ? `<div class="offer-promo-display is-code">
+                             <span class="promo-code-box">${offer.code}</span>
+                             <span class="promo-copy-hint">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1-0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                                 Copy/Redeem
+                             </span>
+                           </div>`
+                    : `<div class="offer-promo-display is-deal">
+                             <span class="promo-redeem-btn">Redeem</span>
+                           </div>`
+                }
+                </div>
+            `;
+            wrapper.appendChild(article);
+            return wrapper;
+        }
+    });
+</script>

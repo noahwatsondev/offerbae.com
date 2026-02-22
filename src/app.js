@@ -5,6 +5,7 @@ const dashboardController = require('./controllers/dashboardController');
 const productController = require('./controllers/productController');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
+const { getGlobalSettings } = require('./services/db');
 const firebaseAdmin = require('firebase-admin');
 const fs = require('fs');
 require('dotenv').config({ override: true });
@@ -239,6 +240,563 @@ app.get('/journal/:slug', productController.getJournalArticlePage);
 // Export the new controller function if it's not already exported
 // Note: We need to make sure globalProductSearch is in the exports of dashboardController.js
 
+// Helper to extract numeric percentage discount from description
+const extractDiscountValue = (desc) => {
+    if (!desc) return 0;
+    const match = desc.match(/(\d+)%/);
+    return match ? parseInt(match[1]) : 0;
+};
+
+app.get('/fresh', async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const { getEnrichedAdvertisers } = require('./services/db');
+        const enrichedBrands = await getEnrichedAdvertisers();
+
+        // Fetch top 6 on-sale products for the premium carousel
+        const db = firebaseAdmin.firestore();
+        const productsSnapshot = await db.collection('products')
+            .where('savingsAmount', '>', 0)
+            .orderBy('savingsAmount', 'desc')
+            .limit(12)
+            .get();
+
+        const topSaleProducts = productsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                price: parseFloat(data.price) || 0,
+                salePrice: parseFloat(data.salePrice) || 0,
+                savings: data.savingsAmount || 0,
+                discountPercent: data.price && data.salePrice ? Math.round((1 - (data.salePrice / data.price)) * 100) : 0
+            };
+        });
+
+        // Fetch active offers with codes and sort by discount/recency
+        const offersSnapshot = await db.collection('offers')
+            .get();
+
+        // Map logoUrls from enrichedBrands for quick lookup
+        const brandLogoMap = new Map();
+        enrichedBrands.forEach(b => {
+            const brandId = (b.id || b.advertiserId || b.data_id || (b.raw_data && b.raw_data.id))?.toString();
+            if (brandId && b.logoUrl) {
+                brandLogoMap.set(brandId, b.logoUrl);
+            }
+        });
+
+        const topOffers = offersSnapshot.docs
+            .map(doc => {
+                const data = doc.data();
+                let expiresAt = 'Ongoing';
+                if (data.endDate) {
+                    try {
+                        const date = new Date(data.endDate);
+                        if (!isNaN(date.getTime())) {
+                            expiresAt = date.toLocaleDateString();
+                        }
+                    } catch (e) { }
+                }
+
+                const offId = (data.advertiserId || data.id || data.data_id)?.toString();
+                return {
+                    ...data,
+                    id: doc.id,
+                    expiresAt,
+                    updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
+                    discountValue: extractDiscountValue(data.description || data.name),
+                    isPromoCode: !!(data.code && data.code !== 'N/A' && data.code !== ''), brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
+                };
+            })
+            .filter(o => o.code && o.code !== 'N/A' && o.code !== '') // Stick to codes only
+            .sort((a, b) => {
+                // Sort by discountValue desc, then updatedAtTime desc
+                if (b.discountValue !== a.discountValue) {
+                    return b.discountValue - a.discountValue;
+                }
+                return b.updatedAtTime - a.updatedAtTime;
+            })
+            .slice(0, 9);
+
+        // Filter for brands that have BOTH on-sale products AND code offers
+        let performanceBrands = enrichedBrands.filter(b => (b.saleProductCount > 0) && (b.hasPromoCodes === true)).map(b => ({
+            name: b.name,
+            slug: b.slug || b.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+            logoUrl: b.logoUrl,
+            offerCount: b.offerCount || 0,
+            productCount: b.productCount || 0,
+            saleProductCount: b.saleProductCount || 0,
+            hasPromoCodes: b.hasPromoCodes || false,
+            categories: b.categories || (b.raw_data && b.raw_data.categories) || []
+        }));
+
+        // Extract unique categories
+        const { slugify } = require('./services/db');
+        const categoryMap = new Map();
+        enrichedBrands.forEach(b => {
+            const cats = b.categories || (b.raw_data && b.raw_data.categories) || [];
+            cats.forEach(c => {
+                if (c && !categoryMap.has(c)) {
+                    categoryMap.set(c, slugify(c));
+                }
+            });
+        });
+        const categoriesRaw = Array.from(categoryMap.entries())
+            .map(([name, slug]) => ({ name: name.trim(), slug }));
+
+        // Refine list: Add "All Categories" to start and move all "Other..." items to end
+        const otherItems = categoriesRaw.filter(c => c.name.toLowerCase().includes('other'));
+        const mainCategories = categoriesRaw.filter(c => !c.name.toLowerCase().includes('other'))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        const finalCategories = [
+            { name: 'All Categories', slug: '' },
+            ...mainCategories,
+            ...otherItems
+        ];
+
+        // Deduplicate by name to ensure unique brands
+        const uniquePerformanceBrands = [];
+        const seenNames = new Set();
+        for (const brand of performanceBrands) {
+            if (!seenNames.has(brand.name)) {
+                uniquePerformanceBrands.push(brand);
+                seenNames.add(brand.name);
+            }
+        }
+
+        res.render('fresh-index', {
+            settings,
+            brands: uniquePerformanceBrands,
+            categories: finalCategories,
+            topSaleProducts,
+            topOffers,
+            breadcrumbPath: []
+        });
+    } catch (err) {
+        console.error('Error fetching settings for fresh build:', err);
+        res.render('fresh-index', { settings: {}, brands: [], breadcrumbPath: [] });
+    }
+});
+
+// Top Brands Index
+app.get('/fresh/brands', async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const { getEnrichedAdvertisers } = require('./services/db');
+        const enrichedBrands = await getEnrichedAdvertisers();
+
+        let brandsList = enrichedBrands.map(b => ({
+            name: b.name,
+            slug: b.slug || b.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+            logoUrl: b.logoUrl,
+            offerCount: b.offerCount || 0,
+            productCount: b.productCount || 0,
+            saleProductCount: b.saleProductCount || 0,
+            hasPromoCodes: b.hasPromoCodes || false,
+            categories: b.categories || (b.raw_data && b.raw_data.categories) || []
+        }));
+
+        // Filter for brands with content and sort alphabetically by name by default
+        brandsList = brandsList.filter(b => (b.offerCount + b.productCount) > 0)
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        // Extract unique categories
+        const { slugify } = require('./services/db');
+        const categoryMap = new Map();
+        enrichedBrands.forEach(b => {
+            const cats = b.categories || (b.raw_data && b.raw_data.categories) || [];
+            cats.forEach(c => {
+                if (c && !categoryMap.has(c)) {
+                    categoryMap.set(c, slugify(c));
+                }
+            });
+        });
+        const categoriesRaw = Array.from(categoryMap.entries())
+            .map(([name, slug]) => ({ name: name.trim(), slug }));
+
+        // Refine list: Add "All Categories" to start and move all "Other..." items to end
+        const otherItems = categoriesRaw.filter(c => c.name.toLowerCase().includes('other'));
+        const mainCategories = categoriesRaw.filter(c => !c.name.toLowerCase().includes('other'))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        const finalCategories = [
+            { name: 'All Categories', slug: '' },
+            ...mainCategories,
+            ...otherItems
+        ];
+
+        res.render('fresh-brands', {
+            settings,
+            brands: brandsList,
+            categories: finalCategories,
+            pageH1: "Top Brands with Amazing Products and Offers",
+            breadcrumbPath: [{ name: 'Brands', url: '/fresh/brands' }]
+        });
+    } catch (err) {
+        console.error('Error fetching brands for fresh build:', err);
+        res.status(500).send("Error loading Brands");
+    }
+});
+
+// Fresh Products Page
+app.get('/fresh/products', async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const db = firebaseAdmin.firestore();
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 60;
+        const onSale = req.query.onSale !== 'false'; // Default to true
+        const offset = (page - 1) * limit;
+
+        let query = db.collection('products');
+
+        if (onSale) {
+            query = query.where('savingsAmount', '>', 0).orderBy('savingsAmount', 'desc');
+        } else {
+            // If not on sale, maybe order by name or something standard
+            query = query.orderBy('name');
+        }
+
+        const productsSnapshot = await query
+            .offset(offset)
+            .limit(limit)
+            .get();
+
+        const products = productsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                price: parseFloat(data.price) || 0,
+                salePrice: parseFloat(data.salePrice) || 0,
+                savings: data.savingsAmount || 0,
+                discountPercent: data.price && data.salePrice ? Math.round((1 - (data.salePrice / data.price)) * 100) : 0
+            };
+        });
+
+        // Get total count for pagination (or at least check if there's more)
+        const hasMore = products.length === limit;
+
+        res.render('fresh-products', {
+            settings,
+            products,
+            pageH1: "Products",
+            currentPage: page,
+            limit,
+            onSale,
+            hasMore,
+            breadcrumbPath: [{ name: 'Products', url: '/fresh/products' }]
+        });
+    } catch (err) {
+        console.error('Error loading fresh products:', err);
+        res.status(500).send("Error loading Products");
+    }
+});
+
+// Fresh Offers Page
+app.get('/fresh/offers', async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const db = firebaseAdmin.firestore();
+        const { getEnrichedAdvertisers } = require('./services/db');
+        const enrichedBrands = await getEnrichedAdvertisers();
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 60;
+        const offset = (page - 1) * limit;
+
+        // Map logoUrls
+        const brandLogoMap = new Map();
+        enrichedBrands.forEach(b => {
+            const brandId = (b.id || b.advertiserId || b.data_id || (b.raw_data && b.raw_data.id))?.toString();
+            if (brandId && b.logoUrl) brandLogoMap.set(brandId, b.logoUrl);
+        });
+
+        // We fetch all code-bearing offers for sorting/paging on server
+        // Note: For very large datasets, we'd want to index discountValue and updatedAtTime in Firestore
+        const offersSnapshot = await db.collection('offers')
+            .get();
+
+        const allOffers = offersSnapshot.docs
+            .map(doc => {
+                const data = doc.data();
+                let expiresAt = 'Ongoing';
+                if (data.endDate) {
+                    try {
+                        const date = new Date(data.endDate);
+                        if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
+                    } catch (e) { }
+                }
+
+                const offId = (data.advertiserId || data.id || data.data_id)?.toString();
+                return {
+                    ...data,
+                    id: doc.id,
+                    expiresAt,
+                    updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
+                    discountValue: extractDiscountValue(data.description || data.name),
+                    isPromoCode: !!(data.code && data.code !== 'N/A' && data.code !== ''),
+                    brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
+                };
+            })
+            .filter(o => o.code && o.code !== 'N/A' && o.code !== '')
+            .sort((a, b) => {
+                if (b.discountValue !== a.discountValue) return b.discountValue - a.discountValue;
+                return b.updatedAtTime - a.updatedAtTime;
+            });
+
+        const paginatedOffers = allOffers.slice(offset, offset + limit);
+        const hasMore = allOffers.length > offset + limit;
+
+        res.render('fresh-offers', {
+            settings,
+            offers: paginatedOffers,
+            pageH1: "Offers",
+            currentPage: page,
+            limit,
+            hasMore,
+            breadcrumbPath: [{ name: 'Offers', url: '/fresh/offers' }]
+        });
+    } catch (err) {
+        console.error('Error loading fresh offers:', err);
+        res.status(500).send("Error loading Offers");
+    }
+});
+
+// Dynamic Route for the Brand Hub
+app.get('/fresh/brands/:slug', async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const settings = await getGlobalSettings();
+        const firebase = require('./config/firebase');
+        const db = firebase.db;
+
+        // 1. Fetch Advertiser by Slug
+        const advSnapshot = await db.collection('advertisers')
+            .where('slug', '==', slug)
+            .limit(1)
+            .get();
+
+        if (advSnapshot.empty) {
+            return res.status(404).render('404', { message: 'Brand not found' });
+        }
+
+        const brandDoc = advSnapshot.docs[0];
+        const brandData = brandDoc.data();
+        const brandId = (brandData.id || brandData.advertiserId || brandData.data_id || (brandData.raw_data && brandData.raw_data.id))?.toString();
+
+        const brand = {
+            name: brandData.name,
+            slug: brandData.slug,
+            logoUrl: brandData.storageLogoUrl || brandData.logoUrl || (brandData.raw_data && brandData.raw_data.logoUrl)
+        };
+
+        // 2. Fetch Offers for this Brand
+        const offersSnapshot = await db.collection('offers')
+            .where('advertiserId', '==', brandId)
+            .get();
+
+        const offers = offersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            let expiresAt = 'Ongoing';
+            if (data.endDate) {
+                try {
+                    const date = new Date(data.endDate);
+                    if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
+                } catch (e) { }
+            }
+            return {
+                ...data,
+                id: doc.id,
+                expiresAt,
+                isPromoCode: !!(data.code && data.code !== 'N/A' && data.code !== ''),
+                discountBadge: data.isPromoCode ? 'CODE' : (data.description?.match(/(\d+%)|(\$\d+)/)?.[0] || 'DEAL')
+            };
+        });
+
+        // 3. Fetch Products for this Brand
+        const productsSnapshot = await db.collection('products')
+            .where('advertiserId', '==', brandId)
+            .limit(20)
+            .get();
+
+        const products = productsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                imageUrl: data.storageImageUrl || data.imageUrl
+            };
+        });
+
+        res.render('fresh-brand', {
+            settings,
+            brand,
+            offers,
+            products,
+            pageH1: `${brand.name} Deals & Products`,
+            breadcrumbPath: [
+                { name: 'Brands', url: '/fresh/brands' },
+                { name: brand.name, url: `/fresh/brands/${brand.slug}` }
+            ]
+        });
+    } catch (err) {
+        console.error('Error resolving brand hub:', err);
+        res.status(500).send("Error loading Brand Hub");
+    }
+});
+
+app.get('/api/fresh/offers', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 9;
+        const offset = parseInt(req.query.offset) || 0;
+
+        const db = firebaseAdmin.firestore();
+
+        const offersSnapshot = await db.collection('offers')
+            .get();
+
+        // Fetch brands to get logos for the API response as well
+        const brandsSnapshot = await db.collection('advertisers').get();
+        const brandLogoMap = new Map();
+        brandsSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            const brandId = (data.id || data.advertiserId || data.data_id || (data.raw_data && data.raw_data.id))?.toString();
+            const logo = data.storageLogoUrl || data.logoUrl || (data.raw_data && data.raw_data.logoUrl);
+            if (brandId && logo) {
+                brandLogoMap.set(brandId, logo);
+            }
+        });
+
+        const allOffers = offersSnapshot.docs
+            .map(doc => {
+                const data = doc.data();
+                let expiresAt = 'Ongoing';
+                if (data.endDate) {
+                    try {
+                        const date = new Date(data.endDate);
+                        if (!isNaN(date.getTime())) {
+                            expiresAt = date.toLocaleDateString();
+                        }
+                    } catch (e) { }
+                }
+
+                const offId = (data.advertiserId || data.id || data.data_id)?.toString();
+                return {
+                    ...data,
+                    id: doc.id,
+                    expiresAt,
+                    updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
+                    discountValue: extractDiscountValue(data.description || data.name),
+                    isPromoCode: !!(data.code && data.code !== 'N/A' && data.code !== ''), brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
+                };
+            })
+            .filter(o => o.code && o.code !== 'N/A' && o.code !== '') // Stick to codes only
+            .sort((a, b) => {
+                if (b.discountValue !== a.discountValue) {
+                    return b.discountValue - a.discountValue;
+                }
+                return b.updatedAtTime - a.updatedAtTime;
+            });
+
+        const paginatedOffers = allOffers.slice(offset, offset + limit);
+        const hasMore = allOffers.length > offset + limit;
+
+        res.json({
+            offers: paginatedOffers,
+            hasMore
+        });
+    } catch (err) {
+        console.error('Error fetching fresh offers:', err);
+        res.status(500).json({ error: 'Failed to fetch offers' });
+    }
+});
+
+app.get('/api/fresh/search', async (req, res) => {
+    try {
+        const q = req.query.q;
+        if (!q || q.length < 2) return res.json({ brands: [], products: [], offers: [] });
+
+        const firebase = require('./config/firebase');
+        const lowerStr = q.toLowerCase();
+        const upperStr = q.toUpperCase();
+        const searchStr = q.charAt(0).toUpperCase() + q.slice(1);
+
+        // Helper for Firestore prefix search
+        const prefixSearch = async (collection, field, overrideStr = null) => {
+            const str = overrideStr || searchStr;
+            const snapshot = await firebase.db.collection(collection)
+                .where(field, '>=', str)
+                .where(field, '<=', str + '\uf8ff')
+                .limit(5)
+                .get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        };
+
+        const [
+            brandsTitle, brandsLower, brandsUpper, brandsLiteral,
+            productsTitle, productsLower, productsUpper, productsLiteral,
+            offersByDesc, offersByAdvertiser, offersByAdvertiserLower, offersByLiteral
+        ] = await Promise.all([
+            prefixSearch('advertisers', 'name'),
+            prefixSearch('advertisers', 'name', lowerStr),
+            prefixSearch('advertisers', 'name', upperStr),
+            prefixSearch('advertisers', 'name', q), // Literal search for "UNice" etc.
+            prefixSearch('products', 'name'),
+            prefixSearch('products', 'name', lowerStr),
+            prefixSearch('products', 'name', upperStr),
+            prefixSearch('products', 'name', q),
+            prefixSearch('offers', 'description'),
+            prefixSearch('offers', 'advertiser'),
+            prefixSearch('offers', 'advertiser', lowerStr),
+            prefixSearch('offers', 'advertiser', q)
+        ]);
+
+        // Combine and deduplicate
+        const dedup = (arrs) => {
+            const map = new Map();
+            arrs.flat().forEach(item => {
+                if (item && item.id) map.set(item.id, item);
+            });
+            return Array.from(map.values()).slice(0, 5);
+        };
+
+        const finalBrands = dedup([brandsTitle, brandsLower, brandsUpper, brandsLiteral]);
+        const finalProducts = dedup([productsTitle, productsLower, productsUpper, productsLiteral]);
+        const finalOffers = dedup([offersByDesc, offersByAdvertiser, offersByAdvertiserLower, offersByLiteral]);
+
+        console.log(`[Search] Query: "${q}" -> B:${finalBrands.length}, P:${finalProducts.length}, O:${finalOffers.length}`);
+
+        // Enforce specific fields and formatting for the frontend
+        res.json({
+            brands: finalBrands.map(b => ({
+                name: b.name,
+                slug: b.slug,
+                logoUrl: b.storageLogoUrl || b.logoUrl || (b.raw_data && b.raw_data.logoUrl)
+            })),
+            products: finalProducts.map(p => ({
+                name: p.name,
+                slug: p.slug,
+                imageUrl: p.storageImageUrl || p.imageUrl,
+                price: p.price,
+                salePrice: p.salePrice
+            })),
+            offers: finalOffers.map(o => ({
+                name: o.description || o.name,
+                id: o.id,
+                network: o.network,
+                isPromoCode: !!o.promoCode,
+                advertiser: o.advertiser
+            }))
+        });
+    } catch (err) {
+        console.error('Search API Error:', err);
+        res.status(500).json({ error: 'Search failed' });
+    }
+});
 
 // 404 Handler
 app.use((req, res) => {
