@@ -809,7 +809,7 @@ body {
   border-radius: 12px;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   padding: 1.25rem;
   gap: 1.25rem;
   transition: all 0.3s ease;
