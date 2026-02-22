@@ -1,8 +1,6 @@
 const express = require('express');
 const path = require('path');
 const config = require('./config/env');
-const dashboardController = require('./controllers/dashboardController');
-const productController = require('./controllers/productController');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
 const { getGlobalSettings } = require('./services/db');
@@ -201,42 +199,6 @@ app.get('/api/sync-history/:network', async (req, res) => {
     }
 });
 
-// Routes
-// Routes
-// Routes
-app.get('/', dashboardController.getNewHomepage);
-app.get('/mission-control/architecture', dashboardController.getArchitecture);
-app.get('/mission-control/style', dashboardController.getStyle);
-app.post('/mission-control/style', (req, res, next) => {
-    console.log('DEBUG: Hit /mission-control/style route');
-    next();
-}, dashboardController.uploadStyleMiddleware, dashboardController.updateStyle);
-app.post('/refresh', dashboardController.refreshData);
-app.get('/api/advertiser/:id/products', dashboardController.getAdvertiserProducts);
-app.get('/api/advertiser/:id/offers', dashboardController.getAdvertiserOffers);
-// Logo Upload & Reset Routes
-app.post('/api/advertiser/:id/logo/upload', dashboardController.uploadLogoMiddleware, dashboardController.uploadLogo);
-app.post('/api/advertiser/:id/logo/reset', dashboardController.resetLogo);
-app.post('/api/advertiser/:id/homelink', express.json(), dashboardController.updateHomeLink);
-app.post('/api/advertiser/:id/description', express.json(), dashboardController.updateDescription);
-app.get('/api/products/search', dashboardController.globalProductSearch);
-app.get('/api/proxy-image', dashboardController.proxyImage);
-app.get('/mission-control', dashboardController.getDashboardData);
-
-// SEO & Catalog Routes (Must be last to avoid catching specific routes)
-app.get('/brands', dashboardController.getHomepage);
-app.get('/brand/:idSlug', productController.getCatalogPage);
-app.get('/categories', productController.getCategoriesPage);
-app.get('/category/:slug', productController.getCategoryPage);
-app.get('/offers', productController.getOffersListPage);
-app.get('/offer/:brandSlug/:idSlug', productController.getOfferDetailPage);
-app.get('/products', productController.getProductsListPage);
-app.get('/product/:brandSlug/:idSlug', productController.getProductDetail);
-app.get('/calendar', productController.getCalendarListPage);
-app.get('/calendar/:slug', productController.getCalendarEventPage);
-app.get('/journal', productController.getJournalListPage);
-app.get('/journal/:slug', productController.getJournalArticlePage);
-
 // Export the new controller function if it's not already exported
 // Note: We need to make sure globalProductSearch is in the exports of dashboardController.js
 
@@ -247,7 +209,7 @@ const extractDiscountValue = (desc) => {
     return match ? parseInt(match[1]) : 0;
 };
 
-app.get('/fresh', async (req, res) => {
+app.get('/', async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const { getEnrichedAdvertisers } = require('./services/db');
@@ -381,7 +343,7 @@ app.get('/fresh', async (req, res) => {
 });
 
 // Top Brands Index
-app.get('/fresh/brands', async (req, res) => {
+app.get('/brands', async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const { getEnrichedAdvertisers } = require('./services/db');
@@ -432,7 +394,7 @@ app.get('/fresh/brands', async (req, res) => {
             brands: brandsList,
             categories: finalCategories,
             pageH1: "Top Brands with Amazing Products and Offers",
-            breadcrumbPath: [{ name: 'Brands', url: '/fresh/brands' }]
+            breadcrumbPath: [{ name: 'Brands', url: '/brands' }]
         });
     } catch (err) {
         console.error('Error fetching brands for fresh build:', err);
@@ -441,7 +403,7 @@ app.get('/fresh/brands', async (req, res) => {
 });
 
 // Fresh Products Page
-app.get('/fresh/products', async (req, res) => {
+app.get('/products', async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const db = firebaseAdmin.firestore();
@@ -488,7 +450,7 @@ app.get('/fresh/products', async (req, res) => {
             limit,
             onSale,
             hasMore,
-            breadcrumbPath: [{ name: 'Products', url: '/fresh/products' }]
+            breadcrumbPath: [{ name: 'Products', url: '/products' }]
         });
     } catch (err) {
         console.error('Error loading fresh products:', err);
@@ -497,7 +459,7 @@ app.get('/fresh/products', async (req, res) => {
 });
 
 // Fresh Offers Page
-app.get('/fresh/offers', async (req, res) => {
+app.get('/offers', async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const db = firebaseAdmin.firestore();
@@ -558,7 +520,7 @@ app.get('/fresh/offers', async (req, res) => {
             currentPage: page,
             limit,
             hasMore,
-            breadcrumbPath: [{ name: 'Offers', url: '/fresh/offers' }]
+            breadcrumbPath: [{ name: 'Offers', url: '/offers' }]
         });
     } catch (err) {
         console.error('Error loading fresh offers:', err);
@@ -567,7 +529,7 @@ app.get('/fresh/offers', async (req, res) => {
 });
 
 // Dynamic Route for the Brand Hub
-app.get('/fresh/brands/:slug', async (req, res) => {
+app.get('/brand/:slug', async (req, res) => {
     try {
         const { slug } = req.params;
         const settings = await getGlobalSettings();
@@ -639,8 +601,8 @@ app.get('/fresh/brands/:slug', async (req, res) => {
             products,
             pageH1: `${brand.name} Deals & Products`,
             breadcrumbPath: [
-                { name: 'Brands', url: '/fresh/brands' },
-                { name: brand.name, url: `/fresh/brands/${brand.slug}` }
+                { name: 'Brands', url: '/brands' },
+                { name: brand.name, url: `/brand/${brand.slug}` }
             ]
         });
     } catch (err) {
