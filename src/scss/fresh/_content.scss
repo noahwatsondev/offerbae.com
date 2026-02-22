@@ -12,6 +12,10 @@
         padding: 1rem;
     }
 
+    @media (max-width: 380px) {
+        padding: 0.75rem;
+    }
+
     .fresh-content-section {
         margin-bottom: 2.5rem;
 
@@ -50,6 +54,16 @@
                 @media (max-width: 768px) {
                     flex: none;
                     width: 100%;
+                }
+
+                @media (max-width: 380px) {
+                    h2 {
+                        font-size: 1.25rem;
+                    }
+
+                    .section-description {
+                        font-size: 0.9rem;
+                    }
                 }
             }
 
@@ -262,7 +276,12 @@
             }
 
             @media (max-width: 768px) {
-                grid-template-columns: repeat(2, 1fr); // 2 across mobile
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            @media (max-width: 380px) {
+                grid-template-columns: 1fr; // Switch to 1 column for very narrow if 2 still peeks
                 gap: 1rem;
             }
         }
@@ -279,6 +298,10 @@
             @media (max-width: 768px) {
                 grid-template-columns: 1fr;
                 gap: 1rem;
+            }
+
+            @media (max-width: 380px) {
+                gap: 0.75rem;
             }
 
             .offer-card-wrapper {
