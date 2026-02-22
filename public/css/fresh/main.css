@@ -668,7 +668,7 @@ body {
   position: absolute;
   top: 0.75rem;
   left: 0.75rem;
-  background: var(--primary-color);
+  background: #10b981;
   color: white;
   font-size: 0.7rem;
   font-weight: 800;
