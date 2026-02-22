@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node --max-old-space-size=450 src/app.js",
-    "build:css": "sass src/scss/fresh/main.scss public/css/fresh/main.css",
-    "watch:css": "sass --watch src/scss/fresh/main.scss public/css/fresh/main.css"
+    "build:css": "sass src/scss/layout/main.scss public/css/layout/main.css",
+    "watch:css": "sass --watch src/scss/layout/main.scss public/css/layout/main.css"
   },
   "repository": {
     "type": "git",
@@ -24,16 +24,12 @@
   "dependencies": {
     "@google-cloud/secret-manager": "^6.1.1",
     "@google-cloud/storage": "^7.17.2",
-    "@google/genai": "^1.26.0",
     "axios": "^1.12.2",
-    "btoa": "^1.2.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "firebase-admin": "^13.6.0",
-    "heroicons": "^2.2.0",
-    "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "sharp": "^0.34.4",
     "xml2js": "^0.6.2"

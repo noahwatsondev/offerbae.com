@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const config = require('./config/env');
 const dashboardController = require('./controllers/dashboardController');
-const productController = require('./controllers/productController');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
 const { getGlobalSettings } = require('./services/db');
@@ -204,7 +203,6 @@ app.get('/api/sync-history/:network', async (req, res) => {
 // Routes
 // Routes
 // Routes
-app.get('/', dashboardController.getNewHomepage);
 app.get('/mission-control/architecture', dashboardController.getArchitecture);
 app.get('/mission-control/style', dashboardController.getStyle);
 app.post('/mission-control/style', (req, res, next) => {
@@ -223,19 +221,6 @@ app.get('/api/products/search', dashboardController.globalProductSearch);
 app.get('/api/proxy-image', dashboardController.proxyImage);
 app.get('/mission-control', dashboardController.getDashboardData);
 
-// SEO & Catalog Routes (Must be last to avoid catching specific routes)
-app.get('/brands', dashboardController.getHomepage);
-app.get('/brand/:idSlug', productController.getCatalogPage);
-app.get('/categories', productController.getCategoriesPage);
-app.get('/category/:slug', productController.getCategoryPage);
-app.get('/offers', productController.getOffersListPage);
-app.get('/offer/:brandSlug/:idSlug', productController.getOfferDetailPage);
-app.get('/products', productController.getProductsListPage);
-app.get('/product/:brandSlug/:idSlug', productController.getProductDetail);
-app.get('/calendar', productController.getCalendarListPage);
-app.get('/calendar/:slug', productController.getCalendarEventPage);
-app.get('/journal', productController.getJournalListPage);
-app.get('/journal/:slug', productController.getJournalArticlePage);
 
 // Export the new controller function if it's not already exported
 // Note: We need to make sure globalProductSearch is in the exports of dashboardController.js
@@ -247,7 +232,7 @@ const extractDiscountValue = (desc) => {
     return match ? parseInt(match[1]) : 0;
 };
 
-app.get('/fresh', async (req, res) => {
+app.get('/', async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const { getEnrichedAdvertisers } = require('./services/db');
@@ -366,7 +351,7 @@ app.get('/fresh', async (req, res) => {
             }
         }
 
-        res.render('fresh-index', {
+        res.render('index', {
             settings,
             brands: uniquePerformanceBrands,
             categories: finalCategories,
@@ -376,12 +361,12 @@ app.get('/fresh', async (req, res) => {
         });
     } catch (err) {
         console.error('Error fetching settings for fresh build:', err);
-        res.render('fresh-index', { settings: {}, brands: [], breadcrumbPath: [] });
+        res.render('index', { settings: {}, brands: [], breadcrumbPath: [] });
     }
 });
 
 // Top Brands Index
-app.get('/fresh/brands', async (req, res) => {
+app.get('/brands', async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const { getEnrichedAdvertisers } = require('./services/db');
@@ -427,12 +412,12 @@ app.get('/fresh/brands', async (req, res) => {
             ...otherItems
         ];
 
-        res.render('fresh-brands', {
+        res.render('brands', {
             settings,
             brands: brandsList,
             categories: finalCategories,
             pageH1: "Top Brands with Amazing Products and Offers",
-            breadcrumbPath: [{ name: 'Brands', url: '/fresh/brands' }]
+            breadcrumbPath: [{ name: 'Brands', url: '/brands' }]
         });
     } catch (err) {
         console.error('Error fetching brands for fresh build:', err);
@@ -441,7 +426,7 @@ app.get('/fresh/brands', async (req, res) => {
 });
 
 // Fresh Products Page
-app.get('/fresh/products', async (req, res) => {
+app.get('/products', async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const db = firebaseAdmin.firestore();
@@ -480,7 +465,7 @@ app.get('/fresh/products', async (req, res) => {
         // Get total count for pagination (or at least check if there's more)
         const hasMore = products.length === limit;
 
-        res.render('fresh-products', {
+        res.render('products', {
             settings,
             products,
             pageH1: "Products",
@@ -488,7 +473,7 @@ app.get('/fresh/products', async (req, res) => {
             limit,
             onSale,
             hasMore,
-            breadcrumbPath: [{ name: 'Products', url: '/fresh/products' }]
+            breadcrumbPath: [{ name: 'Products', url: '/products' }]
         });
     } catch (err) {
         console.error('Error loading fresh products:', err);
@@ -497,7 +482,7 @@ app.get('/fresh/products', async (req, res) => {
 });
 
 // Fresh Offers Page
-app.get('/fresh/offers', async (req, res) => {
+app.get('/offers', async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const db = firebaseAdmin.firestore();
@@ -551,14 +536,14 @@ app.get('/fresh/offers', async (req, res) => {
         const paginatedOffers = allOffers.slice(offset, offset + limit);
         const hasMore = allOffers.length > offset + limit;
 
-        res.render('fresh-offers', {
+        res.render('offers', {
             settings,
             offers: paginatedOffers,
             pageH1: "Offers",
             currentPage: page,
             limit,
             hasMore,
-            breadcrumbPath: [{ name: 'Offers', url: '/fresh/offers' }]
+            breadcrumbPath: [{ name: 'Offers', url: '/offers' }]
         });
     } catch (err) {
         console.error('Error loading fresh offers:', err);
@@ -567,7 +552,7 @@ app.get('/fresh/offers', async (req, res) => {
 });
 
 // Dynamic Route for the Brand Hub
-app.get('/fresh/brands/:slug', async (req, res) => {
+app.get('/brand/:slug', async (req, res) => {
     try {
         const { slug } = req.params;
         const settings = await getGlobalSettings();
@@ -632,15 +617,15 @@ app.get('/fresh/brands/:slug', async (req, res) => {
             };
         });
 
-        res.render('fresh-brand', {
+        res.render('brand', {
             settings,
             brand,
             offers,
             products,
             pageH1: `${brand.name} Deals & Products`,
             breadcrumbPath: [
-                { name: 'Brands', url: '/fresh/brands' },
-                { name: brand.name, url: `/fresh/brands/${brand.slug}` }
+                { name: 'Brands', url: '/brands' },
+                { name: brand.name, url: `/brand/${brand.slug}` }
             ]
         });
     } catch (err) {
@@ -649,7 +634,7 @@ app.get('/fresh/brands/:slug', async (req, res) => {
     }
 });
 
-app.get('/api/fresh/offers', async (req, res) => {
+app.get('/api/offers', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 9;
         const offset = parseInt(req.query.offset) || 0;
@@ -715,7 +700,7 @@ app.get('/api/fresh/offers', async (req, res) => {
     }
 });
 
-app.get('/api/fresh/search', async (req, res) => {
+app.get('/api/search', async (req, res) => {
     try {
         const q = req.query.q;
         if (!q || q.length < 2) return res.json({ brands: [], products: [], offers: [] });

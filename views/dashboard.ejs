@@ -331,7 +331,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div class="stat-label">Rakuten</div>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="refresh-icon" data-network="Rakuten"
+                            stroke="currentColor" class="reicon" data-network="Rakuten"
                             style="width: 16px; height: 16px; cursor: pointer; color: var(--text-secondary);">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -351,7 +351,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div class="stat-label">CJ</div>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="refresh-icon" data-network="CJ"
+                            stroke="currentColor" class="reicon" data-network="CJ"
                             style="width: 16px; height: 16px; cursor: pointer; color: var(--text-secondary);">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -371,7 +371,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div class="stat-label">AWIN</div>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="refresh-icon" data-network="AWIN"
+                            stroke="currentColor" class="reicon" data-network="AWIN"
                             style="width: 16px; height: 16px; cursor: pointer; color: var(--text-secondary);">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -391,7 +391,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div class="stat-label">Pepperjam</div>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="refresh-icon" data-network="Pepperjam"
+                            stroke="currentColor" class="reicon" data-network="Pepperjam"
                             style="width: 16px; height: 16px; cursor: pointer; color: var(--text-secondary);">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -908,7 +908,7 @@
             };
 
             // Network Refresh Logic
-            document.querySelectorAll('.refresh-icon').forEach(icon => {
+            document.querySelectorAll('.reicon').forEach(icon => {
                 icon.addEventListener('click', async (e) => {
                     const network = icon.dataset.network;
                     if (!network || icon.classList.contains('spin')) return;
@@ -962,7 +962,7 @@
 
                     Object.keys(state).forEach(network => {
                         const netState = state[network];
-                        const icon = document.querySelector(`.refresh-icon[data-network="${network}"]`);
+                        const icon = document.querySelector(`.reicon[data-network="${network}"]`);
 
                         if (!icon) return;
 
