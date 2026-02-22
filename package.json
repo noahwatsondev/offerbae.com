@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node --max-old-space-size=450 src/app.js",
-    "build:css": "sass src/scss/layout/main.scss public/css/layout/main.css",
-    "watch:css": "sass --watch src/scss/layout/main.scss public/css/layout/main.css"
+    "build:css": "sass src/scss/fresh/main.scss public/css/fresh/main.css",
+    "watch:css": "sass --watch src/scss/fresh/main.scss public/css/fresh/main.css"
   },
   "repository": {
     "type": "git",

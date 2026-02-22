@@ -1,0 +1,101 @@
+@use 'variables' as *;
+
+.fresh-footer {
+    grid-area: footer;
+    padding: 2rem 1.5rem;
+    background: linear-gradient(to bottom, #EF3E5C, #E42A53);
+    color: white;
+    text-align: center;
+    flex-shrink: 0;
+
+    // We keep the old gradient so it matches, but the user's Footer Styles textarea can override.
+
+    &__container {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    &__logo-section {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    &__logo-img {
+        height: 48px;
+        width: auto;
+        max-width: 250px;
+        object-fit: contain;
+    }
+
+    &__logo-text {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: white !important;
+        filter: none !important;
+        text-shadow: none !important;
+    }
+
+    &__nav {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 0.75rem 0;
+    }
+
+    &__nav-link {
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.95rem;
+        opacity: 0.9;
+        transition: opacity 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+
+    &__nav-icon {
+        display: none; // or simply remove it
+    }
+
+    &__copyright {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 500;
+        opacity: 0.9;
+        font-style: italic;
+    }
+
+    &__legal {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    &__legal-link {
+        color: white;
+        text-decoration: none;
+        font-size: 0.938rem;
+        font-weight: 600;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+}

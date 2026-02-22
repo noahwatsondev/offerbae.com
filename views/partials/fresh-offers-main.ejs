@@ -1,0 +1,131 @@
+<main class="fresh-content">
+    <section class="fresh-content-section">
+        <div class="fresh-section-header">
+            <div class="fresh-section-title-area">
+                <h2>Exclusive Offers & Promo Codes</h2>
+                <p class="section-description">Active discounts and verified promo codes to save you money instantly.
+                </p>
+            </div>
+            <div class="fresh-section-actions">
+                <div class="fresh-section-filters">
+                    <div class="filter-group">
+                        <select id="items-per-page" class="fresh-select-mini">
+                            <option value="60" <%=limit==60 ? 'selected' : '' %>>60 per page</option>
+                            <option value="90" <%=limit==90 ? 'selected' : '' %>>90 per page</option>
+                            <option value="120" <%=limit==120 ? 'selected' : '' %>>120 per page</option>
+                        </select>
+                    </div>
+                    <input type="text" id="offer-search" class="fresh-input-mini" placeholder="Search this page...">
+                    <select id="offer-sort-filter" class="fresh-select-mini">
+                        <option value="discount" selected>Sort by: Best Discount</option>
+                        <option value="recent">Sort by: Most Recent</option>
+                        <option value="expiry">Sort by: Expiring Soon</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="fresh-offer-grid" id="fresh-offer-grid">
+            <% if (typeof offers !=='undefined' && offers.length> 0) { %>
+                <% offers.forEach(offer=> { %>
+                    <%- include('fresh-offer-card', { offer }) %>
+                        <% }) %>
+                            <% } else { %>
+                                <div class="empty-state">No offers available at the moment.</div>
+                                <% } %>
+        </div>
+
+        <% if (currentPage> 1 || hasMore) { %>
+            <div class="fresh-pagination">
+                <% if (currentPage> 1) { %>
+                    <button class="fresh-btn-outline" id="prev-page">Previous</button>
+                    <% } %>
+                        <span class="page-indicator">Page <%= currentPage %></span>
+                        <% if (hasMore) { %>
+                            <button class="fresh-btn-outline" id="next-page">Next</button>
+                            <% } %>
+            </div>
+            <% } %>
+    </section>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const grid = document.getElementById('fresh-offer-grid');
+        const searchInput = document.getElementById('offer-search');
+        const sortFilter = document.getElementById('offer-sort-filter');
+        const itemsPerPage = document.getElementById('items-per-page');
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+
+        const cards = Array.from(grid.querySelectorAll('.offer-card-wrapper'));
+
+        function getParams() {
+            const params = new URLSearchParams(window.location.search);
+            return params;
+        }
+
+        function reloadWithParams(newParams) {
+            const params = getParams();
+            for (const [key, value] of Object.entries(newParams)) {
+                if (value === null) params.delete(key);
+                else params.set(key, value);
+            }
+            window.location.href = window.location.pathname + '?' + params.toString();
+        }
+
+        itemsPerPage.addEventListener('change', () => {
+            reloadWithParams({ limit: itemsPerPage.value, page: 1 });
+        });
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                const page = parseInt(getParams().get('page') || 1);
+                reloadWithParams({ page: Math.max(1, page - 1) });
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                const page = parseInt(getParams().get('page') || 1);
+                reloadWithParams({ page: page + 1 });
+            });
+        }
+
+        function updateGrid() {
+            const query = searchInput.value.toLowerCase();
+            const sortBy = sortFilter.value;
+
+            const filteredCards = cards.filter(card => {
+                const title = card.querySelector('.offer-title').textContent.toLowerCase();
+                const advertiser = card.querySelector('.offer-brand').textContent.toLowerCase();
+                return title.includes(query) || advertiser.includes(query);
+            });
+
+            filteredCards.sort((a, b) => {
+                const aDiscount = parseInt(a.getAttribute('data-discount')) || 0;
+                const bDiscount = parseInt(b.getAttribute('data-discount')) || 0;
+                const aTime = parseInt(a.getAttribute('data-updated')) || 0;
+                const bTime = parseInt(b.getAttribute('data-updated')) || 0;
+
+                switch (sortBy) {
+                    case 'discount':
+                        return bDiscount - aDiscount;
+                    case 'recent':
+                        return bTime - aTime;
+                    default:
+                        return 0;
+                }
+            });
+
+            grid.innerHTML = '';
+            if (filteredCards.length > 0) {
+                filteredCards.forEach(card => grid.appendChild(card));
+            } else {
+                grid.innerHTML = '<div class="empty-state">No offers match your search.</div>';
+            }
+        }
+
+        searchInput.addEventListener('input', updateGrid);
+        sortFilter.addEventListener('change', updateGrid);
+    });
+</script>

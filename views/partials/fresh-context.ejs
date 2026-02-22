@@ -1,0 +1,19 @@
+<div class="fresh-context-wrapper">
+    <div class="fresh-context-inner">
+        <h1 class="fresh-page-title">
+            <%= typeof pageH1 !=='undefined' ? pageH1 : 'Hello, Shopping Lover' %>
+        </h1>
+        <div class="fresh-global-search">
+            <input type="text" placeholder="Search brands, products, offers..." class="fresh-search-input"
+                id="fresh-search-input">
+            <button class="fresh-search-btn" aria-label="Search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+            <div id="fresh-search-results" class="fresh-search-results"></div>
+        </div>
+    </div>
+</div>

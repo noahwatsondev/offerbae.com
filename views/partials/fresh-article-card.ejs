@@ -1,0 +1,29 @@
+<a href="<%= article.url || '#' %>" class="article-card-wrapper">
+    <article class="fresh-article-card">
+        <div class="article-image">
+            <% if (article.imageUrl) { %>
+                <img src="<%= article.imageUrl %>" alt="<%= article.title %>" loading="lazy">
+                <% } else { %>
+                    <div class="article-image-placeholder"></div>
+                    <% } %>
+        </div>
+        <div class="article-info">
+            <div class="article-tags">
+                <% if (article.tags && article.tags.length> 0) { %>
+                    <% article.tags.forEach(tag=> { %>
+                        <span class="tag">
+                            <%= tag %>
+                        </span>
+                        <% }) %>
+                            <% } %>
+            </div>
+            <h3 class="article-title">
+                <%= article.title %>
+            </h3>
+            <p class="article-summary">
+                <%= article.summary %>
+            </p>
+            <span class="article-link">Read Article &rarr;</span>
+        </div>
+    </article>
+</a>

@@ -328,7 +328,7 @@ app.get('/', async (req, res) => {
             }
         }
 
-        res.render('index', {
+        res.render('fresh-index', {
             settings,
             brands: uniquePerformanceBrands,
             categories: finalCategories,
@@ -338,7 +338,7 @@ app.get('/', async (req, res) => {
         });
     } catch (err) {
         console.error('Error fetching settings for fresh build:', err);
-        res.render('index', { settings: {}, brands: [], breadcrumbPath: [] });
+        res.render('fresh-index', { settings: {}, brands: [], breadcrumbPath: [] });
     }
 });
 
@@ -389,7 +389,7 @@ app.get('/brands', async (req, res) => {
             ...otherItems
         ];
 
-        res.render('brands', {
+        res.render('fresh-brands', {
             settings,
             brands: brandsList,
             categories: finalCategories,
@@ -442,7 +442,7 @@ app.get('/products', async (req, res) => {
         // Get total count for pagination (or at least check if there's more)
         const hasMore = products.length === limit;
 
-        res.render('products', {
+        res.render('fresh-products', {
             settings,
             products,
             pageH1: "Products",
@@ -513,7 +513,7 @@ app.get('/offers', async (req, res) => {
         const paginatedOffers = allOffers.slice(offset, offset + limit);
         const hasMore = allOffers.length > offset + limit;
 
-        res.render('offers', {
+        res.render('fresh-offers', {
             settings,
             offers: paginatedOffers,
             pageH1: "Offers",
@@ -594,7 +594,7 @@ app.get('/brand/:slug', async (req, res) => {
             };
         });
 
-        res.render('brand', {
+        res.render('fresh-brand', {
             settings,
             brand,
             offers,
@@ -611,7 +611,7 @@ app.get('/brand/:slug', async (req, res) => {
     }
 });
 
-app.get('/api/offers', async (req, res) => {
+app.get('/api/fresh/offers', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 9;
         const offset = parseInt(req.query.offset) || 0;
@@ -677,7 +677,7 @@ app.get('/api/offers', async (req, res) => {
     }
 });
 
-app.get('/api/search', async (req, res) => {
+app.get('/api/fresh/search', async (req, res) => {
     try {
         const q = req.query.q;
         if (!q || q.length < 2) return res.json({ brands: [], products: [], offers: [] });

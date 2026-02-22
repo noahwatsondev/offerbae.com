@@ -1,0 +1,11 @@
+<div class="fresh-categories-wrapper">
+    <div class="fresh-categories-scroll">
+        <% if (typeof categories !=='undefined' && categories.length> 0) { %>
+            <% categories.forEach(cat=> { %>
+                <a href="/fresh/categories/<%= cat.slug %>" class="category-pill">
+                    <%= cat.name %>
+                </a>
+                <% }) %>
+                    <% } %>
+    </div>
+</div>

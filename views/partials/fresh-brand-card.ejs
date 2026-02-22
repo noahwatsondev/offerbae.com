@@ -1,0 +1,65 @@
+<a href="/fresh/brands/<%= brand.slug %>" class="brand-card-wrapper" <% if (typeof showSortData !=='undefined' &&
+    showSortData) { %>
+    data-name="<%= brand.name.toLowerCase() %>"
+        data-stats-total="<%= (brand.productCount || 0) + (brand.offerCount || 0) %>"
+            data-products="<%= brand.productCount || 0 %>"
+                data-offers="<%= brand.offerCount || 0 %>"
+                    <% } %>
+                        >
+                        <article class="brand-card">
+                            <% if (brand.logoUrl) { %>
+                                <div class="brand-logo"
+                                    style="background-image: url('<%= brand.logoUrl %>'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: transparent;">
+                                </div>
+                                <% } else { %>
+                                    <div class="brand-logo"></div>
+                                    <% } %>
+
+                                        <div class="brand-name">
+                                            <%= brand.name %>
+                                        </div>
+
+                                        <div class="brand-meta">
+                                            <div class="brand-stats-grid">
+                                                <div class="stat-row">
+                                                    <div class="stat-count">
+                                                        <strong>
+                                                            <%= brand.productCount || 0 %>
+                                                        </strong>
+                                                    </div>
+                                                    <div class="stat-label">Products</div>
+                                                    <div class="stat-tags">
+                                                        <% if (brand.saleProductCount> 0) { %>
+                                                            <strong class="sale-label">ON-SALE ITEMS!</strong>
+                                                            <% } %>
+                                                    </div>
+                                                </div>
+                                                <div class="stat-row">
+                                                    <div class="stat-count">
+                                                        <strong>
+                                                            <%= brand.offerCount || 0 %>
+                                                        </strong>
+                                                    </div>
+                                                    <div class="stat-label">Offers</div>
+                                                    <div class="stat-tags">
+                                                        <% if (brand.hasPromoCodes) { %>
+                                                            <strong class="codes-label">ACTIVE CODES!</strong>
+                                                            <% } %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <% if (brand.categories && brand.categories.length> 0) { %>
+                                                <div class="brand-categories">
+                                                    <% const cats=typeof categoryLimit !=='undefined' ?
+                                                        brand.categories.slice(0, categoryLimit) : brand.categories;
+                                                        cats.forEach(cat=> {
+                                                        %>
+                                                        <span class="brand-category-tag">
+                                                            <%= cat %>
+                                                        </span>
+                                                        <% }) %>
+                                                </div>
+                                                <% } %>
+                                        </div>
+                        </article>
+</a>

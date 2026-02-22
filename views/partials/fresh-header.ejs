@@ -1,0 +1,48 @@
+<% if (typeof settings !=='undefined' && settings.headerStyles) { %>
+    <style>
+        .fresh-header {
+            <%- settings.headerStyles %>
+        }
+    </style>
+    <% } %>
+        <header class="fresh-header" id="fresh-header">
+            <div class="fresh-header-logo" onclick="location.href='/'">
+                <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
+                    <img src="<%= settings.logoUrl %>" alt="Logo" class="fresh-header-logo-img">
+                    <% } %>
+                        <span class="fresh-header-logo-text"
+                            style="<%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
+                            <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae'
+                                %>
+                        </span>
+            </div>
+
+            <nav class="fresh-header-nav" id="fresh-header-nav">
+                <a href="/fresh/brands" class="fresh-nav-link">Brands</a>
+                <a href="/fresh/products" class="fresh-nav-link">Products</a>
+                <a href="/fresh/offers" class="fresh-nav-link">Offers</a>
+            </nav>
+
+            <button type="button" class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation">
+                <svg class="icon-hamburger" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+                <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </header>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const toggleBtn = document.getElementById('mobile-menu-toggle');
+                const header = document.getElementById('fresh-header');
+                if (toggleBtn && header) {
+                    toggleBtn.addEventListener('click', () => {
+                        header.classList.toggle('mobile-nav-open');
+                    });
+                }
+            });
+        </script>

@@ -1,0 +1,158 @@
+<main class="fresh-content">
+    <section class="fresh-content-section">
+        <div class="fresh-section-header">
+            <div class="fresh-section-title-area">
+                <h2>
+                    <%= onSale ? 'Top Product Savings' : 'All Products' %>
+                </h2>
+                <p class="section-description">
+                    <%= onSale ? 'The best price drops and on-sale items from across our top brands.'
+                        : 'Browse our full catalog of products from top retailers.' %>
+                </p>
+            </div>
+            <div class="fresh-section-actions">
+                <div class="fresh-section-filters">
+                    <div class="filter-group">
+                        <label class="fresh-checkbox-label">
+                            <input type="checkbox" id="on-sale-toggle" <%=onSale ? 'checked' : '' %>>
+                            <span>On Sale Only</span>
+                        </label>
+                    </div>
+                    <div class="filter-group">
+                        <select id="items-per-page" class="fresh-select-mini">
+                            <option value="60" <%=limit==60 ? 'selected' : '' %>>60 per page</option>
+                            <option value="90" <%=limit==90 ? 'selected' : '' %>>90 per page</option>
+                            <option value="120" <%=limit==120 ? 'selected' : '' %>>120 per page</option>
+                        </select>
+                    </div>
+                    <input type="text" id="product-search" class="fresh-input-mini" placeholder="Search this page...">
+                    <select id="product-sort-filter" class="fresh-select-mini">
+                        <option value="savings" selected>Order by: Best Savings</option>
+                        <option value="discount">Order by: Highest % Off</option>
+                        <option value="price-low">Order by: Price Low-High</option>
+                        <option value="price-high">Order by: Price High-Low</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="fresh-product-grid" id="fresh-product-grid">
+            <% if (typeof products !=='undefined' && products.length> 0) { %>
+                <% products.forEach(product=> { %>
+                    <%- include('fresh-product-card', { product }) %>
+                        <% }) %>
+                            <% } else { %>
+                                <p>No products found.</p>
+                                <% } %>
+        </div>
+
+        <% if (currentPage> 1 || hasMore) { %>
+            <div class="fresh-pagination">
+                <% if (currentPage> 1) { %>
+                    <button class="fresh-btn-outline" id="prev-page">Previous</button>
+                    <% } %>
+                        <span class="page-indicator">Page <%= currentPage %></span>
+                        <% if (hasMore) { %>
+                            <button class="fresh-btn-outline" id="next-page">Next</button>
+                            <% } %>
+            </div>
+            <% } %>
+    </section>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const grid = document.getElementById('fresh-product-grid');
+        const searchInput = document.getElementById('product-search');
+        const sortFilter = document.getElementById('product-sort-filter');
+        const onSaleToggle = document.getElementById('on-sale-toggle');
+        const itemsPerPage = document.getElementById('items-per-page');
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+
+        const cards = Array.from(grid.querySelectorAll('.product-card-wrapper'));
+
+        function getParams() {
+            const params = new URLSearchParams(window.location.search);
+            return params;
+        }
+
+        function reloadWithParams(newParams) {
+            const params = getParams();
+            for (const [key, value] of Object.entries(newParams)) {
+                if (value === null) params.delete(key);
+                else params.set(key, value);
+            }
+            window.location.href = window.location.pathname + '?' + params.toString();
+        }
+
+        // Server-side filters
+        onSaleToggle.addEventListener('change', () => {
+            reloadWithParams({ onSale: onSaleToggle.checked, page: 1 });
+        });
+
+        itemsPerPage.addEventListener('change', () => {
+            reloadWithParams({ limit: itemsPerPage.value, page: 1 });
+        });
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                const page = parseInt(getParams().get('page') || 1);
+                reloadWithParams({ page: Math.max(1, page - 1) });
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                const page = parseInt(getParams().get('page') || 1);
+                reloadWithParams({ page: page + 1 });
+            });
+        }
+
+        // Client-side search and sort (on current page results)
+        function updateGrid() {
+            const query = searchInput.value.toLowerCase();
+            const sortBy = sortFilter.value;
+
+            const filteredCards = cards.filter(card => {
+                const name = card.querySelector('.product-title').textContent.toLowerCase();
+                return name.includes(query);
+            });
+
+            filteredCards.sort((a, b) => {
+                const aPrice = parseFloat(a.getAttribute('data-price')) || 0;
+                const bPrice = parseFloat(b.getAttribute('data-price')) || 0;
+                const aSalePrice = parseFloat(a.getAttribute('data-sale-price')) || 0;
+                const bSalePrice = parseFloat(b.getAttribute('data-sale-price')) || 0;
+                const aSavings = parseFloat(a.getAttribute('data-savings')) || 0;
+                const bSavings = parseFloat(b.getAttribute('data-savings')) || 0;
+                const aDiscount = aPrice > 0 ? (1 - (aSalePrice / aPrice)) : 0;
+                const bDiscount = bPrice > 0 ? (1 - (bSalePrice / bPrice)) : 0;
+
+                switch (sortBy) {
+                    case 'savings':
+                        return bSavings - aSavings;
+                    case 'discount':
+                        return bDiscount - aDiscount;
+                    case 'price-low':
+                        return aSalePrice - bSalePrice;
+                    case 'price-high':
+                        return bSalePrice - aSalePrice;
+                    default:
+                        return 0;
+                }
+            });
+
+            // Clear and re-append
+            grid.innerHTML = '';
+            if (filteredCards.length > 0) {
+                filteredCards.forEach(card => grid.appendChild(card));
+            } else {
+                grid.innerHTML = '<p>No products match your search.</p>';
+            }
+        }
+
+        searchInput.addEventListener('input', updateGrid);
+        sortFilter.addEventListener('change', updateGrid);
+    });
+</script>

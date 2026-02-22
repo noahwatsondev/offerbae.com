@@ -1,0 +1,39 @@
+<% if (typeof settings !=='undefined' && settings.footerStyles) { %>
+    <style>
+        .fresh-footer {
+            <%- settings.footerStyles %>
+        }
+    </style>
+    <% } %>
+        <footer class="fresh-footer">
+            <div class="fresh-footer__container">
+                <!-- Logo Section -->
+                <div class="fresh-footer__logo-section">
+                    <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
+                        <img src="<%= settings.logoUrl %>" alt="Logo" class="fresh-footer__logo-img">
+                        <% } %>
+                            <h2 class="fresh-footer__logo-text"
+                                style="<%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
+                                <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText
+                                    : 'OfferBae' %>
+                            </h2>
+                </div>
+
+                <!-- Footer Nav -->
+                <nav class="fresh-footer__nav">
+                    <a href="/brands" class="fresh-footer__nav-link">Brands</a>
+                    <a href="/products" class="fresh-footer__nav-link">Products</a>
+                    <a href="/offers" class="fresh-footer__nav-link">Offers</a>
+                </nav>
+
+                <!-- Copyright -->
+                <p class="fresh-footer__copyright">&copy; 2026 OfferBae. All rights reserved.</p>
+
+                <!-- Legal Links -->
+                <div class="fresh-footer__legal">
+                    <a href="#" class="fresh-footer__legal-link">Legal Statement</a>
+                    <a href="#" class="fresh-footer__legal-link">Privacy Policy</a>
+                    <a href="#" class="fresh-footer__legal-link">Terms of Use</a>
+                </div>
+            </div>
+        </footer>

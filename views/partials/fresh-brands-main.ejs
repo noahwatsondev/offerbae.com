@@ -1,0 +1,62 @@
+<main class="fresh-content">
+    <section class="fresh-content-section">
+        <div class="fresh-section-header">
+            <div class="fresh-section-title-area">
+                <h2>Shop Brands and Find Savings</h2>
+                <p class="section-description">Discover the most popular brands offering substantial discounts and
+                    exclusive codes.</p>
+            </div>
+            <div class="fresh-section-actions">
+                <div class="fresh-section-filters">
+                    <select id="brand-sort-filter" class="fresh-select-mini">
+                        <option value="name" selected>Order by: Name A-Z</option>
+                        <option value="stats">Order by: Most Offers & Products</option>
+                        <option value="products">Order by: Most Products</option>
+                        <option value="offers">Order by: Most Offers</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="fresh-brand-grid">
+            <% if (typeof brands !=='undefined' && brands.length> 0) { %>
+                <% brands.forEach(brand=> { %>
+                    <%- include('fresh-brand-card', { brand: brand, showSortData: true }) %>
+                        <% }) %>
+                            <% } else { %>
+                                <p>No brands found.</p>
+                                <% } %>
+        </div>
+    </section>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const grid = document.querySelector('.fresh-brand-grid');
+        const filter = document.getElementById('brand-sort-filter');
+
+        if (!grid || !filter) return;
+
+        filter.addEventListener('change', function () {
+            const sortBy = this.value;
+            const cards = Array.from(grid.querySelectorAll('.brand-card-wrapper'));
+
+            cards.sort((a, b) => {
+                switch (sortBy) {
+                    case 'name':
+                        return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
+                    case 'stats':
+                        return (parseInt(b.getAttribute('data-stats-total')) || 0) - (parseInt(a.getAttribute('data-stats-total')) || 0);
+                    case 'products':
+                        return (parseInt(b.getAttribute('data-products')) || 0) - (parseInt(a.getAttribute('data-products')) || 0);
+                    case 'offers':
+                        return (parseInt(b.getAttribute('data-offers')) || 0) - (parseInt(a.getAttribute('data-offers')) || 0);
+                    default:
+                        return 0;
+                }
+            });
+
+            // Re-append in new order
+            cards.forEach(card => grid.appendChild(card));
+        });
+    });
+</script>
