@@ -220,7 +220,8 @@
             .offer-icon {
                 width: 32px;
                 height: 32px;
-                border-radius: 6px;
+                border-radius: 0 .5rem;
+                border: none;
             }
         }
 
@@ -260,10 +261,10 @@
         .offer-brand-logo {
             width: 48px;
             height: 48px;
-            border-radius: 10px;
+            border-radius: 0 .5rem;
             overflow: hidden;
             background: #fff;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -278,7 +279,8 @@
         .offer-icon {
             width: 48px;
             height: 48px;
-            border-radius: 10px;
+            border-radius: 0 .5rem;
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -340,7 +342,7 @@
                 color: $primary-color;
                 border: 1px dashed $primary-color;
                 padding: 0.35rem 0.6rem;
-                border-radius: 4px;
+                border-radius: 9999px;
                 background: none;
                 letter-spacing: 0.05em;
                 transition: all 0.2s ease;
@@ -354,15 +356,16 @@
                 }
             }
 
-            // Non-code "Redeem" button — solid + tinted background
+            // Non-code "Redeem" button — flat + primary bg
             .promo-redeem-btn {
                 font-family: inherit;
-                border-style: solid;
-                background: color-mix(in srgb, var(--primary-color), transparent 85%);
+                border: none;
+                background: var(--primary-color, $primary-color);
+                color: #fff;
                 cursor: pointer !important;
 
                 &:hover {
-                    background: color-mix(in srgb, var(--primary-color), transparent 75%);
+                    background: color-mix(in srgb, var(--primary-color), black 10%);
                     cursor: pointer;
                 }
             }
@@ -464,7 +467,7 @@
                     padding: 0.3rem 1.5rem 0.3rem 0.75rem;
                     font-size: 0.875rem;
                     border: 1px solid $border-color;
-                    border-radius: 4px;
+                    border-radius: 9999px;
                     background-color: #fff;
                     color: $text-color;
                     cursor: pointer;
@@ -751,7 +754,8 @@
                     height: 80px;
                     aspect-ratio: 1/1;
                     background: #f3f4f6;
-                    border-radius: 6px 0 6px 0;
+                    border-radius: 0 1rem;
+                    border: none;
                     flex-shrink: 0;
                     align-self: flex-start;
                     margin: 10px 0px 0 10px;
@@ -778,6 +782,8 @@
                     .brand-stats-grid {
                         display: flex;
                         flex-direction: column;
+                        justify-content: flex-end; // Push single rows to the bottom so categories align
+                        min-height: 60px;
                         margin-top: 0.4rem;
 
                         .stat-row {
@@ -788,7 +794,7 @@
                             padding: 6px 0;
                             width: 100%;
 
-                            &:not(:last-child) {
+                            &.stat-row--bordered {
                                 border-bottom: 1px solid transparent;
                                 border-image: linear-gradient(to right, silver, transparent) 1;
                                 border-image-slice: 1;
@@ -931,7 +937,7 @@
                             color: $primary-color;
                             background: rgba($primary-color, 0.1);
                             padding: 0.25rem 0.5rem;
-                            border-radius: 4px;
+                            border-radius: 9999px;
                         }
                     }
 

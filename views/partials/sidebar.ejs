@@ -12,13 +12,13 @@
                             style="display:flex; align-items:center; gap:1rem; text-decoration:none; color:inherit;">
                             <% if (brand.logoUrl) { %>
                                 <div
-                                    style="width:40px; height:40px; background:white; border-radius:50%; border:1px solid #eee; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                                    style="width:40px; height:40px; background:white; border-radius:0 .5rem; border:none; display:flex; align-items:center; justify-content:center; overflow:hidden;">
                                     <img src="<%= brand.logoUrl %>" alt="<%= brand.name %>"
                                         style="max-width:100%; max-height:100%;">
                                 </div>
                                 <% } else { %>
                                     <div
-                                        style="width:40px; height:40px; background:#f3f4f6; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#888;">
+                                        style="width:40px; height:40px; background:#f3f4f6; border-radius:0 .5rem; border:none; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#888;">
                                         <%= brand.name.charAt(0).toUpperCase() %>
                                     </div>
                                     <% } %>

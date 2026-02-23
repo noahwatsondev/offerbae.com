@@ -21,32 +21,41 @@
 
                                         <div class="brand-meta">
                                             <div class="brand-stats-grid">
-                                                <div class="stat-row">
-                                                    <div class="stat-count">
-                                                        <strong>
-                                                            <%= brand.productCount || 0 %>
-                                                        </strong>
-                                                    </div>
-                                                    <div class="stat-label">Products</div>
-                                                    <div class="stat-tags">
-                                                        <% if (brand.saleProductCount> 0) { %>
-                                                            <strong class="sale-label">ON-SALE ITEMS!</strong>
+                                                <% const _hasProducts=(brand.productCount || 0)> 0; %>
+                                                    <% const _hasOffers=(brand.offerCount || 0)> 0; %>
+                                                        <% if (_hasProducts) { %>
+                                                            <div
+                                                                class="stat-row<%= _hasOffers ? ' stat-row--bordered' : '' %>">
+                                                                <div class="stat-count">
+                                                                    <strong>
+                                                                        <%= brand.productCount %>
+                                                                    </strong>
+                                                                </div>
+                                                                <div class="stat-label">Products</div>
+                                                                <div class="stat-tags">
+                                                                    <% if (brand.saleProductCount> 0) { %>
+                                                                        <strong class="sale-label">ON-SALE
+                                                                            ITEMS!</strong>
+                                                                        <% } %>
+                                                                </div>
+                                                            </div>
                                                             <% } %>
-                                                    </div>
-                                                </div>
-                                                <div class="stat-row">
-                                                    <div class="stat-count">
-                                                        <strong>
-                                                            <%= brand.offerCount || 0 %>
-                                                        </strong>
-                                                    </div>
-                                                    <div class="stat-label">Offers</div>
-                                                    <div class="stat-tags">
-                                                        <% if (brand.hasPromoCodes) { %>
-                                                            <strong class="codes-label">ACTIVE CODES!</strong>
-                                                            <% } %>
-                                                    </div>
-                                                </div>
+                                                                <% if (_hasOffers) { %>
+                                                                    <div class="stat-row">
+                                                                        <div class="stat-count">
+                                                                            <strong>
+                                                                                <%= brand.offerCount %>
+                                                                            </strong>
+                                                                        </div>
+                                                                        <div class="stat-label">Offers</div>
+                                                                        <div class="stat-tags">
+                                                                            <% if (brand.hasPromoCodes) { %>
+                                                                                <strong class="codes-label">ACTIVE
+                                                                                    CODES!</strong>
+                                                                                <% } %>
+                                                                        </div>
+                                                                    </div>
+                                                                    <% } %>
                                             </div>
                                             <% if (brand.categories && brand.categories.length> 0) { %>
                                                 <div class="brand-categories">
