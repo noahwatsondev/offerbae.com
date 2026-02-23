@@ -1,8 +1,8 @@
 @use "sass:color";
 
 // Component Specific Variables based on implementation plan palette
-$brand-primary: #E42A53;
-$brand-accent: #DBA437;
+$brand-primary: var(--color-red, #E42A53);
+$brand-accent: var(--color-yellow, #DBA437);
 $bg-main: #FAFAFA;
 $text-dark: #1F2937;
 $text-muted: #6B7280;
@@ -157,8 +157,8 @@ $border-subtle: #E5E7EB;
         &.sticky-conversion {
             position: sticky;
             top: 1.5rem;
-            background: color.adjust($brand-accent, $lightness: 45%); // Very light gold bg
-            border-color: color.adjust($brand-accent, $lightness: 30%);
+            background: color-mix(in srgb, $brand-accent, white 85%); // Very light gold bg
+            border-color: color-mix(in srgb, $brand-accent, white 60%);
 
             p {
                 font-size: 0.85rem;
@@ -181,7 +181,7 @@ $border-subtle: #E5E7EB;
                     &:focus {
                         outline: none;
                         border-color: $brand-primary;
-                        box-shadow: 0 0 0 2px rgba($brand-primary, 0.2);
+                        box-shadow: 0 0 0 2px color-mix(in srgb, $brand-primary, transparent 80%);
                     }
                 }
 
@@ -277,7 +277,7 @@ $border-subtle: #E5E7EB;
                 width: 6px;
                 height: 6px;
                 border-radius: 50%;
-                background-color: #10B981; // Green dot
+                background-color: var(--color-green, #10B981); // Green dot
             }
         }
 
@@ -332,12 +332,12 @@ $border-subtle: #E5E7EB;
 
                 &.is-copied {
                     .promo-copy-hint {
-                        color: #10B981; // Green success text
+                        color: var(--color-green, #10B981); // Green success text
                     }
 
                     .promo-code-box {
-                        border-color: #10B981;
-                        color: #10B981;
+                        border-color: var(--color-green, #10B981);
+                        color: var(--color-green, #10B981);
                     }
                 }
             }
@@ -370,8 +370,8 @@ $border-subtle: #E5E7EB;
     white-space: nowrap;
 
     &:hover {
-        background-color: color.adjust($brand-primary, $lightness: -5%);
-        box-shadow: 0 4px 6px rgba($brand-primary, 0.25);
+        background-color: color-mix(in srgb, $brand-primary, black 10%);
+        box-shadow: 0 4px 6px color-mix(in srgb, $brand-primary, transparent 75%);
     }
 
     &:active {
@@ -385,7 +385,7 @@ $border-subtle: #E5E7EB;
     }
 
     &.is-copied {
-        background-color: #10B981;
+        background-color: var(--color-green, #10B981);
         pointer-events: none;
     }
 }

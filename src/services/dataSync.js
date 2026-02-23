@@ -4,7 +4,7 @@ const rakutenService = require('./rakuten');
 const cjService = require('./cj');
 const awinService = require('./awin');
 const pepperjamService = require('./pepperjam');
-const { upsertAdvertiser, upsertOffer, upsertProduct, getAdvertiser, getProduct, logSyncComplete, getSyncHistory, pruneStaleRecords } = require('./db');
+const { upsertAdvertiser, upsertOffer, upsertProduct, getAdvertiser, getProduct, logSyncComplete, getSyncHistory, pruneStaleRecords, isRealCode, cleanOfferCode, extractCodeFromDescription } = require('./db');
 const imageStore = require('./imageStore');
 
 // Global Sync State
@@ -30,49 +30,7 @@ const resetState = (network) => {
     };
 };
 
-// Helpers for Promo Code Detection
-const isRealCode = (code) => {
-    if (!code) return false;
-    const clean = String(code).trim().toLowerCase();
 
-    // Catch common patterns indicating no actual promo code exists
-    const noCodePattern = /^(no\s+code|none|n\/?a|null|false|0)$/i;
-    // Robust "no coupon code" patterns as requested
-    const looseNoCodePattern = /(no\s+code|no\s+coupon|no\s+promo|no\s+discount|code\s+needed|code\s+required)/i;
-
-    if (noCodePattern.test(clean) || (clean.includes('no') && (clean.includes('code') || clean.includes('coupon'))) || looseNoCodePattern.test(clean)) {
-        if (!/^[A-Z0-9]{3,}$/i.test(clean)) { // If it's not a standard short alphanumeric code
-            return false;
-        }
-    }
-
-    const nonCodes = [
-        'see site', 'click to reveal', 'auto-applied', 'online only', 'undefined', '', 'no code required', 'no coupon code needed'
-    ];
-    return !nonCodes.includes(clean);
-};
-
-const cleanOfferCode = (code) => {
-    if (!code) return null;
-    if (isRealCode(code)) return code.trim();
-    return null;
-};
-
-const extractCodeFromDescription = (desc) => {
-    if (!desc) return null;
-    const patterns = [
-        /code:\s*([A-Za-z0-9_-]{3,})/i,
-        /promo code:\s*([A-Za-z0-9_-]{3,})/i,
-        /coupon code:\s*([A-Za-z0-9_-]{3,})/i,
-        /use code\s*([A-Za-z0-9_-]{3,})/i,
-        /enter code\s*([A-Za-z0-9_-]{3,})/i
-    ];
-    for (const p of patterns) {
-        const match = desc.match(p);
-        if (match && match[1]) return match[1].toUpperCase();
-    }
-    return null;
-};
 
 const generateSearchKeywords = (text) => {
     if (!text) return [];

@@ -4,7 +4,7 @@ const config = require('./config/env');
 const dashboardController = require('./controllers/dashboardController');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
-const { getGlobalSettings } = require('./services/db');
+const { getGlobalSettings, isRealCode } = require('./services/db');
 const firebaseAdmin = require('firebase-admin');
 const fs = require('fs');
 require('dotenv').config({ override: true });
@@ -260,7 +260,107 @@ const getGlobalCategories = async (prefetchedBrands = null) => {
     ];
 };
 
-app.get('/', async (req, res) => {
+// --- Sidebar Global Caching Middleware ---
+let sidebarCache = null;
+let sidebarCacheTime = 0;
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+const populateSidebar = async (req, res, next) => {
+    try {
+        const now = Date.now();
+        if (sidebarCache && now - sidebarCacheTime < CACHE_TTL) {
+            res.locals.sidebarData = sidebarCache;
+            return next();
+        }
+
+        const db = firebaseAdmin.firestore();
+
+        // Fetch 5 newest Brands
+        const { getEnrichedAdvertisers } = require('./services/db');
+        const enrichedBrands = await getEnrichedAdvertisers();
+        const newestBrands = enrichedBrands
+            .filter(b => b.productCount > 0 || b.offerCount > 0)
+            .sort((a, b) => {
+                const aTime = a.updatedAt ? (a.updatedAt._seconds || new Date(a.updatedAt).getTime() || 0) : 0;
+                const bTime = b.updatedAt ? (b.updatedAt._seconds || new Date(b.updatedAt).getTime() || 0) : 0;
+                return bTime - aTime;
+            })
+            .slice(0, 5)
+            .map(b => ({
+                name: b.name,
+                slug: b.slug,
+                logoUrl: b.logoUrl,
+                count: (b.productCount || 0) + (b.offerCount || 0)
+            }));
+
+        // Fetch 5 newest Products
+        const productsSnapshot = await db.collection('products')
+            .orderBy('updatedAt', 'desc')
+            .limit(5)
+            .get();
+        const newestProducts = productsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                name: data.name,
+                slug: data.slug,
+                imageUrl: data.storageImageUrl || data.imageUrl,
+                brandName: data.advertiser || 'Brand',
+                price: data.price,
+                salePrice: data.salePrice
+            };
+        });
+
+        // Fetch 5 newest Offers
+        // Note: For large collections, orderBy requires a composite index if combining with filters.
+        // We'll just grab the 5 newest globally for the sidebar
+        const offersSnapshot = await db.collection('offers')
+            .orderBy('updatedAt', 'desc')
+            .limit(5)
+            .get();
+
+        // Map logos for offers
+        const brandLogoMap = new Map();
+        enrichedBrands.forEach(b => {
+            const brandId = (b.id || b.advertiserId || b.data_id || (b.raw_data && b.raw_data.id))?.toString();
+            if (brandId && b.logoUrl) brandLogoMap.set(brandId, b.logoUrl);
+        });
+
+        const newestOffers = offersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            const offId = (data.advertiserId || data.id || data.data_id)?.toString();
+
+            let expiresAt = 'Ongoing';
+            if (data.endDate) {
+                try {
+                    const date = new Date(data.endDate);
+                    if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
+                } catch (e) { }
+            }
+
+            return {
+                id: doc.id,
+                description: data.description || data.name,
+                brandName: data.advertiser || 'Brand',
+                isPromoCode: isRealCode(data.code),
+                code: data.code,
+                brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null,
+                expiresAt,
+                clickUrl: data.clickUrl || data.link
+            };
+        });
+
+        sidebarCache = { newestBrands, newestProducts, newestOffers };
+        sidebarCacheTime = now;
+        res.locals.sidebarData = sidebarCache;
+    } catch (err) {
+        console.error('Error populating sidebar:', err);
+        res.locals.sidebarData = { newestBrands: [], newestProducts: [], newestOffers: [] };
+    }
+    next();
+};
+
+app.get('/', populateSidebar, async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const { getEnrichedAdvertisers } = require('./services/db');
@@ -319,7 +419,7 @@ app.get('/', async (req, res) => {
                     expiresAt,
                     updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
                     discountValue: extractDiscountValue(data.description || data.name),
-                    isPromoCode: !!(data.code && data.code !== 'N/A' && data.code !== ''), brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
+                    isPromoCode: isRealCode(data.code), brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
                 };
             })
             .filter(o => o.code && o.code !== 'N/A' && o.code !== '') // Stick to codes only
@@ -357,22 +457,38 @@ app.get('/', async (req, res) => {
             }
         }
 
-        res.render('index', {
+        res.render('page', {
             settings,
             brands: uniquePerformanceBrands,
+            products: topSaleProducts,
+            offers: topOffers,
             categories: finalCategories,
-            topSaleProducts,
-            topOffers,
+            showBrands: true,
+            showProducts: true,
+            showOffers: true,
+            brandsH2: "Top Brands with On-Sale Products and Offer Codes",
+            brandsDescription: "Discover the most popular brands offering substantial discounts and exclusive codes.",
+            productsH2: "Top On-Sale Prices",
+            productsDescription: "Discover the absolute best price drops on top-rated products.",
+            offersH2: "Top Offer Savings",
+            offersDescription: "Exclusive promo codes and heavy discounts to maximize your budget.",
+            showBrandsLink: true,
+            showProductsLink: true,
+            showOffersLink: true,
+            showProductsFilters: true,
+            showOffersFilters: true,
+            showProductsPagination: false,
+            showOffersPagination: false,
             breadcrumbPath: []
         });
     } catch (err) {
         console.error('Error fetching settings for fresh build:', err);
-        res.render('index', { settings: {}, brands: [], breadcrumbPath: [] });
+        res.render('page', { settings: {}, brands: [], breadcrumbPath: [] });
     }
 });
 
 // Top Brands Index
-app.get('/brands', async (req, res) => {
+app.get('/brands', populateSidebar, async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const { getEnrichedAdvertisers } = require('./services/db');
@@ -396,10 +512,16 @@ app.get('/brands', async (req, res) => {
         const finalCategories = await getGlobalCategories(enrichedBrands);
 
 
-        res.render('brands', {
+        res.render('page', {
             settings,
             brands: brandsList,
             categories: finalCategories,
+            showBrands: true,
+            showProducts: false,
+            showOffers: false,
+            brandsH2: "Top Brands",
+            brandsDescription: "Browse our directory of top brands with amazing products and offers.",
+            showBrandsLink: false,
             pageH1: "Top Brands with Amazing Products and Offers",
             breadcrumbPath: [{ name: 'Brands', url: '/brands' }]
         });
@@ -410,7 +532,7 @@ app.get('/brands', async (req, res) => {
 });
 
 // Fresh Products Page
-app.get('/products', async (req, res) => {
+app.get('/products', populateSidebar, async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const db = firebaseAdmin.firestore();
@@ -451,10 +573,16 @@ app.get('/products', async (req, res) => {
 
         const finalCategories = await getGlobalCategories();
 
-        res.render('products', {
+        res.render('page', {
             settings,
             products,
             categories: finalCategories,
+            showBrands: false,
+            showProducts: true,
+            showOffers: false,
+            productsH2: "Products",
+            showProductsFilters: true,
+            showProductsPagination: true,
             pageH1: "Products",
             currentPage: page,
             limit,
@@ -469,7 +597,7 @@ app.get('/products', async (req, res) => {
 });
 
 // Fresh Offers Page
-app.get('/offers', async (req, res) => {
+app.get('/offers', populateSidebar, async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const db = firebaseAdmin.firestore();
@@ -510,7 +638,7 @@ app.get('/offers', async (req, res) => {
                     expiresAt,
                     updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
                     discountValue: extractDiscountValue(data.description || data.name),
-                    isPromoCode: !!(data.code && data.code !== 'N/A' && data.code !== ''),
+                    isPromoCode: isRealCode(data.code),
                     brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
                 };
             })
@@ -522,11 +650,18 @@ app.get('/offers', async (req, res) => {
 
         const paginatedOffers = allOffers.slice(offset, offset + limit);
         const finalCategories = await getGlobalCategories(enrichedBrands);
+        const hasMore = allOffers.length > offset + limit;
 
-        res.render('offers', {
+        res.render('page', {
             settings,
             offers: paginatedOffers,
             categories: finalCategories,
+            showBrands: false,
+            showProducts: false,
+            showOffers: true,
+            offersH2: "Offers",
+            showOffersFilters: true,
+            showOffersPagination: true,
             pageH1: "Offers",
             currentPage: page,
             limit,
@@ -540,7 +675,7 @@ app.get('/offers', async (req, res) => {
 });
 
 // Dynamic Route for the Brand Hub
-app.get('/brand/:slug', async (req, res) => {
+app.get('/brands/:slug', populateSidebar, async (req, res) => {
     try {
         const { slug } = req.params;
         const settings = await getGlobalSettings();
@@ -561,10 +696,19 @@ app.get('/brand/:slug', async (req, res) => {
         const brandData = brandDoc.data();
         const brandId = (brandData.id || brandData.advertiserId || brandData.data_id || (brandData.raw_data && brandData.raw_data.id))?.toString();
 
+        const finalCategories = await getGlobalCategories();
+
         const brand = {
             name: brandData.name,
             slug: brandData.slug,
-            logoUrl: brandData.storageLogoUrl || brandData.logoUrl || (brandData.raw_data && brandData.raw_data.logoUrl)
+            logoUrl: brandData.storageLogoUrl || brandData.logoUrl || (brandData.raw_data && brandData.raw_data.logoUrl),
+            categories: (brandData.categories || []).map(catName => {
+                const found = finalCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+                return {
+                    name: catName,
+                    slug: found ? found.slug : catName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '')
+                };
+            })
         };
 
         // 2. Fetch Offers for this Brand
@@ -585,7 +729,7 @@ app.get('/brand/:slug', async (req, res) => {
                 ...data,
                 id: doc.id,
                 expiresAt,
-                isPromoCode: !!(data.code && data.code !== 'N/A' && data.code !== ''),
+                isPromoCode: isRealCode(data.code),
                 discountBadge: data.isPromoCode ? 'CODE' : (data.description?.match(/(\d+%)|(\$\d+)/)?.[0] || 'DEAL')
             };
         });
@@ -605,23 +749,204 @@ app.get('/brand/:slug', async (req, res) => {
             };
         });
 
-        const finalCategories = await getGlobalCategories();
 
-        res.render('brand', {
+
+        res.render('page', {
             settings,
             brand,
             offers,
             products,
             categories: finalCategories,
-            pageH1: `${brand.name} Deals & Products`,
+            showBrands: false,
+            showProducts: true,
+            showOffers: true,
+            productsH2: "Top Products",
+            offersH2: "Top Offers",
+            pageLogo: brand.logoUrl,
+            pageH1: brand.name,
+            pageH1Sub: "Products & Offers",
+            pageCategories: brand.categories,
             breadcrumbPath: [
                 { name: 'Brands', url: '/brands' },
-                { name: brand.name, url: `/brand/${brand.slug}` }
+                { name: brand.name, url: `/brands/${brand.slug}` }
             ]
         });
     } catch (err) {
         console.error('Error resolving brand hub:', err);
         res.status(500).send("Error loading Brand Hub");
+    }
+});
+
+app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) => {
+    try {
+        const { brandSlug, productSlug } = req.params;
+        const settings = await getGlobalSettings();
+        const firebase = require('./config/firebase');
+        const db = firebase.db;
+
+        // Fetch product by slug and optionally by brand to ensure it's correct
+        const productSnapshot = await db.collection('products')
+            .where('slug', '==', productSlug)
+            .limit(1)
+            .get();
+
+        if (productSnapshot.empty) {
+            return res.status(404).render('404', { message: 'Product not found' });
+        }
+
+        const productDoc = productSnapshot.docs[0];
+        const data = productDoc.data();
+
+        const productDetails = {
+            ...data,
+            id: productDoc.id,
+            imageUrl: data.storageImageUrl || data.imageUrl,
+            brandName: data.advertiser || 'Brand'
+        };
+
+        const finalCategories = await getGlobalCategories();
+
+        res.render('page', {
+            settings,
+            productDetails,
+            categories: finalCategories,
+            showBrands: false,
+            showProducts: false,
+            showOffers: false,
+            showProductDetails: true,
+            pageH1: productDetails.name,
+            breadcrumbPath: [
+                { name: 'Products', url: '/products' },
+                { name: productDetails.brandName, url: `/brands/${brandSlug}` },
+                { name: productDetails.name, url: `/products/${brandSlug}/${productSlug}` }
+            ]
+        });
+    } catch (err) {
+        console.error('Error loading product details:', err);
+        res.status(500).send("Error loading Product Details");
+    }
+});
+
+app.get('/offers/:brandSlug/:offerSlug', populateSidebar, async (req, res) => {
+    try {
+        const { brandSlug, offerSlug } = req.params;
+        const settings = await getGlobalSettings();
+        const firebase = require('./config/firebase');
+        const db = firebase.db;
+
+        // Note: For now, we will query by a known field, ideally we add a slug to offers as well
+        // For demonstration, querying by doc id if slug is the id, or handling title matches
+        const offerSnapshot = await db.collection('offers')
+            // Assuming offerSlug maps to the offer ID for now, or you'd search by slug
+            .doc(offerSlug)
+            .get();
+
+        if (!offerSnapshot.exists) {
+            return res.status(404).render('404', { message: 'Offer not found' });
+        }
+
+        const data = offerSnapshot.data();
+        let expiresAt = 'Ongoing';
+        if (data.endDate) {
+            try {
+                const date = new Date(data.endDate);
+                if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
+            } catch (e) { }
+        }
+
+        const offerDetails = {
+            ...data,
+            id: offerSnapshot.id,
+            expiresAt,
+            isPromoCode: isRealCode(data.code),
+            brandName: data.advertiser || 'Brand'
+        };
+
+        const finalCategories = await getGlobalCategories();
+
+        res.render('page', {
+            settings,
+            offerDetails,
+            categories: finalCategories,
+            showBrands: false,
+            showProducts: false,
+            showOffers: false,
+            showProductDetails: false,
+            showOfferDetails: true,
+            pageH1: offerDetails.description || 'Offer Details',
+            breadcrumbPath: [
+                { name: 'Offers', url: '/offers' },
+                { name: offerDetails.brandName, url: `/brands/${brandSlug}` },
+                { name: 'Offer Details', url: `/offers/${brandSlug}/${offerSlug}` }
+            ]
+        });
+    } catch (err) {
+        console.error('Error loading offer details:', err);
+        res.status(500).send("Error loading Offer Details");
+    }
+});
+
+app.get('/categories', populateSidebar, async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const { getEnrichedAdvertisers } = require('./services/db');
+        const enrichedBrands = await getEnrichedAdvertisers();
+        const finalCategories = await getGlobalCategories(enrichedBrands);
+
+        res.render('page', {
+            settings,
+            categories: finalCategories,
+            showBrands: false,
+            showProducts: false,
+            showOffers: false,
+            pageH1: "All Categories",
+            breadcrumbPath: [
+                { name: 'Categories', url: '/categories' }
+            ]
+        });
+    } catch (err) {
+        console.error('Error loading categories:', err);
+        res.status(500).send("Error loading Categories");
+    }
+});
+
+app.get('/categories/:categorySlug', populateSidebar, async (req, res) => {
+    try {
+        const { categorySlug } = req.params;
+        const settings = await getGlobalSettings();
+        const { getEnrichedAdvertisers } = require('./services/db');
+        const enrichedBrands = await getEnrichedAdvertisers();
+        const finalCategories = await getGlobalCategories(enrichedBrands);
+
+        // Find category name from slug
+        const categoryDetails = finalCategories.find(c => c.slug === categorySlug) || { name: 'Category' };
+
+        const categoryBrands = enrichedBrands.filter(b => {
+            const cats = b.categories || (b.raw_data && b.raw_data.categories) || [];
+            return cats.some(c => c.toLowerCase() === categoryDetails.name.toLowerCase());
+        });
+
+        // We could theoretically fetch filtered products/offers from Firestore here too.
+        // For now, pass down the brands matched to this category.
+
+        res.render('page', {
+            settings,
+            brands: categoryBrands,
+            categories: finalCategories,
+            showBrands: true,
+            showProducts: false,
+            showOffers: false,
+            brandsH2: `Brands in ${categoryDetails.name}`,
+            pageH1: `${categoryDetails.name}`,
+            breadcrumbPath: [
+                { name: 'Categories', url: '/categories' },
+                { name: categoryDetails.name, url: `/categories/${categorySlug}` }
+            ]
+        });
+
+    } catch (err) {
+        console.error('Error loading category:', err);
+        res.status(500).send("Error loading Category");
     }
 });
 
@@ -667,7 +992,7 @@ app.get('/api/offers', async (req, res) => {
                     expiresAt,
                     updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
                     discountValue: extractDiscountValue(data.description || data.name),
-                    isPromoCode: !!(data.code && data.code !== 'N/A' && data.code !== ''), brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
+                    isPromoCode: isRealCode(data.code), brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
                 };
             })
             .filter(o => o.code && o.code !== 'N/A' && o.code !== '') // Stick to codes only
@@ -764,7 +1089,7 @@ app.get('/api/search', async (req, res) => {
                 name: o.description || o.name,
                 id: o.id,
                 network: o.network,
-                isPromoCode: !!o.promoCode,
+                isPromoCode: isRealCode(o.code || o.promoCode),
                 advertiser: o.advertiser
             }))
         });

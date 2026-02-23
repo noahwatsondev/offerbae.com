@@ -1,0 +1,44 @@
+<section class="content-section">
+    <div class="offer-details-container"
+        style="max-width:800px; margin:0 auto; background:white; padding:2rem; border-radius:1rem; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);">
+        <% if (typeof offerDetails !=='undefined' && offerDetails) { %>
+            <div class="offer-header" style="text-align:center; padding-bottom:2rem; border-bottom:1px solid #eee;">
+                <% if (offerDetails.brandLogo) { %>
+                    <img src="<%= offerDetails.brandLogo %>" alt="<%= offerDetails.brandName %>"
+                        style="max-width:150px; margin-bottom:1rem;">
+                    <% } %>
+                        <h2>
+                            <%= offerDetails.description || offerDetails.name %>
+                        </h2>
+                        <div class="offer-meta" style="color:#666; margin-top:0.5rem;">
+                            <%= offerDetails.brandName %>
+                        </div>
+            </div>
+
+            <div class="offer-body" style="text-align:center; padding-top:2rem;">
+                <% if (offerDetails.isPromoCode && offerDetails.code) { %>
+                    <div class="promo-code-display"
+                        style="font-size:1.5rem; letter-spacing:2px; font-weight:bold; background:#f3f4f6; display:inline-block; padding:1rem 2rem; border:2px dashed #ccc; border-radius:0.5rem; margin-bottom:2rem;">
+                        <%= offerDetails.code %>
+                    </div>
+                    <% } else { %>
+                        <div class="deal-badge"
+                            style="display:inline-block; padding:0.5rem 1.5rem; background:var(--color-green); color:white; font-weight:bold; border-radius:2rem; margin-bottom:2rem;">
+                            Deal Activated
+                        </div>
+                        <% } %>
+
+                            <p>Expires: <%= offerDetails.expiresAt || 'Ongoing' %>
+                            </p>
+                            <div style="margin-top:2rem;">
+                                <a href="<%= offerDetails.affiliateUrl || '#' %>" target="_blank" class="btn-primary"
+                                    style="display:inline-block; padding:1rem 2rem; background:var(--primary-color); color:white; text-decoration:none; border-radius:0.5rem; font-weight:bold; width:100%; max-width:300px;">
+                                    <%= offerDetails.isPromoCode ? 'Copy Code & Shop' : 'Shop Now' %>
+                                </a>
+                            </div>
+            </div>
+            <% } else { %>
+                <p>Offer details not available.</p>
+                <% } %>
+    </div>
+</section>

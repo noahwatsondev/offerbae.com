@@ -15,7 +15,7 @@
         justify-content: space-between;
         width: 100%;
         box-sizing: border-box;
-        padding: .5rem 1rem;
+        padding: 1rem;
     }
 
     .header-logo {
@@ -47,6 +47,7 @@
         display: flex;
         align-items: center;
         gap: 2rem;
+        padding-right: 2rem;
 
         .nav-link {
             text-decoration: none;
@@ -77,6 +78,55 @@
 
         .icon-close {
             display: none;
+        }
+    }
+
+    .header-search-container {
+        padding: 0 1rem 0 1rem;
+        width: 100%;
+        box-sizing: border-box;
+
+        .global-search {
+            width: 100%;
+            position: relative;
+
+            .search-input {
+                box-sizing: border-box;
+                width: 100%;
+                padding: 0.75rem 2.5rem 0.75rem 2.75rem;
+                background: linear-gradient(white, white) padding-box,
+                    linear-gradient(to right, $primary-color, var(--color-red)) border-box;
+                border-radius: 8px;
+                border: 1px solid transparent;
+                font-size: 0.95rem;
+                background-color: #fff;
+                color: $text-color;
+                transition: box-shadow 0.2s ease;
+
+                &:focus {
+                    outline: none;
+                    box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+                }
+
+                &::placeholder {
+                    color: #9CA3AF;
+                }
+            }
+
+            .search-btn {
+                position: absolute;
+                left: 0.5rem;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                color: $primary-color;
+                cursor: pointer;
+                padding: 0.5rem;
+                display: flex;
+                align-items: center;
+                transition: color 0.2s ease;
+            }
         }
     }
 

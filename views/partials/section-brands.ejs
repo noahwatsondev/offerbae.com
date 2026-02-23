@@ -1,0 +1,28 @@
+<section class="content-section">
+    <div class="section-header">
+        <div class="section-title-area">
+            <h2 id="brands-section-title">
+                <%= typeof brandsH2 !=='undefined' ? brandsH2 : 'Top Brands' %>
+            </h2>
+            <% if (typeof brandsDescription !=='undefined' ) { %>
+                <p class="section-description">
+                    <%= brandsDescription %>
+                </p>
+                <% } %>
+        </div>
+        <% if (typeof showBrandsLink !=='undefined' && showBrandsLink) { %>
+            <div class="section-actions">
+                <a href="/brands" class="section-link">See All Brands &rarr;</a>
+            </div>
+            <% } %>
+    </div>
+    <div class="brand-grid">
+        <% if (typeof brands !=='undefined' && brands.length> 0) { %>
+            <% brands.forEach(brand=> { %>
+                <%- include('brand-card', { brand: brand, categoryLimit: 3 }) %>
+                    <% }) %>
+                        <% } else { %>
+                            <p>No brands found yet.</p>
+                            <% } %>
+    </div>
+</section>

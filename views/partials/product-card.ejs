@@ -1,34 +1,41 @@
 <a href="<%= product.affiliateUrl %>" target="_blank" class="product-card-wrapper" data-price="<%= product.price %>"
     data-sale-price="<%= product.salePrice %>" data-savings="<%= product.price - product.salePrice %>">
     <article class="product-card">
-        <div class="product-badge">
-            <%= product.discountPercent %>% OFF
-        </div>
-        <div class="product-image-container">
-            <% if (product.imageUrl) { %>
-                <img src="<%= product.imageUrl %>" alt="<%= product.name %>" loading="lazy">
-                <% } else { %>
-                    <div class="image-placeholder"></div>
-                    <% } %>
-        </div>
-        <div class="product-info">
-            <div class="product-brand">
-                <%= product.advertiserName || 'Top Brand' %>
-            </div>
-            <h3 class="product-title" title="<%= product.name %>">
-                <%= product.name %>
-            </h3>
-            <div class="product-pricing">
-                <span class="sale-price">$<%= product.salePrice.toFixed(2) %></span>
-                <% if (product.price> product.salePrice) { %>
-                    <span class="original-price">$<%= product.price.toFixed(2) %></span>
-                    <% } %>
-            </div>
-            <% if (product.price> product.salePrice) { %>
-                <div class="product-savings">
-                    Save $<%= (product.price - product.salePrice).toFixed(2) %>!
+        <% const originalPrice=Number(product.price || 0); const salePrice=Number(product.salePrice || 0); const
+            hasDiscount=originalPrice> salePrice && salePrice > 0;
+            const displayPrice = hasDiscount ? salePrice : (salePrice > 0 ? salePrice : originalPrice);
+            %>
+
+            <% if (hasDiscount && product.discountPercent) { %>
+                <div class="product-badge">
+                    <%= product.discountPercent %>% OFF
                 </div>
                 <% } %>
-        </div>
+                    <div class="product-image-container">
+                        <% if (product.imageUrl) { %>
+                            <img src="<%= product.imageUrl %>" alt="<%= product.name %>" loading="lazy">
+                            <% } else { %>
+                                <div class="image-placeholder"></div>
+                                <% } %>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-brand">
+                            <%= product.advertiserName || 'Top Brand' %>
+                        </div>
+                        <h3 class="product-title" title="<%= product.name %>">
+                            <%= product.name %>
+                        </h3>
+                        <div class="product-pricing">
+                            <span class="sale-price">$<%= displayPrice.toFixed(2) %></span>
+                            <% if (hasDiscount) { %>
+                                <span class="original-price">$<%= originalPrice.toFixed(2) %></span>
+                                <% } %>
+                        </div>
+                        <% if (hasDiscount) { %>
+                            <div class="product-savings">
+                                Save $<%= (originalPrice - salePrice).toFixed(2) %>!
+                            </div>
+                            <% } %>
+                    </div>
     </article>
 </a>

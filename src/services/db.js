@@ -179,12 +179,21 @@ const upsertProduct = async (productData, existingData = null) => {
             if (!v) return 0;
             return parseFloat(String(v).replace(/[^0-9.-]+/g, "")) || 0;
         };
-        const price = getNum(productData.price);
-        const salePrice = getNum(productData.salePrice);
+        let price = getNum(productData.price);
+        let salePrice = getNum(productData.salePrice);
+
+        // If salePrice is 0 but price is not, it's likely a missing salePrice, not a free product
+        if (salePrice <= 0 && price > 0) {
+            salePrice = price;
+            productData.salePrice = price;
+        }
+
         if (price > salePrice && salePrice > 0) {
             productData.savingsAmount = price - salePrice;
         } else {
             productData.savingsAmount = 0;
+            // Also ensure discountPercent is handled if it exists in data
+            if (productData.discountPercent) productData.discountPercent = 0;
         }
 
         await ref.set({
@@ -381,6 +390,50 @@ const getEnrichedAdvertisers = async () => {
     }
 };
 
+const isRealCode = (code) => {
+    if (!code) return false;
+    const clean = String(code).trim().toLowerCase();
+
+    // Catch common patterns indicating no actual promo code exists
+    // Added "required" and "none required" as requested
+    const noCodePattern = /^(no\s+code|none|n\/?a|null|false|0|required|none\s+required)$/i;
+    // Robust "no coupon code" patterns
+    const looseNoCodePattern = /(no\s+code|no\s+coupon|no\s+promo|no\s+discount|code\s+needed|code\s+required)/i;
+
+    if (noCodePattern.test(clean) || (clean.includes('no') && (clean.includes('code') || clean.includes('coupon'))) || looseNoCodePattern.test(clean)) {
+        if (!/^[A-Z0-9]{3,}$/i.test(clean)) { // If it's not a standard short alphanumeric code
+            return false;
+        }
+    }
+
+    const nonCodes = [
+        'see site', 'click to reveal', 'auto-applied', 'online only', 'undefined', '', 'no code required', 'no coupon code needed', 'required', 'none required'
+    ];
+    return !nonCodes.includes(clean);
+};
+
+const cleanOfferCode = (code) => {
+    if (!code) return null;
+    if (isRealCode(code)) return code.trim();
+    return null;
+};
+
+const extractCodeFromDescription = (desc) => {
+    if (!desc) return null;
+    const patterns = [
+        /code:\s*([A-Za-z0-9_-]{3,})/i,
+        /promo code:\s*([A-Za-z0-9_-]{3,})/i,
+        /coupon code:\s*([A-Za-z0-9_-]{3,})/i,
+        /use code\s*([A-Za-z0-9_-]{3,})/i,
+        /enter code\s*([A-Za-z0-9_-]{3,})/i
+    ];
+    for (const p of patterns) {
+        const match = desc.match(p);
+        if (match && match[1]) return match[1].toUpperCase();
+    }
+    return null;
+};
+
 module.exports = {
     upsertAdvertiser,
     upsertOffer,
@@ -394,5 +447,8 @@ module.exports = {
     getGlobalSettings,
     updateGlobalSettings,
     getEnrichedAdvertisers,
-    slugify
+    slugify,
+    isRealCode,
+    cleanOfferCode,
+    extractCodeFromDescription
 };

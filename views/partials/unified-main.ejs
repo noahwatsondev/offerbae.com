@@ -1,0 +1,34 @@
+<main class="content">
+
+    <!-- Categories Section (Optional, per page context) -->
+    <!-- <% if (typeof showCategories !== 'undefined' && showCategories) { %>
+        <%- include('section-categories') %>
+    <% } %> -->
+
+    <!-- Brands Grid Section -->
+    <% if (typeof showBrands !=='undefined' && showBrands) { %>
+        <%- include('section-brands') %>
+            <% } %>
+
+                <!-- Products Grid Section -->
+                <% if (typeof showProducts !=='undefined' && showProducts) { %>
+                    <%- include('section-products') %>
+                        <% } %>
+
+                            <!-- Offers Grid Section -->
+                            <% if (typeof showOffers !=='undefined' && showOffers) { %>
+                                <%- include('section-offers') %>
+                                    <% } %>
+
+                                        <!-- Product Details Section -->
+                                        <% if (typeof showProductDetails !=='undefined' && showProductDetails) { %>
+                                            <%- include('section-product-details') %>
+                                                <% } %>
+
+                                                    <!-- Offer Details Section -->
+                                                    <% if (typeof showOfferDetails !=='undefined' && showOfferDetails) {
+                                                        %>
+                                                        <%- include('section-offer-details') %>
+                                                            <% } %>
+
+</main>
