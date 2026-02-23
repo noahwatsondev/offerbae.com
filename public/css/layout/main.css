@@ -656,6 +656,7 @@ body {
   position: relative;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   width: 100%;
+  min-width: 0;
   flex: 1;
 }
 .content .content-section .product-grid .product-card:hover {
@@ -707,6 +708,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
 }
 .content .content-section .product-grid .product-card .product-info .product-brand {
   font-size: 0.75rem;
@@ -733,6 +735,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
+  flex-wrap: wrap;
   padding-top: 0.5rem;
 }
 .content .content-section .product-grid .product-card .product-info .product-pricing .sale-price {
