@@ -2,15 +2,21 @@
 
 .header {
     grid-area: header;
-    padding: 1rem;
-    border-bottom: 1px solid $border-color;
     background: #fff;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     position: relative;
     z-index: 1000;
     flex-shrink: 0;
+
+    .header-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        box-sizing: border-box;
+        padding: .5rem 1rem;
+    }
 
     .header-logo {
         display: flex;

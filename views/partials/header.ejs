@@ -6,34 +6,37 @@
     </style>
     <% } %>
         <header class="header" id="header">
-            <div class="header-logo" onclick="location.href='/'">
-                <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
-                    <img src="<%= settings.logoUrl %>" alt="Logo" class="header-logo-img">
-                    <% } %>
-                        <span class="header-logo-text"
-                            style="<%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
-                            <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText : 'OfferBae'
-                                %>
-                        </span>
+            <div class="header-main">
+                <div class="header-logo" onclick="location.href='/'">
+                    <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
+                        <img src="<%= settings.logoUrl %>" alt="Logo" class="header-logo-img">
+                        <% } %>
+                            <span class="header-logo-text"
+                                style="<%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
+                                <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText
+                                    : 'OfferBae' %>
+                            </span>
+                </div>
+
+                <nav class="header-nav" id="header-nav">
+                    <a href="/brands" class="nav-link">Brands</a>
+                    <a href="/products" class="nav-link">Products</a>
+                    <a href="/offers" class="nav-link">Offers</a>
+                </nav>
+
+                <button type="button" class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation">
+                    <svg class="icon-hamburger" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                    <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
-
-            <nav class="header-nav" id="header-nav">
-                <a href="/brands" class="nav-link">Brands</a>
-                <a href="/products" class="nav-link">Products</a>
-                <a href="/offers" class="nav-link">Offers</a>
-            </nav>
-
-            <button type="button" class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation">
-                <svg class="icon-hamburger" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                    stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                </svg>
-                <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                    stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+            <%- include('categories') %>
         </header>
         <script>
             document.addEventListener('DOMContentLoaded', () => {

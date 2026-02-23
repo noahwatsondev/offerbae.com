@@ -232,6 +232,34 @@ const extractDiscountValue = (desc) => {
     return match ? parseInt(match[1]) : 0;
 };
 
+// Helper to fetch and format global dynamic categories
+const getGlobalCategories = async (prefetchedBrands = null) => {
+    const { getEnrichedAdvertisers, slugify } = require('./services/db');
+    const enrichedBrands = prefetchedBrands || await getEnrichedAdvertisers();
+
+    const categoryMap = new Map();
+    enrichedBrands.forEach(b => {
+        const cats = b.categories || (b.raw_data && b.raw_data.categories) || [];
+        cats.forEach(c => {
+            if (c && !categoryMap.has(c)) {
+                categoryMap.set(c, slugify(c));
+            }
+        });
+    });
+    const categoriesRaw = Array.from(categoryMap.entries())
+        .map(([name, slug]) => ({ name: name.trim(), slug }));
+
+    const otherItems = categoriesRaw.filter(c => c.name.toLowerCase().includes('other'));
+    const mainCategories = categoriesRaw.filter(c => !c.name.toLowerCase().includes('other'))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+    return [
+        { name: 'All Categories', slug: '' },
+        ...mainCategories,
+        ...otherItems
+    ];
+};
+
 app.get('/', async (req, res) => {
     try {
         const settings = await getGlobalSettings();
@@ -316,30 +344,8 @@ app.get('/', async (req, res) => {
             categories: b.categories || (b.raw_data && b.raw_data.categories) || []
         }));
 
-        // Extract unique categories
-        const { slugify } = require('./services/db');
-        const categoryMap = new Map();
-        enrichedBrands.forEach(b => {
-            const cats = b.categories || (b.raw_data && b.raw_data.categories) || [];
-            cats.forEach(c => {
-                if (c && !categoryMap.has(c)) {
-                    categoryMap.set(c, slugify(c));
-                }
-            });
-        });
-        const categoriesRaw = Array.from(categoryMap.entries())
-            .map(([name, slug]) => ({ name: name.trim(), slug }));
+        const finalCategories = await getGlobalCategories(enrichedBrands);
 
-        // Refine list: Add "All Categories" to start and move all "Other..." items to end
-        const otherItems = categoriesRaw.filter(c => c.name.toLowerCase().includes('other'));
-        const mainCategories = categoriesRaw.filter(c => !c.name.toLowerCase().includes('other'))
-            .sort((a, b) => a.name.localeCompare(b.name));
-
-        const finalCategories = [
-            { name: 'All Categories', slug: '' },
-            ...mainCategories,
-            ...otherItems
-        ];
 
         // Deduplicate by name to ensure unique brands
         const uniquePerformanceBrands = [];
@@ -387,30 +393,8 @@ app.get('/brands', async (req, res) => {
         brandsList = brandsList.filter(b => (b.offerCount + b.productCount) > 0)
             .sort((a, b) => a.name.localeCompare(b.name));
 
-        // Extract unique categories
-        const { slugify } = require('./services/db');
-        const categoryMap = new Map();
-        enrichedBrands.forEach(b => {
-            const cats = b.categories || (b.raw_data && b.raw_data.categories) || [];
-            cats.forEach(c => {
-                if (c && !categoryMap.has(c)) {
-                    categoryMap.set(c, slugify(c));
-                }
-            });
-        });
-        const categoriesRaw = Array.from(categoryMap.entries())
-            .map(([name, slug]) => ({ name: name.trim(), slug }));
+        const finalCategories = await getGlobalCategories(enrichedBrands);
 
-        // Refine list: Add "All Categories" to start and move all "Other..." items to end
-        const otherItems = categoriesRaw.filter(c => c.name.toLowerCase().includes('other'));
-        const mainCategories = categoriesRaw.filter(c => !c.name.toLowerCase().includes('other'))
-            .sort((a, b) => a.name.localeCompare(b.name));
-
-        const finalCategories = [
-            { name: 'All Categories', slug: '' },
-            ...mainCategories,
-            ...otherItems
-        ];
 
         res.render('brands', {
             settings,
@@ -465,9 +449,12 @@ app.get('/products', async (req, res) => {
         // Get total count for pagination (or at least check if there's more)
         const hasMore = products.length === limit;
 
+        const finalCategories = await getGlobalCategories();
+
         res.render('products', {
             settings,
             products,
+            categories: finalCategories,
             pageH1: "Products",
             currentPage: page,
             limit,
@@ -534,11 +521,12 @@ app.get('/offers', async (req, res) => {
             });
 
         const paginatedOffers = allOffers.slice(offset, offset + limit);
-        const hasMore = allOffers.length > offset + limit;
+        const finalCategories = await getGlobalCategories(enrichedBrands);
 
         res.render('offers', {
             settings,
             offers: paginatedOffers,
+            categories: finalCategories,
             pageH1: "Offers",
             currentPage: page,
             limit,
@@ -617,11 +605,14 @@ app.get('/brand/:slug', async (req, res) => {
             };
         });
 
+        const finalCategories = await getGlobalCategories();
+
         res.render('brand', {
             settings,
             brand,
             offers,
             products,
+            categories: finalCategories,
             pageH1: `${brand.name} Deals & Products`,
             breadcrumbPath: [
                 { name: 'Brands', url: '/brands' },

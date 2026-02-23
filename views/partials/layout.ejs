@@ -45,10 +45,9 @@
                 <%- include('header', { settings: typeof settings !=='undefined' ? settings : {} }) %>
                     <%- include('breadcrumbs') %>
                         <%- include('context') %>
-                            <%- include('categories') %>
-                                <%- include('sidebar') %>
-                                    <%- include(typeof mainPartial !=='undefined' ? mainPartial : 'main-container' ) %>
-                                        <%- include('footer') %>
+                            <%- include('sidebar') %>
+                                <%- include(typeof mainPartial !=='undefined' ? mainPartial : 'main-container' ) %>
+                                    <%- include('footer') %>
             </div>
             <%- include('footer-scripts') %>
 </body>

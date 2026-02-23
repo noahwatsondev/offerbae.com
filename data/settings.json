@@ -33,9 +33,9 @@
   "colorRed": "#e42a53",
   "colorViolet": "#92407e",
   "colorGreen": "#16a34a",
-  "headerStyles": "background: rgba(255, 255, 255, 0.9); \r\nbackdrop-filter: blur(10px); /* Adjust blur strength as needed */\r\n-webkit-backdrop-filter: blur(2px); /* For Safari support */\r\nborder: 1px solid rgba(255, 255, 255, 0.9); /* Light, semi-transparent border */\r\nbox-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */\r\npadding: 1rem 2rem;",
+  "headerStyles": "background: rgba(255, 255, 255, 0.9); \r\nbackdrop-filter: blur(10px); /* Adjust blur strength as needed */\r\n-webkit-backdrop-filter: blur(2px); /* For Safari support */\r\nborder: 1px solid rgba(255, 255, 255, 0.9); /* Light, semi-transparent border */\r\nbox-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */",
   "updatedAt": {
-    "_seconds": 1771643694,
-    "_nanoseconds": 92000000
+    "_seconds": 1771860600,
+    "_nanoseconds": 394000000
   }
 }
