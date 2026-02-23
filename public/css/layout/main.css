@@ -795,6 +795,15 @@ h2 {
 .offer-card .offer-content .offer-promo-display .promo-redeem-btn:hover {
   cursor: text;
 }
+.offer-card .offer-content .offer-promo-display .promo-redeem-btn {
+  border-style: solid;
+  background: color-mix(in srgb, var(--primary-color), transparent 85%);
+  cursor: pointer !important;
+}
+.offer-card .offer-content .offer-promo-display .promo-redeem-btn:hover {
+  background: color-mix(in srgb, var(--primary-color), transparent 75%);
+  cursor: pointer;
+}
 .offer-card .offer-content .offer-promo-display .promo-copy-hint {
   display: flex;
   align-items: center;
