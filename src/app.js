@@ -305,7 +305,7 @@ const populateSidebar = async (req, res, next) => {
                 name: data.name,
                 slug: data.slug,
                 imageUrl: data.storageImageUrl || data.imageUrl,
-                brandName: data.advertiser || 'Brand',
+                brandName: data.advertiserName || data.advertiser || '',
                 price: data.price,
                 salePrice: data.salePrice
             };

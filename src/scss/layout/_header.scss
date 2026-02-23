@@ -53,8 +53,9 @@
             text-decoration: none;
             color: var(--nav-link-color, $text-color);
             font-weight: 500;
-            font-size: 1rem;
+            font-size: 1.25rem;
             transition: color 0.2s ease;
+            font-style: italic;
 
             &:hover {
                 color: $primary-color;
@@ -151,9 +152,10 @@
 
             .nav-link {
                 width: 100%;
-                padding: 1rem;
+                padding: 1.25rem;
                 padding-left: 1rem;
                 border-bottom: 1px solid rgba($border-color, 0.5);
+                font-style: italic;
 
                 &:last-child {
                     border-bottom: none;

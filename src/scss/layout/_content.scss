@@ -356,6 +356,7 @@
 
             // Non-code "Redeem" button — solid + tinted background
             .promo-redeem-btn {
+                font-family: inherit;
                 border-style: solid;
                 background: color-mix(in srgb, var(--primary-color), transparent 85%);
                 cursor: pointer !important;

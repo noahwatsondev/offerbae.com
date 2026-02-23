@@ -360,8 +360,9 @@ h2 {
   text-decoration: none;
   color: var(--nav-link-color, #111827);
   font-weight: 500;
-  font-size: 1rem;
+  font-size: 1.25rem;
   transition: color 0.2s ease;
+  font-style: italic;
 }
 .header .header-nav .nav-link:hover {
   color: var(--primary-color);
@@ -443,9 +444,10 @@ h2 {
   }
   .header .header-nav .nav-link {
     width: 100%;
-    padding: 1rem;
+    padding: 1.25rem;
     padding-left: 1rem;
     border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+    font-style: italic;
   }
   .header .header-nav .nav-link:last-child {
     border-bottom: none;
@@ -796,6 +798,7 @@ h2 {
   cursor: text;
 }
 .offer-card .offer-content .offer-promo-display .promo-redeem-btn {
+  font-family: inherit;
   border-style: solid;
   background: color-mix(in srgb, var(--primary-color), transparent 85%);
   cursor: pointer !important;
