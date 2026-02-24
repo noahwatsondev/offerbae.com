@@ -298,7 +298,15 @@ if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
+// In-memory TTL cache for settings (30s)
+let _settingsCache = null;
+let _settingsCacheAt = 0;
+const SETTINGS_TTL = 30_000;
+
 const getGlobalSettings = async () => {
+    if (_settingsCache && Date.now() - _settingsCacheAt < SETTINGS_TTL) {
+        return _settingsCache;
+    }
     try {
         // Try to fetch from Firestore first
         const doc = await firebase.db.collection('settings').doc('global').get();
@@ -306,6 +314,8 @@ const getGlobalSettings = async () => {
             const data = doc.data();
             // Cache to local file
             fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
+            _settingsCache = data;
+            _settingsCacheAt = Date.now();
             return data;
         }
     } catch (e) {
@@ -315,8 +325,10 @@ const getGlobalSettings = async () => {
     // Fallback to local file if Firestore fails or doesn't exist
     try {
         if (fs.existsSync(SETTINGS_FILE)) {
-            console.log('Loading settings from local cache.');
-            return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+            const data = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+            _settingsCache = data;
+            _settingsCacheAt = Date.now();
+            return data;
         }
     } catch (fileErr) {
         console.error('Error reading local settings cache:', fileErr.message);
@@ -352,18 +364,21 @@ const updateGlobalSettings = async (settings) => {
     }
 };
 
+// In-memory TTL cache for advertisers (60s)
+let _advertiserCache = null;
+let _advertiserCacheAt = 0;
+const ADVERTISER_TTL = 60_000;
+
 const getEnrichedAdvertisers = async () => {
+    if (_advertiserCache && Date.now() - _advertiserCacheAt < ADVERTISER_TTL) {
+        return _advertiserCache;
+    }
     try {
-        console.log('[DEBUG] getEnrichedAdvertisers: Fetching from Firestore...');
         const advSnapshot = await firebase.db.collection(COLLECTIONS.ADVERTISERS).get();
-        console.log(`[DEBUG] getEnrichedAdvertisers: Found ${advSnapshot.size} documents.`);
 
         const advertisers = [];
-        const networkCounts = {};
-
         advSnapshot.forEach(doc => {
             const data = doc.data();
-            networkCounts[data.network] = (networkCounts[data.network] || 0) + 1;
             advertisers.push({
                 ...data,
                 productCount: data.productCount || 0,
@@ -373,8 +388,6 @@ const getEnrichedAdvertisers = async () => {
             });
         });
 
-        console.log(`[DEBUG] getEnrichedAdvertisers: Network breakdown:`, JSON.stringify(networkCounts));
-
         // Sort: Product Count (Desc) -> Name (Asc)
         advertisers.sort((a, b) => {
             if (b.productCount !== a.productCount) {
@@ -383,7 +396,9 @@ const getEnrichedAdvertisers = async () => {
             return (a.name || '').localeCompare(b.name || '');
         });
 
-        return advertisers;
+        _advertiserCache = advertisers;
+        _advertiserCacheAt = Date.now();
+        return _advertiserCache;
     } catch (e) {
         console.error('Error fetching enriched advertisers:', e);
         throw e;

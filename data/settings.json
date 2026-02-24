@@ -22,20 +22,20 @@
   "offersCtaStyles": "border-radius:0.375rem;\r\nborder: 2px dotted #8b5cf6;\r\ncolor:#8b5cf6;\r\nfont-weight:bold;\r\npadding-top: .5rem;\r\npadding-bottom: .5rem;\r\nbackground: linear-gradient(to bottom right, rgba(216, 180, 254, .2), white, white, rgba(216, 180, 254, .2));\r\nfont-size:1.25rem;\r\nfont-style: italic;\r\ntext-align: left;",
   "productsCtaCountStyles": "font-weight: 800;\r\nletter-spacing:1px;\r\nfont-size:2rem;\r\n",
   "offersCtaCountStyles": "font-weight: 800;\r\nletter-spacing:1px;\r\nfont-size:2rem;",
-  "defaultLinkColor": "#2200cc",
   "offerPromoCodeStyles": "border: 3px dashed green;\r\nborder-radius:0.375rem !important;\r\nbackground: palegreen;\r\npadding: 5px;\r\ncolor: green;\r\nletter-spacing: 3px;\r\nfont-family: monospace;\r\nfont-size: 1.15rem;\r\nwidth: 200px;\r\ndisplay: block;\r\nmargin: 20px 10px 10px 0;\r\ntext-align: center;\r\nfont-weight: 800;",
   "logoStyles": "background: linear-gradient(to right, #FFD15C, #EF3E5C);\r\ncolor: transparent;\r\nbackground-clip: text;\r\ndisplay: inline-block;\r\nfont-weight: 400;\r\nletter-spacing:1px;\r\nfont-style: italic;\r\nfont-size: 2rem;\r\nfilter: drop-shadow(2px 2px white);",
   "headerNavLinksColor": "#ef3e57",
   "footerStyles": "background: linear-gradient(to right, #ef3e57, #E42A53);\r\ncolor: white;",
   "colorOrange": "#f97316",
   "colorYellow": "#ffd15c",
-  "colorBlue": "#3a7d8e",
   "colorViolet": "#92407e",
   "colorGreen": "#16a34a",
   "headerStyles": "background: rgba(255, 255, 255, 0.9); \r\nbackdrop-filter: blur(10px); /* Adjust blur strength as needed */\r\n-webkit-backdrop-filter: blur(2px); /* For Safari support */\r\nborder: 1px solid rgba(255, 255, 255, 0.9); /* Light, semi-transparent border */\r\nbox-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */",
   "colorRed": "#ef3e5c",
+  "defaultLinkColor": "#2200cc",
+  "colorBlue": "#2185d5",
   "updatedAt": {
-    "_seconds": 1771864116,
-    "_nanoseconds": 267000000
+    "_seconds": 1771952663,
+    "_nanoseconds": 451000000
   }
 }

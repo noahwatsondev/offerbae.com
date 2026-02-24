@@ -225,7 +225,7 @@ $border-subtle: #E5E7EB;
         border: 1px solid $border-subtle;
         border-radius: 8px;
         padding: 1rem 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
         transition: box-shadow 0.2s;
 
         &:hover {

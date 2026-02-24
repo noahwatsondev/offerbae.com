@@ -26,7 +26,8 @@
                             <%= product.name %>
                         </h3>
                         <div class="product-pricing">
-                            <span class="sale-price">$<%= displayPrice.toFixed(2) %></span>
+                            <span class="<%= hasDiscount ? 'sale-price' : 'regular-price' %>">$<%=
+                                    displayPrice.toFixed(2) %></span>
                             <% if (hasDiscount) { %>
                                 <span class="original-price">$<%= originalPrice.toFixed(2) %></span>
                                 <% } %>

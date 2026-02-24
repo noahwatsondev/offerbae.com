@@ -42,3 +42,58 @@
             <% } %>
                 <% } %>
 </section>
+<script>
+    (function () {
+        function equalizeProductImageHeights() {
+            document.querySelectorAll('.product-grid').forEach(grid => {
+                const containers = Array.from(grid.querySelectorAll('.product-image-container'));
+                if (!containers.length) return;
+
+                // Reset heights so we get natural sizes
+                containers.forEach(c => c.style.height = '');
+
+                // Group by row using top offset
+                const rows = new Map();
+                containers.forEach(c => {
+                    const top = Math.round(c.getBoundingClientRect().top + window.scrollY);
+                    if (!rows.has(top)) rows.set(top, []);
+                    rows.get(top).push(c);
+                });
+
+                // Set each row's containers to the minimum natural height in that row
+                // Exclude broken images (naturalWidth === 0) from the comparison
+                rows.forEach(rowContainers => {
+                    const validContainers = rowContainers.filter(c => {
+                        const img = c.querySelector('img');
+                        return !img || img.naturalWidth > 0;
+                    });
+                    const candidates = validContainers.length ? validContainers : rowContainers;
+                    const heights = candidates.map(c => c.getBoundingClientRect().height).filter(h => h > 0);
+                    if (!heights.length) return;
+                    const minH = Math.min(...heights);
+                    rowContainers.forEach(c => c.style.height = minH + 'px');
+                });
+            });
+        }
+
+        function waitForImagesAndEqualize() {
+            const images = Array.from(document.querySelectorAll('.product-grid .product-image-container img'));
+            const promises = images.map(img =>
+                img.complete ? Promise.resolve() : new Promise(res => { img.onload = res; img.onerror = res; })
+            );
+            Promise.all(promises).then(equalizeProductImageHeights);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForImagesAndEqualize);
+        } else {
+            waitForImagesAndEqualize();
+        }
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(equalizeProductImageHeights, 150);
+        });
+    })();
+</script>

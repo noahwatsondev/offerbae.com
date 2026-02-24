@@ -30,41 +30,38 @@
     flex-direction: column;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
     width: 100%;
-    min-width: 0; // Prevent implicit grid blowout
+    min-width: 0;
     flex: 1;
 
     &:hover {
         transform: translateY(-4px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 0 0 1px $primary-color;
         background: rgba(255, 255, 255, 0.9);
-        border-color: rgba($primary-color, 0.2);
     }
 
     .product-badge {
         position: absolute;
-        top: 0.75rem;
-        left: 0.75rem;
-        background: var(--color-green, #10b981); // Calmer green for savings
+        top: 0.0;
+        left: 0.0;
+        background: darkslategray;
         color: white;
         font-size: 0.7rem;
         font-weight: 800;
         padding: 0.25rem 0.5rem;
-        border-radius: 6px;
+        border-radius: 6px 0 6px 0;
         z-index: 10;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .product-image-container {
         width: 100%;
-        aspect-ratio: 1/1;
         background: #fff;
         overflow: hidden;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
-        padding: 1rem;
 
         img {
             max-width: 100%;
@@ -134,6 +131,10 @@
                 color: #9CA3AF;
                 text-decoration: line-through !important; // Force strikethrough
             }
+
+            .regular-price {
+                font-weight: bold;
+            }
         }
 
         .product-savings {
@@ -173,10 +174,10 @@
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    padding: 1.25rem;
+    padding: .75rem 1.25rem 1.25rem .75rem;
     gap: 1.25rem;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
     width: 100%;
     flex: 1;
     min-width: 0;
@@ -195,8 +196,7 @@
     &:hover {
         background: rgba(255, 255, 255, 0.9);
         transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        border-color: rgba($primary-color, 0.2);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 0 0 1px $primary-color;
     }
 
     // Compact variant for sidebar
@@ -226,6 +226,8 @@
         }
 
         .offer-content {
+            margin-top: 0;
+
             .offer-title {
                 font-size: 0.85rem;
                 margin-bottom: 0.25rem;
@@ -300,6 +302,7 @@
     .offer-content {
         flex-grow: 1;
         min-width: 0; // Prevent overflow
+        margin-top: .5rem;
 
         .offer-brand {
             font-size: 0.7rem;
@@ -408,7 +411,7 @@
     }
 
     .content-section {
-        margin-bottom: 2.5rem;
+        margin-bottom: 5rem;
 
         &:last-child {
             margin-bottom: 0;
@@ -516,6 +519,7 @@
         .product-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
+            grid-auto-rows: auto;
             gap: 1.5rem;
 
             @media (max-width: 1200px) {
@@ -675,7 +679,7 @@
                 font-size: 0.9rem;
                 cursor: pointer;
                 transition: all 0.3s ease;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
 
                 &:hover:not(:disabled) {
                     background: rgba(255, 255, 255, 0.9);
@@ -730,21 +734,24 @@
             }
 
             .brand-card {
-                background: #fff;
-                border: 1px solid $border-color;
-                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 12px;
                 display: grid;
-                grid-template-columns: 80px 1fr; // Match logo width
+                grid-template-columns: 80px 1fr;
                 grid-row: span 3;
                 grid-template-rows: subgrid;
                 padding: 0 1.25rem 1.25rem 0;
                 gap: 1.25rem;
                 box-sizing: border-box;
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+                transition: all 0.3s ease;
 
                 &:hover {
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
                     transform: translateY(-2px);
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 0 0 1px $primary-color;
+                    background: rgba(255, 255, 255, 0.9);
                 }
 
                 .brand-logo {
@@ -780,58 +787,59 @@
                     gap: 0;
 
                     .brand-stats-grid {
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: flex-end; // Push single rows to the bottom so categories align
+                        display: grid;
+                        grid-template-columns: max-content auto 1fr;
+                        column-gap: 10px;
+                        align-items: center;
+                        justify-content: flex-end;
                         min-height: 60px;
-                        margin-top: 0.4rem;
+                        align-content: start; // Rows sit at top; min-height keeps consistent card height
 
                         .stat-row {
-                            display: grid;
-                            grid-template-columns: 45px auto 1fr;
-                            gap: 10px;
-                            align-items: center;
-                            padding: 6px 0;
-                            width: 100%;
+                            display: contents; // Flatten into parent grid so columns share widths
+                        }
 
-                            &.stat-row--bordered {
-                                border-bottom: 1px solid transparent;
-                                border-image: linear-gradient(to right, silver, transparent) 1;
-                                border-image-slice: 1;
-                            }
+                        .stat-divider {
+                            grid-column: 1 / -1;
+                            height: 1px;
+                            background: linear-gradient(to right, silver, transparent);
+                            padding: 0;
+                            margin: 2px 0;
+                        }
 
-                            .stat-count {
-                                grid-column: 1;
-                                text-align: right;
-                                font-size: 0.9rem;
-                                color: $text-color;
+                        .stat-count {
+                            text-align: right;
+                            font-size: 0.9rem;
+                            color: $text-color;
+                            font-weight: 700;
+                            padding: 5px 0;
+                        }
+
+                        .stat-label {
+                            text-align: left;
+                            font-size: 0.9rem;
+                            color: #6b7280;
+                            padding: 5px 0;
+                        }
+
+                        .stat-tags {
+                            text-align: left;
+                            display: flex;
+                            gap: 4px;
+                            padding: 5px 0;
+
+                            .sale-label {
+                                color: var(--color-red, #ef4444);
                                 font-weight: 700;
+                                font-size: 0.75rem;
+                                font-style: italic;
                             }
 
-                            .stat-label {
-                                grid-column: 2;
-                                text-align: left;
-                                font-size: 0.9rem;
-                                color: #6b7280;
-                            }
-
-                            .stat-tags {
-                                grid-column: 3;
-                                text-align: left;
-                                display: flex;
-                                gap: 4px;
-
-                                .sale-label {
-                                    color: var(--color-red, #ef4444);
-                                    font-weight: 700;
-                                    font-size: 0.75rem;
-                                }
-
-                                .codes-label {
-                                    color: var(--color-green, #22c55e);
-                                    font-weight: 700;
-                                    font-size: 0.75rem;
-                                }
+                            .codes-label {
+                                color: var(--color-green, #22c55e);
+                                font-weight: 700;
+                                font-size: 0.75rem;
+                                font-style: italic;
                             }
                         }
                     }
@@ -841,7 +849,7 @@
                         flex-direction: row;
                         flex-wrap: wrap;
                         gap: 6px;
-                        margin-top: 0.75rem;
+                        margin-top: 1rem;
                         align-items: flex-start;
 
 

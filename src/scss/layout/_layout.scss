@@ -66,7 +66,7 @@ body {
 
 .context-wrapper {
     grid-area: context;
-    padding: 0 1rem;
+    padding: 1rem 1.5rem;
     background-color: transparent;
 
     .context-inner {
@@ -96,6 +96,7 @@ h2 {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.08));
 }
 
 /* Global Search Results - Top Level for Robustness */
@@ -226,20 +227,20 @@ h2 {
     display: inline-flex;
     align-items: center;
     padding: .25rem 0.65rem;
-    background: color-mix(in srgb, var(--primary-color), transparent 90%);
+    background: color-mix(in srgb, var(--color-blue), transparent 90%);
     border-radius: 100px;
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--color-blue);
     text-decoration: none;
     white-space: nowrap;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid transparent;
 
     &:hover {
-        color: $primary-color;
+        color: var(--color-blue);
         border-color: rgba($primary-color, 0.3);
-        background: color-mix(in srgb, var(--primary-color), transparent 85%);
+        background: color-mix(in srgb, var(--color-blue), transparent 85%);
         transform: translateY(-1px);
     }
 
@@ -248,16 +249,16 @@ h2 {
     }
 
     &.active {
-        background: $primary-color;
+        background: var(--color-blue);
         color: white;
-        border-color: $primary-color;
+        border-color: var(--color-blue);
     }
 }
 
 .breadcrumbs-wrapper {
     grid-area: breadcrumbs;
     background-color: transparent;
-    padding: 1.5rem 1rem 0;
+    padding: 1.5rem 1.5rem 0 1.5rem;
 
     .breadcrumbs-inner {
         max-width: 1200px;

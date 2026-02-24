@@ -4,19 +4,12 @@ const config = require('./config/env');
 const dashboardController = require('./controllers/dashboardController');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
-const { getGlobalSettings, isRealCode } = require('./services/db');
+const { getGlobalSettings, getEnrichedAdvertisers, isRealCode, slugify } = require('./services/db');
 const firebaseAdmin = require('firebase-admin');
 const fs = require('fs');
 require('dotenv').config({ override: true });
 
-console.log('[DEBUG-ENV] Available Env Vars:', Object.keys(process.env).join(', '));
-
 const app = express();
-
-app.use((req, res, next) => {
-    console.log(`[REQUEST] ${req.method} ${req.url}`);
-    next();
-});
 
 // --- Helper function to get a secret (Env Var Only) ---
 // We have removed Google Secret Manager to strictly rely on Environment Variables
@@ -206,7 +199,7 @@ app.get('/api/sync-history/:network', async (req, res) => {
 app.get('/mission-control/architecture', dashboardController.getArchitecture);
 app.get('/mission-control/style', dashboardController.getStyle);
 app.post('/mission-control/style', (req, res, next) => {
-    console.log('DEBUG: Hit /mission-control/style route');
+
     next();
 }, dashboardController.uploadStyleMiddleware, dashboardController.updateStyle);
 app.post('/refresh', dashboardController.refreshData);
@@ -234,7 +227,6 @@ const extractDiscountValue = (desc) => {
 
 // Helper to fetch and format global dynamic categories
 const getGlobalCategories = async (prefetchedBrands = null) => {
-    const { getEnrichedAdvertisers, slugify } = require('./services/db');
     const enrichedBrands = prefetchedBrands || await getEnrichedAdvertisers();
 
     const categoryMap = new Map();
@@ -276,7 +268,6 @@ const populateSidebar = async (req, res, next) => {
         const db = firebaseAdmin.firestore();
 
         // Fetch 5 newest Brands
-        const { getEnrichedAdvertisers } = require('./services/db');
         const enrichedBrands = await getEnrichedAdvertisers();
         const newestBrands = enrichedBrands
             .filter(b => b.productCount > 0 || b.offerCount > 0)
@@ -363,7 +354,6 @@ const populateSidebar = async (req, res, next) => {
 app.get('/', populateSidebar, async (req, res) => {
     try {
         const settings = await getGlobalSettings();
-        const { getEnrichedAdvertisers } = require('./services/db');
         const enrichedBrands = await getEnrichedAdvertisers();
 
         // Fetch top 6 on-sale products for the premium carousel
@@ -371,7 +361,7 @@ app.get('/', populateSidebar, async (req, res) => {
         const productsSnapshot = await db.collection('products')
             .where('savingsAmount', '>', 0)
             .orderBy('savingsAmount', 'desc')
-            .limit(12)
+            .limit(18)
             .get();
 
         const topSaleProducts = productsSnapshot.docs.map(doc => {
@@ -432,8 +422,11 @@ app.get('/', populateSidebar, async (req, res) => {
             })
             .slice(0, 9);
 
-        // Filter for brands that have BOTH on-sale products AND code offers
-        let performanceBrands = enrichedBrands.filter(b => (b.saleProductCount > 0) && (b.hasPromoCodes === true)).map(b => ({
+        // Three-tier brand priority, each tier sorted by total count (products + offers) desc
+        const brandSortByTotal = (a, b) =>
+            ((b.productCount || 0) + (b.offerCount || 0)) - ((a.productCount || 0) + (a.offerCount || 0));
+
+        const mapBrand = b => ({
             name: b.name,
             slug: b.slug || b.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
             logoUrl: b.logoUrl,
@@ -442,20 +435,49 @@ app.get('/', populateSidebar, async (req, res) => {
             saleProductCount: b.saleProductCount || 0,
             hasPromoCodes: b.hasPromoCodes || false,
             categories: b.categories || (b.raw_data && b.raw_data.categories) || []
-        }));
+        });
 
-        const finalCategories = await getGlobalCategories(enrichedBrands);
+        // Tier 1: on-sale products AND promo code offers
+        const tier1 = enrichedBrands
+            .filter(b => (b.saleProductCount > 0) && (b.hasPromoCodes === true))
+            .sort(brandSortByTotal)
+            .map(mapBrand);
 
+        const tier1Names = new Set(tier1.map(b => b.name));
 
-        // Deduplicate by name to ensure unique brands
-        const uniquePerformanceBrands = [];
+        // Tier 2: on-sale products AND any offers (not already in tier 1)
+        const tier2 = enrichedBrands
+            .filter(b => (b.saleProductCount > 0) && (b.offerCount > 0) && !tier1Names.has(b.name))
+            .sort(brandSortByTotal)
+            .map(mapBrand);
+
+        const tier2Names = new Set(tier2.map(b => b.name));
+
+        // Tier 3: has products AND any offers (not already in tiers 1 or 2)
+        // Sub-sort: promo code brands first, then by total count desc
+        const tier3Sort = (a, b) => {
+            if (a.hasPromoCodes !== b.hasPromoCodes) return b.hasPromoCodes ? 1 : -1;
+            return ((b.productCount || 0) + (b.offerCount || 0)) - ((a.productCount || 0) + (a.offerCount || 0));
+        };
+        const tier3 = enrichedBrands
+            .filter(b => (b.productCount > 0) && (b.offerCount > 0) && !tier1Names.has(b.name) && !tier2Names.has(b.name))
+            .sort(tier3Sort)
+            .map(mapBrand);
+
+        const allTiers = [...tier1, ...tier2, ...tier3];
+
+        // Deduplicate by name and take first 16
         const seenNames = new Set();
-        for (const brand of performanceBrands) {
+        const uniquePerformanceBrands = [];
+        for (const brand of allTiers) {
             if (!seenNames.has(brand.name)) {
                 uniquePerformanceBrands.push(brand);
                 seenNames.add(brand.name);
             }
+            if (uniquePerformanceBrands.length >= 16) break;
         }
+
+        const finalCategories = await getGlobalCategories(enrichedBrands);
 
         res.render('page', {
             settings,
@@ -466,17 +488,16 @@ app.get('/', populateSidebar, async (req, res) => {
             showBrands: true,
             showProducts: true,
             showOffers: true,
-            brandsH2: "Top Brands with On-Sale Products and Offer Codes",
+            brandsH2: "Top Brands with On-Sale Items and Promo Codes",
             brandsDescription: "Discover the most popular brands offering substantial discounts and exclusive codes.",
-            productsH2: "Top On-Sale Prices",
+            productsH2: "Top On-Sale Savings",
             productsDescription: "Discover the absolute best price drops on top-rated products.",
-            offersH2: "Top Offer Savings",
+            offersH2: "Top Offers",
             offersDescription: "Exclusive promo codes and heavy discounts to maximize your budget.",
             showBrandsLink: true,
             showProductsLink: true,
             showOffersLink: true,
-            showProductsFilters: true,
-            showOffersFilters: true,
+
             showProductsPagination: false,
             showOffersPagination: false,
             breadcrumbPath: []
@@ -491,7 +512,6 @@ app.get('/', populateSidebar, async (req, res) => {
 app.get('/brands', populateSidebar, async (req, res) => {
     try {
         const settings = await getGlobalSettings();
-        const { getEnrichedAdvertisers } = require('./services/db');
         const enrichedBrands = await getEnrichedAdvertisers();
 
         let brandsList = enrichedBrands.map(b => ({
@@ -519,10 +539,10 @@ app.get('/brands', populateSidebar, async (req, res) => {
             showBrands: true,
             showProducts: false,
             showOffers: false,
-            brandsH2: "Top Brands",
-            brandsDescription: "Browse our directory of top brands with amazing products and offers.",
+            brandsH2: "OfferBae Brands",
+            brandsDescription: "Browse our directory of partnered online stores.",
             showBrandsLink: false,
-            pageH1: "Top Brands with Amazing Products and Offers",
+            pageH1: "Hot Brands with Amazing Products and Offers",
             breadcrumbPath: [{ name: 'Brands', url: '/brands' }]
         });
     } catch (err) {
@@ -601,7 +621,6 @@ app.get('/offers', populateSidebar, async (req, res) => {
     try {
         const settings = await getGlobalSettings();
         const db = firebaseAdmin.firestore();
-        const { getEnrichedAdvertisers } = require('./services/db');
         const enrichedBrands = await getEnrichedAdvertisers();
 
         const page = parseInt(req.query.page) || 1;
@@ -889,7 +908,6 @@ app.get('/offers/:brandSlug/:offerSlug', populateSidebar, async (req, res) => {
 app.get('/categories', populateSidebar, async (req, res) => {
     try {
         const settings = await getGlobalSettings();
-        const { getEnrichedAdvertisers } = require('./services/db');
         const enrichedBrands = await getEnrichedAdvertisers();
         const finalCategories = await getGlobalCategories(enrichedBrands);
 
@@ -914,7 +932,6 @@ app.get('/categories/:categorySlug', populateSidebar, async (req, res) => {
     try {
         const { categorySlug } = req.params;
         const settings = await getGlobalSettings();
-        const { getEnrichedAdvertisers } = require('./services/db');
         const enrichedBrands = await getEnrichedAdvertisers();
         const finalCategories = await getGlobalCategories(enrichedBrands);
 
