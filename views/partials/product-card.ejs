@@ -12,11 +12,13 @@
                 </div>
                 <% } %>
                     <div class="product-image-container">
-                        <% if (product.imageUrl) { %>
-                            <img src="<%= product.imageUrl %>" alt="<%= product.name %>" loading="lazy">
-                            <% } else { %>
-                                <div class="image-placeholder"></div>
-                                <% } %>
+                        <% const _imgSrc=product.storageImageUrl || product.imageUrl; %>
+                            <% if (_imgSrc) { %>
+                                <img src="<%= _imgSrc %>" alt="<%= product.name %>" loading="lazy"
+                                    onerror="this.style.display='none'">
+                                <% } else { %>
+                                    <div class="image-placeholder"></div>
+                                    <% } %>
                     </div>
                     <div class="product-info">
                         <div class="product-brand">

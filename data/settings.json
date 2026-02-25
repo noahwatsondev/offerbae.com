@@ -30,12 +30,12 @@
   "colorYellow": "#ffd15c",
   "colorViolet": "#92407e",
   "colorGreen": "#16a34a",
-  "headerStyles": "background: rgba(255, 255, 255, 0.9); \r\nbackdrop-filter: blur(10px); /* Adjust blur strength as needed */\r\n-webkit-backdrop-filter: blur(2px); /* For Safari support */\r\nborder: 1px solid rgba(255, 255, 255, 0.9); /* Light, semi-transparent border */\r\nbox-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */",
   "colorRed": "#ef3e5c",
   "defaultLinkColor": "#2200cc",
   "colorBlue": "#2185d5",
+  "headerStyles": "background: linear-gradient(to right, white, rgba(255, 255, 255, 0.9));\r\nbackdrop-filter: blur(10px); /* Adjust blur strength as needed */\r\n-webkit-backdrop-filter: blur(2px); /* For Safari support */\r\nborder: 1px solid rgba(255, 255, 255, 0.9); /* Light, semi-transparent border */\r\nbox-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */",
   "updatedAt": {
-    "_seconds": 1771952663,
-    "_nanoseconds": 451000000
+    "_seconds": 1772039154,
+    "_nanoseconds": 150000000
   }
 }

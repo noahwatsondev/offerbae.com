@@ -514,20 +514,22 @@ app.get('/brands', populateSidebar, async (req, res) => {
         const settings = await getGlobalSettings();
         const enrichedBrands = await getEnrichedAdvertisers();
 
-        let brandsList = enrichedBrands.map(b => ({
-            name: b.name,
-            slug: b.slug || b.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
-            logoUrl: b.logoUrl,
-            offerCount: b.offerCount || 0,
-            productCount: b.productCount || 0,
-            saleProductCount: b.saleProductCount || 0,
-            hasPromoCodes: b.hasPromoCodes || false,
-            categories: b.categories || (b.raw_data && b.raw_data.categories) || []
-        }));
+        let brandsList = enrichedBrands
+            .filter(b => b.name)
+            .map(b => ({
+                name: b.name,
+                slug: b.slug || b.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+                logoUrl: b.logoUrl,
+                offerCount: b.offerCount || 0,
+                productCount: b.productCount || 0,
+                saleProductCount: b.saleProductCount || 0,
+                hasPromoCodes: b.hasPromoCodes || false,
+                categories: b.categories || (b.raw_data && b.raw_data.categories) || []
+            }));
 
         // Filter for brands with content and sort alphabetically by name by default
         brandsList = brandsList.filter(b => (b.offerCount + b.productCount) > 0)
-            .sort((a, b) => a.name.localeCompare(b.name));
+            .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         const finalCategories = await getGlobalCategories(enrichedBrands);
 
@@ -542,7 +544,7 @@ app.get('/brands', populateSidebar, async (req, res) => {
             brandsH2: "OfferBae Brands",
             brandsDescription: "Browse our directory of partnered online stores.",
             showBrandsLink: false,
-            pageH1: "Hot Brands with Amazing Products and Offers",
+            pageH1: "Top Brands & Stores with Active Promo Codes",
             breadcrumbPath: [{ name: 'Brands', url: '/brands' }]
         });
     } catch (err) {
@@ -603,7 +605,7 @@ app.get('/products', populateSidebar, async (req, res) => {
             productsH2: "Products",
             showProductsFilters: true,
             showProductsPagination: true,
-            pageH1: "Products",
+            pageH1: "Discounted Products & Deals",
             currentPage: page,
             limit,
             onSale,
@@ -681,7 +683,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
             offersH2: "Offers",
             showOffersFilters: true,
             showOffersPagination: true,
-            pageH1: "Offers",
+            pageH1: "Latest Promo Codes & Coupon Offers",
             currentPage: page,
             limit,
             hasMore,
@@ -781,9 +783,10 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             showOffers: offers.length > 0,
             productsH2: "Top Products",
             offersH2: "Top Offers",
+            offersDescription: `Active promo codes and top deals from ${brand.name}.`,
             pageLogo: brand.logoUrl,
-            pageH1: brand.name,
-            pageH1Sub: "Products & Offers",
+            pageH1: `${brand.name} Promo Codes & Deals`,
+            pageH1Sub: "Verified Offers & Discounts",
             pageCategories: brand.categories,
             breadcrumbPath: [
                 { name: 'Brands', url: '/brands' },
@@ -833,7 +836,7 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
             showProducts: false,
             showOffers: false,
             showProductDetails: true,
-            pageH1: productDetails.name,
+            pageH1: `${productDetails.name} Deals`,
             breadcrumbPath: [
                 { name: 'Products', url: '/products' },
                 { name: productDetails.brandName, url: `/brands/${brandSlug}` },
@@ -892,7 +895,7 @@ app.get('/offers/:brandSlug/:offerSlug', populateSidebar, async (req, res) => {
             showOffers: false,
             showProductDetails: false,
             showOfferDetails: true,
-            pageH1: offerDetails.description || 'Offer Details',
+            pageH1: offerDetails.description || 'Exclusive Offer Details',
             breadcrumbPath: [
                 { name: 'Offers', url: '/offers' },
                 { name: offerDetails.brandName, url: `/brands/${brandSlug}` },
@@ -917,7 +920,8 @@ app.get('/categories', populateSidebar, async (req, res) => {
             showBrands: false,
             showProducts: false,
             showOffers: false,
-            pageH1: "All Categories",
+            showCategories: true,
+            pageH1: "Browse Offers by Category",
             breadcrumbPath: [
                 { name: 'Categories', url: '/categories' }
             ]
@@ -954,7 +958,8 @@ app.get('/categories/:categorySlug', populateSidebar, async (req, res) => {
             showProducts: false,
             showOffers: false,
             brandsH2: `Brands in ${categoryDetails.name}`,
-            pageH1: `${categoryDetails.name}`,
+            offersDescription: `Active promo codes and deals in ${categoryDetails.name}.`,
+            pageH1: `Best ${categoryDetails.name} Promo Codes & Deals`,
             breadcrumbPath: [
                 { name: 'Categories', url: '/categories' },
                 { name: categoryDetails.name, url: `/categories/${categorySlug}` }

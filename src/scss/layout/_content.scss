@@ -202,7 +202,7 @@
     // Compact variant for sidebar
     .is-compact & {
         padding: 0.75rem 0;
-        gap: 0.75rem;
+        gap: 1rem;
         background: transparent;
         border-color: transparent;
         box-shadow: none;
@@ -412,10 +412,6 @@
 
     .content-section {
         margin-bottom: 5rem;
-
-        &:last-child {
-            margin-bottom: 0;
-        }
 
         .section-header {
             display: flex;
@@ -747,6 +743,21 @@
                 box-sizing: border-box;
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
                 transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+
+                &::after {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    border-radius: inherit;
+                    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 1.6px, transparent 1.6px);
+                    background-size: 10px 10px;
+                    mask-image: radial-gradient(ellipse at 112% -12%, transparent 28%, rgba(0, 0, 0, 0.85) 40%, transparent 62%);
+                    -webkit-mask-image: radial-gradient(ellipse at 112% -12%, transparent 28%, rgba(0, 0, 0, 0.85) 40%, transparent 62%);
+                    pointer-events: none;
+                    top: -56px;
+                }
 
                 &:hover {
                     transform: translateY(-2px);
