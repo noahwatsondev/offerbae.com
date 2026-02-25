@@ -46,8 +46,8 @@
                     <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:1.5rem;">
                         <% sidebarData.newestProducts.forEach(product=> { %>
                             <li>
-                                <!-- Fallback URL logic until we add brandSlug dynamically upstream reliably -->
-                                <a href="/products/<%= product.slug %>"
+                                <!-- Internal link to SEO product page -->
+                                <a href="/products/<%= product.brandSlug || 'unknown' %>/<%= product.slug %>"
                                     style="display:flex; align-items:center; gap:1rem; text-decoration:none; color:inherit;">
                                     <% const _productImg=product.storageImageUrl || product.imageUrl; %>
                                         <% if (_productImg) { %>

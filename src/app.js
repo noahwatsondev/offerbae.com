@@ -295,6 +295,8 @@ const populateSidebar = async (req, res, next) => {
                 id: doc.id,
                 name: data.name,
                 slug: data.slug,
+                brandSlug: slugify(data.advertiserName || data.advertiser || ''),
+                link: data.link || '',
                 imageUrl: data.storageImageUrl || data.imageUrl,
                 brandName: data.advertiserName || data.advertiser || '',
                 price: data.price,
@@ -369,6 +371,7 @@ app.get('/', populateSidebar, async (req, res) => {
             return {
                 ...data,
                 id: doc.id,
+                brandSlug: slugify(data.advertiserName || data.advertiser || ''),
                 price: parseFloat(data.price) || 0,
                 salePrice: parseFloat(data.salePrice) || 0,
                 savings: data.savingsAmount || 0,
@@ -488,12 +491,12 @@ app.get('/', populateSidebar, async (req, res) => {
             showBrands: true,
             showProducts: true,
             showOffers: true,
-            brandsH2: "Top Brands with On-Sale Items and Promo Codes",
-            brandsDescription: "Discover the most popular brands offering substantial discounts and exclusive codes.",
-            productsH2: "Top On-Sale Savings",
-            productsDescription: "Discover the absolute best price drops on top-rated products.",
-            offersH2: "Top Offers",
-            offersDescription: "Exclusive promo codes and heavy discounts to maximize your budget.",
+            brandsH2: "Partner Brands",
+            brandsDescription: "Explore our curated directory of premium brand partners.",
+            productsH2: "Trending Products",
+            productsDescription: "Discover the most sought-after items curated by our editors.",
+            offersH2: "Partner Perks",
+            offersDescription: "Exclusive perks, rewards, and offers from our brand partners.",
             showBrandsLink: true,
             showProductsLink: true,
             showOffersLink: true,
@@ -541,10 +544,10 @@ app.get('/brands', populateSidebar, async (req, res) => {
             showBrands: true,
             showProducts: false,
             showOffers: false,
-            brandsH2: "OfferBae Brands",
-            brandsDescription: "Browse our directory of partnered online stores.",
+            brandsH2: "Partner Brands",
+            brandsDescription: "Explore our curated directory of premium brand partners.",
             showBrandsLink: false,
-            pageH1: "Top Brands & Stores with Active Promo Codes",
+            pageH1: "Curated Partner Brands & Stores",
             breadcrumbPath: [{ name: 'Brands', url: '/brands' }]
         });
     } catch (err) {
@@ -583,6 +586,7 @@ app.get('/products', populateSidebar, async (req, res) => {
             return {
                 ...data,
                 id: doc.id,
+                brandSlug: slugify(data.advertiserName || data.advertiser || ''),
                 price: parseFloat(data.price) || 0,
                 salePrice: parseFloat(data.salePrice) || 0,
                 savings: data.savingsAmount || 0,
@@ -696,7 +700,8 @@ app.get('/offers', populateSidebar, async (req, res) => {
 });
 
 // Dynamic Route for the Brand Hub
-app.get('/brands/:slug', populateSidebar, async (req, res) => {
+// Shared route for Premium Brand profile and Dedicated Coupon SEO Landing Page
+app.get(['/brands/:slug', '/coupons/:slug'], populateSidebar, async (req, res) => {
     try {
         const { slug } = req.params;
         const settings = await getGlobalSettings();
@@ -766,11 +771,25 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             return {
                 ...data,
                 id: doc.id,
+                brandSlug: slugify(data.advertiserName || data.advertiser || ''),
                 imageUrl: data.storageImageUrl || data.imageUrl
             };
         });
 
 
+
+        const isCouponRoute = req.path.startsWith('/coupons');
+
+        const pageH1 = isCouponRoute
+            ? `10+ ${brand.name} Promo Codes, Coupons & Discounts (${new Date().getFullYear()})`
+            : `${brand.name}`;
+
+        const pageH1Sub = isCouponRoute
+            ? "Verified Offers & Deals"
+            : "Explore Products & Offers";
+
+        const breadcrumbUrl = isCouponRoute ? `/coupons/${brand.slug}` : `/brands/${brand.slug}`;
+        const rootBreadcrumb = isCouponRoute ? { name: 'Coupons', url: '/offers' } : { name: 'Brands', url: '/brands' };
 
         res.render('page', {
             settings,
@@ -779,18 +798,20 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             products,
             categories: finalCategories,
             showBrands: false,
-            showProducts: products.length > 0,
+            // Premium routes show products aggressively; Coupon routes push them down/hide if offers abound
+            showProducts: isCouponRoute && offers.length >= 5 ? false : products.length > 0,
             showOffers: offers.length > 0,
             productsH2: "Top Products",
-            offersH2: "Top Offers",
+            offersH2: isCouponRoute ? `${brand.name} Promo Codes & Offers` : "Partner Perks",
             offersDescription: `Active promo codes and top deals from ${brand.name}.`,
             pageLogo: brand.logoUrl,
-            pageH1: `${brand.name} Promo Codes & Deals`,
-            pageH1Sub: "Verified Offers & Discounts",
+            pageH1,
+            pageH1Sub,
             pageCategories: brand.categories,
+            isCouponRoute,
             breadcrumbPath: [
-                { name: 'Brands', url: '/brands' },
-                { name: brand.name, url: `/brands/${brand.slug}` }
+                rootBreadcrumb,
+                { name: brand.name, url: breadcrumbUrl }
             ]
         });
     } catch (err) {
@@ -819,11 +840,24 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
         const productDoc = productSnapshot.docs[0];
         const data = productDoc.data();
 
+        const advSnapshot = await db.collection('advertisers')
+            .where('slug', '==', brandSlug)
+            .limit(1)
+            .get();
+        let pageLogo = null;
+        let finalBrandName = data.advertiser || data.advertiserName || 'Brand';
+
+        if (!advSnapshot.empty) {
+            const advData = advSnapshot.docs[0].data();
+            pageLogo = advData.storageLogoUrl || advData.logoUrl || (advData.raw_data && advData.raw_data.logoUrl);
+            finalBrandName = advData.name || finalBrandName;
+        }
+
         const productDetails = {
             ...data,
             id: productDoc.id,
             imageUrl: data.storageImageUrl || data.imageUrl,
-            brandName: data.advertiser || 'Brand'
+            brandName: finalBrandName
         };
 
         const finalCategories = await getGlobalCategories();
@@ -836,7 +870,8 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
             showProducts: false,
             showOffers: false,
             showProductDetails: true,
-            pageH1: `${productDetails.name} Deals`,
+            pageLogo,
+            pageH1: productDetails.name,
             breadcrumbPath: [
                 { name: 'Products', url: '/products' },
                 { name: productDetails.brandName, url: `/brands/${brandSlug}` },
@@ -895,7 +930,9 @@ app.get('/offers/:brandSlug/:offerSlug', populateSidebar, async (req, res) => {
             showOffers: false,
             showProductDetails: false,
             showOfferDetails: true,
-            pageH1: offerDetails.description || 'Exclusive Offer Details',
+            pageH1: offerDetails.isPromoCode
+                ? `Verified ${offerDetails.brandName} Promo Code: ${offerDetails.description || offerDetails.code}`
+                : `${offerDetails.brandName} Deal: ${offerDetails.description || 'Exclusive Limit-Time Offer'}`,
             breadcrumbPath: [
                 { name: 'Offers', url: '/offers' },
                 { name: offerDetails.brandName, url: `/brands/${brandSlug}` },
@@ -921,7 +958,7 @@ app.get('/categories', populateSidebar, async (req, res) => {
             showProducts: false,
             showOffers: false,
             showCategories: true,
-            pageH1: "Browse Offers by Category",
+            pageH1: "Browse by Category",
             breadcrumbPath: [
                 { name: 'Categories', url: '/categories' }
             ]

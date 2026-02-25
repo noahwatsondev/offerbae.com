@@ -21,6 +21,12 @@
                     <% if (typeof showOffersLink !=='undefined' && showOffersLink) { %>
                         <a href="/offers" class="section-link">See All Offers &rarr;</a>
                         <% } %>
+                            <% if (typeof isCouponRoute !=='undefined' && !isCouponRoute && typeof brand !=='undefined'
+                                ) { %>
+                                <a href="/coupons/<%= brand.slug %>" class="section-link"
+                                    style="font-size: 0.8rem; color: #9CA3AF; font-weight: normal; text-decoration: underline;">View
+                                    <%= brand.name %> Promo Codes</a>
+                                <% } %>
         </div>
     </div>
 

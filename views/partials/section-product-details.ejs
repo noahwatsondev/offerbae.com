@@ -1,34 +1,56 @@
 <section class="content-section">
-    <div class="product-details-container">
+    <div class="product-details-container"
+        style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15); padding: 2rem;">
         <% if (typeof productDetails !=='undefined' && productDetails) { %>
-            <div class="product-header">
-                <h2>
-                    <%= productDetails.name %>
-                </h2>
-                <div class="product-meta">By <%= productDetails.brandName %>
-                </div>
-            </div>
-            <div class="product-body" style="display:flex; gap:2rem; margin-top:2rem;">
-                <div class="product-image" style="flex:1;">
+            <div class="product-body" style="display:flex; gap:2rem; flex-wrap: wrap;">
+                <div class="product-image" style="flex:1; min-width: 300px; position: relative;">
+                    <a href="<%= productDetails.link || '#' %>" target="_blank" rel="noopener noreferrer"
+                        style="position: absolute; top: 0; right: 0; background: rgba(255,255,255,0.9); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 600; text-decoration: none; color: var(--primary-color); border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 2;">See
+                        more images &nearr;</a>
                     <img src="<%= productDetails.imageUrl %>" alt="<%= productDetails.name %>"
-                        style="max-width:100%; height:auto;">
+                        style="max-width:100%; height:auto; border-radius: 0.5rem; border: 1px solid #eee;">
                 </div>
-                <div class="product-info" style="flex:1;">
-                    <div class="price-block">
-                        <span class="current-price" style="font-size:2rem; font-weight:bold;">$<%= productDetails.price
-                                %></span>
-                        <% if (productDetails.salePrice) { %>
-                            <span class="sale-price"
-                                style="text-decoration:line-through; color:#888; margin-left:1rem;">$<%=
-                                    productDetails.salePrice %></span>
-                            <% } %>
-                    </div>
-                    <p class="description" style="margin-top:1rem;">
-                        <%= productDetails.description || 'No description available.' %>
-                    </p>
-                    <a href="<%= productDetails.affiliateUrl || '#' %>" target="_blank" class="btn-primary"
-                        style="display:inline-block; margin-top:2rem; padding:1rem 2rem; background:var(--primary-color); color:white; text-decoration:none; border-radius:0.5rem;">Buy
-                        Now</a>
+                <div class="product-info" style="flex:1; min-width: 300px; padding-top: 1rem;">
+                    <% const originalPrice=Number(productDetails.price || 0); const
+                        salePrice=Number(productDetails.salePrice || 0); const hasDiscount=originalPrice> salePrice &&
+                        salePrice > 0;
+                        const displayPrice = hasDiscount ? salePrice : (salePrice > 0 ? salePrice : originalPrice);
+                        %>
+                        <div class="price-block" style="margin-bottom: 1.5rem;">
+                            <% if (hasDiscount && productDetails.discountPercent) { %>
+                                <div class="product-badge"
+                                    style="display: inline-block; background: var(--primary-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem;">
+                                    <%= productDetails.discountPercent %>% OFF
+                                </div>
+                                <% } %>
+                                    <div class="product-pricing"
+                                        style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                                        <span class="<%= hasDiscount ? 'sale-price' : 'regular-price' %>"
+                                            style="font-size:2.5rem; font-weight:bold; color: <%= hasDiscount ? '#ef4444' : 'inherit' %>;">
+                                            $<%= displayPrice.toFixed(2) %>
+                                        </span>
+                                        <% if (hasDiscount) { %>
+                                            <span class="original-price"
+                                                style="text-decoration:line-through; color:#9ca3af; font-size: 1.25rem;">
+                                                $<%= originalPrice.toFixed(2) %>
+                                            </span>
+                                            <% } %>
+                                    </div>
+                                    <% if (hasDiscount) { %>
+                                        <div class="product-savings"
+                                            style="color: #10b981; font-weight: 600; font-size: 1.1rem;">
+                                            Save $<%= (originalPrice - salePrice).toFixed(2) %>!
+                                        </div>
+                                        <% } %>
+                        </div>
+                        <p class="description"
+                            style="margin-top:1rem; line-height: 1.7; color: #4b5563; font-size: 1.05rem;">
+                            <%= productDetails.description || 'No description available.' %>
+                        </p>
+                        <a href="<%= productDetails.link || '#' %>" target="_blank" rel="noopener noreferrer"
+                            class="btn-primary"
+                            style="display:inline-block; margin-top:2rem; padding:1rem 2rem; background:var(--primary-color); color:white; text-decoration:none; border-radius:0.5rem; font-weight: 600;">Buy
+                            Now</a>
                 </div>
             </div>
             <% } else { %>
