@@ -1,32 +1,59 @@
 <div class="context-wrapper">
     <div class="context-inner">
-        <div style="display: flex; align-items: center; gap: 1.5rem; width: 100%;">
-            <% if (typeof pageLogo !=='undefined' && pageLogo) { %>
-                <div
-                    style="width: 80px; height: 80px; background: white; border-radius: 0 1rem; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
-                    <img src="<%= pageLogo %>" alt="Brand Logo"
-                        style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                </div>
-                <% } %>
-                    <h1 class="page-title">
-                        <%= typeof pageH1 !=='undefined' ? pageH1
-                            : 'Exclusive Product Offerings and Savings from the Hottest Online Stores' %>
-                            <% if (typeof pageH1Sub !=='undefined' && pageH1Sub) { %>
-                                <span style="display: block; font-size: 1rem; opacity: .75;">
-                                    <%= pageH1Sub %>
+        <% if (typeof pageH1Sub !=='undefined' && pageH1Sub) { %>
+            <%# Product page: logo + brand name on line 1, product name on line 2 — all inside H1 %>
+                <h1 class="page-title" style="display: block; width: 100%;">
+                    <span style="display: flex; align-items: center; gap: 1.25rem;">
+                        <% if (typeof pageLogo !=='undefined' && pageLogo) { %>
+                            <span
+                                style="width: 80px; height: 80px; background: white; border-radius: 0 1rem; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+                                <img src="<%= pageLogo %>" alt="Brand Logo"
+                                    style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            </span>
+                            <% } %>
+                                <span>
+                                    <%= typeof pageH1 !=='undefined' ? pageH1 : '' %>
                                 </span>
+                    </span>
+                    <span
+                        style="display: block; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; margin-top: 0.85rem; background: linear-gradient(to right, var(--color-violet), var(--color-red)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));">
+                        <%= pageH1Sub %>
+                    </span>
+                </h1>
+                <% } else { %>
+                    <%# Brand hub / homepage: logo as flex sibling to H1 (original layout) %>
+                        <div style="display: flex; align-items: center; gap: 1.5rem; width: 100%;">
+                            <% if (typeof pageLogo !=='undefined' && pageLogo) { %>
+                                <div
+                                    style="width: 80px; height: 80px; background: white; border-radius: 0 1rem; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+                                    <img src="<%= pageLogo %>" alt="Brand Logo"
+                                        style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                </div>
                                 <% } %>
-                    </h1>
-        </div>
+                                    <h1 class="page-title">
+                                        <%= typeof pageH1 !=='undefined' ? pageH1
+                                            : 'Exclusive Product Offerings and Savings from the Hottest Online Stores'
+                                            %>
+                                    </h1>
+                        </div>
+                        <% } %>
 
-        <% if (typeof pageCategories !=='undefined' && pageCategories && pageCategories.length> 0) { %>
-            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem;">
-                <% pageCategories.forEach(category=> { %>
-                    <a href="/categories/<%= category.slug %>" class="category-pill">
-                        <%= category.name %>
-                    </a>
-                    <% }) %>
-            </div>
-            <% } %>
+                            <% if (typeof contextLink !=='undefined' && contextLink) { %>
+                                <a href="<%= contextLink.url %>" class="context-link-cta">
+                                    <%= contextLink.text %>
+                                </a>
+                                <% } %>
+
+                                    <% if (typeof pageCategories !=='undefined' && pageCategories &&
+                                        pageCategories.length> 0) {
+                                        %>
+                                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem;">
+                                            <% pageCategories.forEach(category=> { %>
+                                                <a href="/categories/<%= category.slug %>" class="category-pill">
+                                                    <%= category.name %>
+                                                </a>
+                                                <% }) %>
+                                        </div>
+                                        <% } %>
     </div>
 </div>
