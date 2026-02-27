@@ -287,6 +287,7 @@ const syncRakutenAdvertisers = async () => {
             storageLogoUrl: logoResults.storageLogoUrl,
             isManualLogo: logoResults.isManualLogo,
             affiliateHomeUrl: affiliateHomeUrl,
+            searchKeywords: generateSearchKeywords(adv.name || ''),
             raw_data: JSON.parse(JSON.stringify(adv))
         };
 
@@ -461,6 +462,7 @@ const syncCJAdvertisers = async () => {
             logoUrl: logoResults.logoUrl,
             storageLogoUrl: logoResults.storageLogoUrl,
             isManualLogo: logoResults.isManualLogo,
+            searchKeywords: generateSearchKeywords(adv.name || ''),
             raw_data: JSON.parse(JSON.stringify(adv))
         }, existingData);
         activeIds.add(result.id);
@@ -609,6 +611,7 @@ const syncAWINAdvertisers = async () => {
             logoUrl: logoResults.logoUrl,
             storageLogoUrl: logoResults.storageLogoUrl,
             isManualLogo: logoResults.isManualLogo,
+            searchKeywords: generateSearchKeywords(adv.name || ''),
             raw_data: JSON.parse(JSON.stringify(adv))
         }, existingData);
         activeIds.add(result.id);
@@ -748,6 +751,7 @@ const syncPepperjamAdvertisers = async () => {
             logoUrl: logoResults.logoUrl,
             storageLogoUrl: logoResults.storageLogoUrl,
             isManualLogo: logoResults.isManualLogo,
+            searchKeywords: generateSearchKeywords(adv.name || ''),
             raw_data: JSON.parse(JSON.stringify(adv))
         }, existingData);
         activeIds.add(result.id);

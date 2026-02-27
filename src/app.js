@@ -1273,60 +1273,167 @@ app.get('/api/offers', async (req, res) => {
 
 app.get('/api/search', async (req, res) => {
     try {
-        const q = req.query.q;
-        if (!q || q.length < 2) return res.json({ brands: [], products: [], offers: [] });
+        const q = (req.query.q || '').trim();
+        if (!q || q.length < 2) return res.json({ brands: [], products: [], offers: [], categories: [] });
 
         const firebase = require('./config/firebase');
-        const lowerStr = q.toLowerCase();
-        const upperStr = q.toUpperCase();
-        const searchStr = q.charAt(0).toUpperCase() + q.slice(1);
+        const db = firebase.db;
 
-        // Helper for Firestore prefix search
-        const prefixSearch = async (collection, field, overrideStr = null) => {
-            const str = overrideStr || searchStr;
-            const snapshot = await firebase.db.collection(collection)
+        // Normalize the query into tokens for keyword matching
+        const tokens = q.toLowerCase()
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .split(/\s+/)
+            .filter(t => t.length >= 2);
+
+        // Use the longest token as the primary keyword (most specific)
+        const primaryToken = tokens.sort((a, b) => b.length - a.length)[0] || q.toLowerCase();
+        const searchStr = q.charAt(0).toUpperCase() + q.slice(1); // Title case
+
+        // Helper: Firestore prefix-range query (exact prefix match fallback)
+        const prefixSearch = async (collection, field, str) => {
+            const snap = await db.collection(collection)
                 .where(field, '>=', str)
                 .where(field, '<=', str + '\uf8ff')
-                .limit(5)
+                .limit(6)
                 .get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         };
+
+        // Helper: Firestore array-contains keyword search
+        const keywordSearch = async (collection, token) => {
+            const snap = await db.collection(collection)
+                .where('searchKeywords', 'array-contains', token)
+                .limit(8)
+                .get();
+            return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        };
+
+        // Helper: Category search — find advertisers whose categories array contains the query word
+        const categorySearch = async (token) => {
+            const snap = await db.collection('advertisers')
+                .where('categories', 'array-contains', token)
+                .limit(6)
+                .get();
+            return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        };
+
+        // Helper: Advertiser search via categories (try variations)
+        const categoryVariants = [
+            q.toLowerCase(),
+            q.charAt(0).toUpperCase() + q.slice(1).toLowerCase(),
+            q.toUpperCase(),
+            ...tokens
+        ];
 
         const [
-            brandsTitle, brandsLower, brandsUpper, brandsLiteral,
-            productsTitle, productsLower, productsUpper, productsLiteral,
-            offersByDesc, offersByAdvertiser, offersByAdvertiserLower, offersByLiteral
+            brandsKeyword, brandsPrefixTitle, brandsPrefixLower, brandsPrefixLiteral,
+            productsKeyword, productsPrefixTitle, productsPrefixLower,
+            offersByAdvertiserPrefix, offersByDescPrefix, offersByAdvertiserLower,
+            brandsFromCategories
         ] = await Promise.all([
-            prefixSearch('advertisers', 'name'),
-            prefixSearch('advertisers', 'name', lowerStr),
-            prefixSearch('advertisers', 'name', upperStr),
-            prefixSearch('advertisers', 'name', q), // Literal search for "UNice" etc.
-            prefixSearch('products', 'name'),
-            prefixSearch('products', 'name', lowerStr),
-            prefixSearch('products', 'name', upperStr),
-            prefixSearch('products', 'name', q),
-            prefixSearch('offers', 'description'),
-            prefixSearch('offers', 'advertiser'),
-            prefixSearch('offers', 'advertiser', lowerStr),
-            prefixSearch('offers', 'advertiser', q)
+            keywordSearch('advertisers', primaryToken),
+            prefixSearch('advertisers', 'name', searchStr),
+            prefixSearch('advertisers', 'name', q.toLowerCase()),
+            prefixSearch('advertisers', 'name', q),
+            keywordSearch('products', primaryToken),
+            prefixSearch('products', 'name', searchStr),
+            prefixSearch('products', 'name', q.toLowerCase()),
+            prefixSearch('offers', 'advertiser', searchStr),
+            prefixSearch('offers', 'description', searchStr),
+            prefixSearch('offers', 'advertiser', q.toLowerCase()),
+            // Category search — try the primary token and title case
+            categorySearch(categoryVariants[0]).then(r =>
+                r.length ? r : categorySearch(categoryVariants[1])
+            )
         ]);
 
-        // Combine and deduplicate
-        const dedup = (arrs) => {
+        // Deduplicate across multiple result arrays, return up to maxCount
+        const dedup = (arrs, maxCount = 5) => {
             const map = new Map();
             arrs.flat().forEach(item => {
-                if (item && item.id) map.set(item.id, item);
+                if (item && item.id && !map.has(item.id)) map.set(item.id, item);
             });
-            return Array.from(map.values()).slice(0, 5);
+            return Array.from(map.values()).slice(0, maxCount);
         };
 
-        const finalBrands = dedup([brandsTitle, brandsLower, brandsUpper, brandsLiteral]);
-        const finalProducts = dedup([productsTitle, productsLower, productsUpper, productsLiteral]);
-        const finalOffers = dedup([offersByDesc, offersByAdvertiser, offersByAdvertiserLower, offersByLiteral]);
+        const finalBrands = dedup([brandsKeyword, brandsPrefixTitle, brandsPrefixLower, brandsPrefixLiteral]);
+        const finalProducts = dedup([productsKeyword, productsPrefixTitle, productsPrefixLower]);
+        const finalOffers = dedup([offersByAdvertiserPrefix, offersByDescPrefix, offersByAdvertiserLower]);
 
-        console.log(`[Search] Query: "${q}" -> B:${finalBrands.length}, P:${finalProducts.length}, O:${finalOffers.length}`);
+        // Create a quick lookup map for advertiser logos to attach to offers
+        const finalBrandIdsSearch = new Set(
+            [...offersByAdvertiserPrefix, ...offersByDescPrefix, ...offersByAdvertiserLower]
+                .map(o => o.advertiserId || o.data_id || (o.raw_data && o.raw_data.advertiserId))
+                .filter(Boolean)
+        );
+        let brandLogoMap = new Map();
+        if (finalBrandIdsSearch.size > 0) {
+            // Need to fetch logos for these advertisers to show on offers
+            // We'll just grab any matched brands from our earlier queries first to save DB reads
+            [...brandsKeyword, ...brandsPrefixTitle, ...brandsPrefixLower, ...brandsPrefixLiteral, ...brandsFromCategories].forEach(b => {
+                const bId = (b.id || b.advertiserId || b.data_id)?.toString();
+                if (bId) brandLogoMap.set(bId, b.storageLogoUrl || b.logoUrl || (b.raw_data && b.raw_data.logoUrl));
+            });
 
-        // Enforce specific fields and formatting for the frontend
+            // If any are still missing, we could fetch them, but for autocomplete performance
+            // we will rely on what we have, or fallback to default icon
+            const missingBrandIds = Array.from(finalBrandIdsSearch).filter(id => !brandLogoMap.has(id));
+            if (missingBrandIds.length > 0) {
+                const chunks = [];
+                for (let i = 0; i < missingBrandIds.length; i += 30) {
+                    chunks.push(missingBrandIds.slice(i, i + 30));
+                }
+                await Promise.all(chunks.map(async chunk => {
+                    // Handle permutations like 1234, CJ-1234, RT-1234
+                    const expandedChunk = [...chunk];
+                    chunk.forEach(id => {
+                        expandedChunk.push(`CJ-${id}`);
+                        expandedChunk.push(`RT-${id}`);
+                        expandedChunk.push(`AWIN-${id}`);
+                    });
+
+                    const safeChunk = expandedChunk.slice(0, 30); // Firestore IN queries are limited
+
+                    // 1. By Document ID
+                    const snapId = await db.collection('advertisers').where('__name__', 'in', safeChunk).get();
+                    snapId.docs.forEach(doc => {
+                        const b = doc.data();
+                        const bId = (doc.id || b.advertiserId || b.id || b.data_id)?.toString();
+                        if (bId) brandLogoMap.set(bId, b.storageLogoUrl || b.logoUrl || (b.raw_data && b.raw_data.logoUrl));
+                        // Also associate with raw ID from offer
+                        const possibleRaw = doc.id.replace(/^(CJ|RT|AWIN)-/i, '');
+                        brandLogoMap.set(possibleRaw, b.storageLogoUrl || b.logoUrl || (b.raw_data && b.raw_data.logoUrl));
+                    });
+
+                    // 2. By `advertiserId` field
+                    const snapAdvId = await db.collection('advertisers').where('advertiserId', 'in', safeChunk).get();
+                    snapAdvId.docs.forEach(doc => {
+                        const b = doc.data();
+                        const bId = (doc.id || b.advertiserId || b.id || b.data_id)?.toString();
+                        if (bId) brandLogoMap.set(bId, b.storageLogoUrl || b.logoUrl || (b.raw_data && b.raw_data.logoUrl));
+                        const rawAdvId = b.advertiserId?.toString();
+                        if (rawAdvId) brandLogoMap.set(rawAdvId, b.storageLogoUrl || b.logoUrl || (b.raw_data && b.raw_data.logoUrl));
+                    });
+
+                    // 3. By raw `id` field
+                    const snapRawId = await db.collection('advertisers').where('id', 'in', safeChunk).get();
+                    snapRawId.docs.forEach(doc => {
+                        const b = doc.data();
+                        const bId = (doc.id || b.advertiserId || b.id || b.data_id)?.toString();
+                        if (bId) brandLogoMap.set(bId, b.storageLogoUrl || b.logoUrl || (b.raw_data && b.raw_data.logoUrl));
+                        const rawId = b.id?.toString();
+                        if (rawId) brandLogoMap.set(rawId, b.storageLogoUrl || b.logoUrl || (b.raw_data && b.raw_data.logoUrl));
+                    });
+                }));
+            }
+        }
+
+        // Category results: show brands from that category that aren't already in finalBrands
+        const finalBrandIds = new Set(finalBrands.map(b => b.id));
+        const categoryBrands = brandsFromCategories.filter(b => !finalBrandIds.has(b.id)).slice(0, 4);
+
+        console.log(`[Search] Query: "${q}" (token: "${primaryToken}") → B:${finalBrands.length}, P:${finalProducts.length}, O:${finalOffers.length}, Cat:${categoryBrands.length}`);
+
         res.json({
             brands: finalBrands.map(b => ({
                 name: b.name,
@@ -1336,16 +1443,28 @@ app.get('/api/search', async (req, res) => {
             products: finalProducts.map(p => ({
                 name: p.name,
                 slug: p.slug,
+                brandName: p.advertiser || p.advertiserName || p.brand || '',
+                brandSlug: p.brandSlug || p.advertiserSlug || slugify(p.advertiserName || p.advertiser || ''),
                 imageUrl: p.storageImageUrl || p.imageUrl,
                 price: p.price,
                 salePrice: p.salePrice
             })),
-            offers: finalOffers.map(o => ({
-                name: o.description || o.name,
-                id: o.id,
-                network: o.network,
-                isPromoCode: isRealCode(o.code || o.promoCode),
-                advertiser: o.advertiser
+            offers: finalOffers.map(o => {
+                const advId = (o.advertiserId || o.data_id || (o.raw_data && o.raw_data.advertiserId))?.toString();
+                return {
+                    name: o.description || o.name,
+                    id: o.id,
+                    advertiser: o.advertiser || o.advertiserName,
+                    brandSlug: o.brandSlug || o.advertiserSlug || slugify(o.advertiser || ''),
+                    brandLogo: brandLogoMap.get(advId) || o.logoUrl || null,
+                    isPromoCode: isRealCode(o.code || o.promoCode)
+                };
+            }),
+            categoryBrands: categoryBrands.map(b => ({
+                name: b.name,
+                slug: b.slug,
+                logoUrl: b.storageLogoUrl || b.logoUrl || (b.raw_data && b.raw_data.logoUrl),
+                categories: b.categories || []
             }))
         });
     } catch (err) {

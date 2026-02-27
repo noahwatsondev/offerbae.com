@@ -43,23 +43,32 @@ const isRealCode = (code) => {
     return !nonCodes.includes(clean);
 };
 
+const isCodeLike = (str) => {
+    if (!str || str.length < 4 || str.length > 24) return false;
+    const hasDigit = /\d/.test(str);
+    const isAllCapsAlnum = /^[A-Z][A-Z0-9_-]+$/.test(str);
+    if (hasDigit && isAllCapsAlnum) return true;
+    if (!hasDigit && isAllCapsAlnum && str.length >= 6) {
+        const COMMON_WORDS = new Set([
+            'SCHOOL', 'EASTER', 'SPRING', 'SUMMER', 'FALL', 'WINTER',
+            'NEEDED', 'FREEDOM', 'CHECKOUT', 'GRADUATION', 'SISTER',
+            'TRAVEL', 'TREATS', 'LAUNCH', 'MEMBER', 'ONLINE', 'ORDERS',
+            'COUPON', 'DISCOUNT', 'EXCLUSIVE', 'SPECIAL', 'BIRTHDAY',
+        ]);
+        return !COMMON_WORDS.has(str);
+    }
+    return false;
+};
+
 const extractCodeFromDescription = (desc) => {
     if (!desc) return null;
-    const patterns = [
-        /promo\s+code[:\s]+([A-Z0-9_-]{3,20})\b/i,
-        /coupon\s+code[:\s]+([A-Z0-9_-]{3,20})\b/i,
-        /discount\s+code[:\s]+([A-Z0-9_-]{3,20})\b/i,
-        /(?:use|using|apply|enter|with|code)\s+code\s+([A-Z0-9_-]{3,20})\b/i,
-        /\bcode[:\s]+([A-Z0-9_-]{3,20})\b/i,
-        /(?:using|with)\s+code\s+([A-Z0-9_-]{3,20})\b/i,
-    ];
-    for (const p of patterns) {
-        const match = desc.match(p);
-        if (match && match[1]) {
-            const candidate = match[1].toUpperCase();
-            if (/^(FOR|THE|AND|OFF|GET|USE|NEW|ONLY|SAVE|MORE|SHOP|SITE|FREE|YOUR|ALL)$/.test(candidate)) continue;
-            return candidate;
-        }
+    if (!/\bcode\b/i.test(desc)) return null;
+
+    const pattern = /\bcode[:\s\u2013\u2014\uff1a\u00a0]*([A-Za-z0-9][A-Za-z0-9_-]{2,23})\b/ig;
+    let match;
+    while ((match = pattern.exec(desc)) !== null) {
+        const candidate = match[1].toUpperCase();
+        if (isCodeLike(candidate)) return candidate;
     }
     return null;
 };

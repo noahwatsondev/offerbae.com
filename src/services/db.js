@@ -433,36 +433,40 @@ const cleanOfferCode = (code) => {
     return null;
 };
 
+// Evaluate whether a token looks like a promo code rather than a plain English word.
+// Rules: has at least one digit (e.g. BOLD10, SVMEMBER16), OR is all-caps alphanumeric
+// and 6+ chars (unlikely to be a normal English word at that length).
+const isCodeLike = (str) => {
+    if (!str || str.length < 4 || str.length > 24) return false;
+    const hasDigit = /\d/.test(str);
+    const isAllCapsAlnum = /^[A-Z][A-Z0-9_-]+$/.test(str);
+    // Strong signal: contains a digit
+    if (hasDigit && isAllCapsAlnum) return true;
+    // Weaker signal: all-caps, no digits, longer than 5 chars — exclude common words
+    if (!hasDigit && isAllCapsAlnum && str.length >= 6) {
+        const COMMON_WORDS = new Set([
+            'SCHOOL', 'EASTER', 'SPRING', 'SUMMER', 'FALL', 'WINTER',
+            'NEEDED', 'FREEDOM', 'CHECKOUT', 'GRADUATION', 'SISTER',
+            'TRAVEL', 'TREATS', 'LAUNCH', 'MEMBER', 'ONLINE', 'ORDERS',
+            'COUPON', 'DISCOUNT', 'EXCLUSIVE', 'SPECIAL', 'BIRTHDAY',
+        ]);
+        return !COMMON_WORDS.has(str);
+    }
+    return false;
+};
+
 const extractCodeFromDescription = (desc) => {
     if (!desc) return null;
-    const patterns = [
-        // Explicit label patterns (most reliable)
-        /promo\s+code[:\s]+([A-Z0-9_-]{3,20})\b/i,
-        /coupon\s+code[:\s]+([A-Z0-9_-]{3,20})\b/i,
-        /discount\s+code[:\s]+([A-Z0-9_-]{3,20})\b/i,
-        // "use/using/apply/enter code XXXX"
-        /(?:use|using|apply|enter|with)\s+code\s+([A-Z0-9_-]{3,20})\b/i,
-        // "code: XXXX" style
-        /\bcode[:\s]+([A-Z0-9_-]{3,20})\b/i,
-    ];
-    // Common English words that are NOT promo codes
-    const COMMON_WORDS = new Set([
-        'FOR', 'THE', 'AND', 'OFF', 'GET', 'USE', 'NEW', 'ONLY', 'SAVE', 'MORE',
-        'SHOP', 'SITE', 'FREE', 'YOUR', 'ALL', 'NOW', 'END', 'FALL', 'FIT',
-        'JUST', 'BIG', 'TOP', 'WIN', 'OUT', 'YES', 'DEAL', 'SALE', 'BEST',
-        'LOVE', 'ITEMS', 'CODE', 'MAGIC', 'TREAT', 'WOMEN', 'SPRING', 'SUMMER',
-        'NEEDED', 'SCHOOL', 'EASTER', 'GRADUATION', 'FREEDOM', 'CHECKOUT', 'TAX',
-    ]);
-    for (const p of patterns) {
-        const match = desc.match(p);
-        if (match && match[1]) {
-            const candidate = match[1].toUpperCase();
-            // Reject: starts with hyphen, pure common word, less than 4 chars, or all letters with no digits (weak signal)
-            if (candidate.startsWith('-')) continue;
-            if (COMMON_WORDS.has(candidate)) continue;
-            if (candidate.length < 4) continue;
-            return candidate;
-        }
+    // Bail early — no mention of "code" at all
+    if (!/\bcode\b/i.test(desc)) return null;
+
+    // Look for any word-like token that immediately follows "code" (with flexible separators)
+    // Covers: "code XXXX", "code: XXXX", "code – XXXX", "code：XXXX", "Code XXXX", etc.
+    const pattern = /\bcode[:\s\u2013\u2014\uff1a\u00a0]*([A-Za-z0-9][A-Za-z0-9_-]{2,23})\b/ig;
+    let match;
+    while ((match = pattern.exec(desc)) !== null) {
+        const candidate = match[1].toUpperCase();
+        if (isCodeLike(candidate)) return candidate;
     }
     return null;
 };
