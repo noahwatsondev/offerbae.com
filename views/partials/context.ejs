@@ -32,29 +32,27 @@
                                 <% } %>
                                     <h1 class="page-title">
                                         <%= typeof pageH1 !=='undefined' ? pageH1
-                                            : 'Exclusive Product Offerings and Savings from the Hottest Online Stores'
-                                            %>
+                                            : 'Exclusive Products and Savings from the Hottest Online Brands' %>
                                     </h1>
                         </div>
                         <% } %>
 
-                            <% if (typeof contextLink !=='undefined' && contextLink) { %>
-                                <div style="margin-bottom: 2rem;">
-                                    <a href="<%= contextLink.url %>" class="context-link-cta">
-                                        <%= contextLink.text %>
-                                    </a>
+                            <% if (typeof pageCategories !=='undefined' && pageCategories && pageCategories.length> 0) {
+                                %>
+                                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem;">
+                                    <% pageCategories.forEach(category=> { %>
+                                        <a href="/categories/<%= category.slug %>" class="category-pill">
+                                            <%= category.name %>
+                                        </a>
+                                        <% }) %>
                                 </div>
                                 <% } %>
 
-                                    <% if (typeof pageCategories !=='undefined' && pageCategories &&
-                                        pageCategories.length> 0) {
-                                        %>
-                                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem;">
-                                            <% pageCategories.forEach(category=> { %>
-                                                <a href="/categories/<%= category.slug %>" class="category-pill">
-                                                    <%= category.name %>
-                                                </a>
-                                                <% }) %>
+                                    <% if (typeof contextLink !=='undefined' && contextLink) { %>
+                                        <div style="margin-bottom: 2rem;">
+                                            <a href="<%= contextLink.url %>" class="context-link-cta">
+                                                <%= contextLink.text %>
+                                            </a>
                                         </div>
                                         <% } %>
     </div>

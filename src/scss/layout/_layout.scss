@@ -71,9 +71,8 @@ body {
 
     .context-inner {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: flex-start;
         gap: 1rem;
         margin-bottom: 0.5rem;
 

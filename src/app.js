@@ -225,6 +225,27 @@ const extractDiscountValue = (desc) => {
     return match ? parseInt(match[1]) : 0;
 };
 
+// Helper to map a Firestore product doc into a view-ready object
+// with all the fields that product-card.ejs expects
+const mapProductDoc = (doc, overrides = {}) => {
+    const data = doc.data ? doc.data() : doc;
+    const id = doc.id || data.id;
+    const price = parseFloat(data.price) || 0;
+    const salePrice = parseFloat(data.salePrice) || 0;
+    const hasDiscount = price > salePrice && salePrice > 0;
+    return {
+        ...data,
+        id,
+        price,
+        salePrice,
+        savings: hasDiscount ? price - salePrice : 0,
+        discountPercent: hasDiscount ? Math.round((1 - salePrice / price) * 100) : 0,
+        imageUrl: data.storageImageUrl || data.imageUrl,
+        brandSlug: overrides.brandSlug || data.brandSlug || slugify(data.advertiserName || data.advertiser || ''),
+        ...overrides
+    };
+};
+
 // Helper to fetch and format global dynamic categories
 const getGlobalCategories = async (prefetchedBrands = null) => {
     const enrichedBrands = prefetchedBrands || await getEnrichedAdvertisers();
@@ -367,18 +388,7 @@ app.get('/', populateSidebar, async (req, res) => {
             .limit(18)
             .get();
 
-        const topSaleProducts = productsSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                ...data,
-                id: doc.id,
-                brandSlug: slugify(data.advertiserName || data.advertiser || ''),
-                price: parseFloat(data.price) || 0,
-                salePrice: parseFloat(data.salePrice) || 0,
-                savings: data.savingsAmount || 0,
-                discountPercent: data.price && data.salePrice ? Math.round((1 - (data.salePrice / data.price)) * 100) : 0
-            };
-        });
+        const topSaleProducts = productsSnapshot.docs.map(doc => mapProductDoc(doc));
 
         // Fetch active offers with codes and sort by discount/recency
         const offersSnapshot = await db.collection('offers')
@@ -584,18 +594,7 @@ app.get('/products', populateSidebar, async (req, res) => {
             .limit(limit)
             .get();
 
-        const products = productsSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                ...data,
-                id: doc.id,
-                brandSlug: slugify(data.advertiserName || data.advertiser || ''),
-                price: parseFloat(data.price) || 0,
-                salePrice: parseFloat(data.salePrice) || 0,
-                savings: data.savingsAmount || 0,
-                discountPercent: data.price && data.salePrice ? Math.round((1 - (data.salePrice / data.price)) * 100) : 0
-            };
-        });
+        const products = productsSnapshot.docs.map(doc => mapProductDoc(doc));
 
         // Get total count for pagination (or at least check if there's more)
         const hasMore = products.length === limit;
@@ -772,15 +771,7 @@ app.get(['/brands/:slug', '/coupons/:slug'], populateSidebar, async (req, res) =
             .limit(20)
             .get();
 
-        const products = productsSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                ...data,
-                id: doc.id,
-                brandSlug: slugify(data.advertiserName || data.advertiser || ''),
-                imageUrl: data.storageImageUrl || data.imageUrl
-            };
-        });
+        const products = productsSnapshot.docs.map(doc => mapProductDoc(doc, { brandSlug: slugify((doc.data().advertiserName || doc.data().advertiser || '')) }));
 
 
 
@@ -849,10 +840,7 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
 
         const productsSnapshot = await db.collection('products')
             .where('advertiserId', '==', brandId).limit(40).get();
-        const products = productsSnapshot.docs.map(doc => {
-            const d = doc.data();
-            return { ...d, id: doc.id, brandSlug, imageUrl: d.storageImageUrl || d.imageUrl };
-        });
+        const products = productsSnapshot.docs.map(doc => mapProductDoc(doc, { brandSlug }));
 
         // Check if there are any offers to show the link
         const offersCountSnap = await db.collection('offers')
