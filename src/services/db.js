@@ -436,15 +436,33 @@ const cleanOfferCode = (code) => {
 const extractCodeFromDescription = (desc) => {
     if (!desc) return null;
     const patterns = [
-        /code:\s*([A-Za-z0-9_-]{3,})/i,
-        /promo code:\s*([A-Za-z0-9_-]{3,})/i,
-        /coupon code:\s*([A-Za-z0-9_-]{3,})/i,
-        /use code\s*([A-Za-z0-9_-]{3,})/i,
-        /enter code\s*([A-Za-z0-9_-]{3,})/i
+        // Explicit label patterns (most reliable)
+        /promo\s+code[:\s]+([A-Z0-9_-]{3,20})\b/i,
+        /coupon\s+code[:\s]+([A-Z0-9_-]{3,20})\b/i,
+        /discount\s+code[:\s]+([A-Z0-9_-]{3,20})\b/i,
+        // "use/using/apply/enter code XXXX"
+        /(?:use|using|apply|enter|with)\s+code\s+([A-Z0-9_-]{3,20})\b/i,
+        // "code: XXXX" style
+        /\bcode[:\s]+([A-Z0-9_-]{3,20})\b/i,
     ];
+    // Common English words that are NOT promo codes
+    const COMMON_WORDS = new Set([
+        'FOR', 'THE', 'AND', 'OFF', 'GET', 'USE', 'NEW', 'ONLY', 'SAVE', 'MORE',
+        'SHOP', 'SITE', 'FREE', 'YOUR', 'ALL', 'NOW', 'END', 'FALL', 'FIT',
+        'JUST', 'BIG', 'TOP', 'WIN', 'OUT', 'YES', 'DEAL', 'SALE', 'BEST',
+        'LOVE', 'ITEMS', 'CODE', 'MAGIC', 'TREAT', 'WOMEN', 'SPRING', 'SUMMER',
+        'NEEDED', 'SCHOOL', 'EASTER', 'GRADUATION', 'FREEDOM', 'CHECKOUT', 'TAX',
+    ]);
     for (const p of patterns) {
         const match = desc.match(p);
-        if (match && match[1]) return match[1].toUpperCase();
+        if (match && match[1]) {
+            const candidate = match[1].toUpperCase();
+            // Reject: starts with hyphen, pure common word, less than 4 chars, or all letters with no digits (weak signal)
+            if (candidate.startsWith('-')) continue;
+            if (COMMON_WORDS.has(candidate)) continue;
+            if (candidate.length < 4) continue;
+            return candidate;
+        }
     }
     return null;
 };
