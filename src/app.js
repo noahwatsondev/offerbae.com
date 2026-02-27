@@ -4,7 +4,7 @@ const config = require('./config/env');
 const dashboardController = require('./controllers/dashboardController');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
-const { getGlobalSettings, getEnrichedAdvertisers, isRealCode, slugify } = require('./services/db');
+const { getGlobalSettings, getEnrichedAdvertisers, isRealCode, slugify, extractCodeFromDescription } = require('./services/db');
 const firebaseAdmin = require('firebase-admin');
 const fs = require('fs');
 require('dotenv').config({ override: true });
@@ -246,6 +246,34 @@ const mapProductDoc = (doc, overrides = {}) => {
     };
 };
 
+// Helper to map a Firestore offer doc into a view-ready object.
+// Auto-extracts code from description if the stored code field is invalid.
+const mapOfferDoc = (doc, overrides = {}) => {
+    const data = doc.data ? doc.data() : doc;
+    const id = doc.id || data.id;
+    let expiresAt = 'Ongoing';
+    if (data.endDate) {
+        try {
+            const date = new Date(data.endDate);
+            if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
+        } catch (e) { }
+    }
+    const extractedCode = !isRealCode(data.code) ? extractCodeFromDescription(data.description) : null;
+    const resolvedCode = isRealCode(data.code) ? data.code : extractedCode;
+    const resolvedIsPromoCode = isRealCode(resolvedCode);
+    return {
+        ...data,
+        id,
+        expiresAt,
+        code: resolvedCode || data.code,
+        isPromoCode: resolvedIsPromoCode,
+        discountBadge: resolvedIsPromoCode ? 'CODE' : (data.description?.match(/(\d+%)|(\$\d+)/)?.[0] || 'DEAL'),
+        discountValue: extractCodeFromDescription(data.description) ? 0 : (data.discountValue || 0),
+        updatedAtTime: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : (data.updatedAtTime || 0),
+        ...overrides
+    };
+};
+
 // Helper to fetch and format global dynamic categories
 const getGlobalCategories = async (prefetchedBrands = null) => {
     const enrichedBrands = prefetchedBrands || await getEnrichedAdvertisers();
@@ -417,16 +445,12 @@ app.get('/', populateSidebar, async (req, res) => {
                 }
 
                 const offId = (data.advertiserId || data.id || data.data_id)?.toString();
-                return {
-                    ...data,
-                    id: doc.id,
-                    expiresAt,
+                return mapOfferDoc(doc, {
                     updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
                     discountValue: extractDiscountValue(data.description || data.name),
-                    isPromoCode: isRealCode(data.code),
                     brandSlug: data.advertiserSlug || slugify(data.advertiser || data.advertiserName || ''),
                     brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
-                };
+                });
             })
             .filter(o => o.code && o.code !== 'N/A' && o.code !== '') // Stick to codes only
             .sort((a, b) => {
@@ -659,16 +683,12 @@ app.get('/offers', populateSidebar, async (req, res) => {
                 }
 
                 const offId = (data.advertiserId || data.id || data.data_id)?.toString();
-                return {
-                    ...data,
-                    id: doc.id,
-                    expiresAt,
+                return mapOfferDoc(doc, {
                     updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
                     discountValue: extractDiscountValue(data.description || data.name),
-                    isPromoCode: isRealCode(data.code),
                     brandSlug: data.advertiserSlug || slugify(data.advertiser || data.advertiserName || ''),
                     brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
-                };
+                });
             })
             .filter(o => o.code && o.code !== 'N/A' && o.code !== '')
             .sort((a, b) => {
@@ -702,9 +722,13 @@ app.get('/offers', populateSidebar, async (req, res) => {
     }
 });
 
+// Redirect legacy /coupons/:slug URLs to /offers/:slug
+app.get('/coupons/:slug', (req, res) => {
+    res.redirect(301, `/offers/${req.params.slug}`);
+});
+
 // Dynamic Route for the Brand Hub
-// Shared route for Premium Brand profile and Dedicated Coupon SEO Landing Page
-app.get(['/brands/:slug', '/coupons/:slug'], populateSidebar, async (req, res) => {
+app.get('/brands/:slug', populateSidebar, async (req, res) => {
     try {
         const { slug } = req.params;
         const settings = await getGlobalSettings();
@@ -754,14 +778,18 @@ app.get(['/brands/:slug', '/coupons/:slug'], populateSidebar, async (req, res) =
                     if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
                 } catch (e) { }
             }
+            // Auto-extract code from description if the stored code field is invalid
+            const extractedCode = !isRealCode(data.code) ? extractCodeFromDescription(data.description) : null;
+            const resolvedCode = isRealCode(data.code) ? data.code : extractedCode;
             return {
                 ...data,
                 id: doc.id,
                 expiresAt,
-                isPromoCode: isRealCode(data.code),
+                code: resolvedCode || data.code,
+                isPromoCode: isRealCode(resolvedCode),
                 brandSlug: brand.slug,
                 brandLogo: brand.logoUrl,
-                discountBadge: data.isPromoCode ? 'CODE' : (data.description?.match(/(\d+%)|(\$\d+)/)?.[0] || 'DEAL')
+                discountBadge: isRealCode(resolvedCode) ? 'CODE' : (data.description?.match(/(\d+%)|(\$\d+)/)?.[0] || 'DEAL')
             };
         });
 
@@ -795,20 +823,18 @@ app.get(['/brands/:slug', '/coupons/:slug'], populateSidebar, async (req, res) =
             products,
             categories: finalCategories,
             showBrands: false,
-            // Premium routes show products aggressively; Coupon routes push them down/hide if offers abound
-            showProducts: isCouponRoute && offers.length >= 5 ? false : products.length > 0,
+            showProducts: products.length > 0,
             showOffers: offers.length > 0,
             productsH2: "Top Products",
-            offersH2: isCouponRoute ? `${brand.name} Promo Codes & Offers` : "Partner Perks",
+            offersH2: "Partner Perks",
             offersDescription: `Active promo codes and top deals from ${brand.name}.`,
             pageLogo: brand.logoUrl,
-            pageH1,
-            pageH1Sub,
+            pageH1: `${brand.name}`,
+            pageH1Sub: "Explore Products & Offers",
             pageCategories: brand.categories,
-            isCouponRoute,
             breadcrumbPath: [
-                rootBreadcrumb,
-                { name: brand.name, url: breadcrumbUrl }
+                { name: 'Brands', url: '/brands' },
+                { name: brand.name, url: `/brands/${brand.slug}` }
             ]
         });
     } catch (err) {
@@ -906,25 +932,7 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
 
         const offersSnapshot = await db.collection('offers')
             .where('advertiserId', '==', brandId).get();
-        const offers = offersSnapshot.docs.map(doc => {
-            const d = doc.data();
-            let expiresAt = 'Ongoing';
-            if (d.endDate) {
-                try {
-                    const date = new Date(d.endDate);
-                    if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
-                } catch (e) { }
-            }
-            return {
-                ...d,
-                id: doc.id,
-                expiresAt,
-                isPromoCode: isRealCode(d.code),
-                brandSlug,
-                brandLogo: brand.logoUrl,
-                discountBadge: d.isPromoCode ? 'CODE' : (d.description?.match(/(\d+%)|(\$\d+)/)?.[0] || 'DEAL')
-            };
-        });
+        const offers = offersSnapshot.docs.map(doc => mapOfferDoc(doc, { brandSlug, brandLogo: brand.logoUrl }));
 
         const finalCategories = await getGlobalCategories();
         const pageCategories = (brandData.categories || []).map(catName => {
