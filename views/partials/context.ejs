@@ -39,9 +39,11 @@
                         <% } %>
 
                             <% if (typeof contextLink !=='undefined' && contextLink) { %>
-                                <a href="<%= contextLink.url %>" class="context-link-cta">
-                                    <%= contextLink.text %>
-                                </a>
+                                <div style="margin-bottom: 2rem;">
+                                    <a href="<%= contextLink.url %>" class="context-link-cta">
+                                        <%= contextLink.text %>
+                                    </a>
+                                </div>
                                 <% } %>
 
                                     <% if (typeof pageCategories !=='undefined' && pageCategories &&

@@ -860,6 +860,13 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
         const hasOffers = !offersCountSnap.empty;
 
         const finalCategories = await getGlobalCategories();
+        const pageCategories = (brandData.categories || []).map(catName => {
+            const found = finalCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+            return {
+                name: catName,
+                slug: found ? found.slug : slugify(catName)
+            };
+        });
 
         res.render('page', {
             settings,
@@ -872,6 +879,7 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
             productsH2: `${brand.name} Products`,
             pageLogo: brand.logoUrl,
             pageH1: `${brand.name} Products`,
+            pageCategories,
             contextLink: hasOffers ? {
                 text: '🏷️ Active Offers Available!',
                 url: `/offers/${brandSlug}`
@@ -931,7 +939,18 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
         });
 
         const finalCategories = await getGlobalCategories();
-        const year = new Date().getFullYear();
+        const pageCategories = (brandData.categories || []).map(catName => {
+            const found = finalCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+            return {
+                name: catName,
+                slug: found ? found.slug : slugify(catName)
+            };
+        });
+
+        // Check if there are products for cross-linking
+        const productsCountSnap = await db.collection('products')
+            .where('advertiserId', '==', brandId).limit(1).get();
+        const hasProducts = !productsCountSnap.empty;
 
         res.render('page', {
             settings,
@@ -945,6 +964,11 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
             offersDescription: `Verified promo codes and deals from ${brand.name}. Updated ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`,
             pageLogo: brand.logoUrl,
             pageH1: `${brand.name} Promo Codes and Discounts`,
+            pageCategories,
+            contextLink: hasProducts ? {
+                text: '📦 View Available Products',
+                url: `/products/${brandSlug}`
+            } : null,
             breadcrumbPath: [
                 { name: 'Offers', url: '/offers' },
                 { name: brand.name, url: `/offers/${brandSlug}` }
