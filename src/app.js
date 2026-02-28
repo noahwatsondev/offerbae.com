@@ -108,14 +108,18 @@ app.set('view cache', false); // Disable view caching
 
 // Domain Canonicalization Middleware
 app.use((req, res, next) => {
-    // Redirect www to non-www
-    // We hardcode https to avoid double redirects and ensure stability on Render
+    // TEMPORARILY DISABLED: Redirect www to non-www
+    // We are disabling this for the next few hours to stop "Too many redirects" 
+    // while the root domain DNS propagates from Firebase to Render.
+    /*
     if (req.headers.host && req.headers.host.startsWith('www.')) {
         const nakedDomain = req.headers.host.replace(/^www\./, '');
         return res.redirect(301, 'https://' + nakedDomain + req.originalUrl);
     }
+    */
     next();
 });
+
 
 
 // Cache-Control & CSP Middleware
