@@ -40,12 +40,12 @@
 
                         document.addEventListener('click', function (e) {
                             var link = e.target.closest('a');
-                            if (link && link.hostname && link.hostname !== window.location.hostname) {
-                                var isAffiliate = link.href.indexOf('rakuten') !== -1 ||
-                                    link.href.indexOf('pjatr.com') !== -1 ||
-                                    link.href.indexOf('awin1.com') !== -1 ||
-                                    link.href.indexOf('cj.com') !== -1 ||
-                                    link.href.indexOf('pepperjam') !== -1 ||
+                            if (link && link.hostname && link.hostname != window.location.hostname) {
+                                var isAffiliate = link.href.indexOf('rakuten') != -1 ||
+                                    link.href.indexOf('pjatr.com') != -1 ||
+                                    link.href.indexOf('awin1.com') != -1 ||
+                                    link.href.indexOf('cj.com') != -1 ||
+                                    link.href.indexOf('pepperjam') != -1 ||
                                     e.target.closest('.btn-primary, .promo-redeem-btn');
 
                                 if (isAffiliate) {

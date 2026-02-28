@@ -258,7 +258,7 @@
 
         // Create a map of coupons by advertiser ID for easy lookup
         var couponsByAdvertiser = {};
-        if (typeof coupons !== 'undefined' && coupons) {
+        if (typeof coupons != 'undefined' && coupons) {
         coupons.forEach(c => {
         if (!couponsByAdvertiser[c.advertiserId]) {
         couponsByAdvertiser[c.advertiserId] = [];
@@ -727,7 +727,7 @@
                 const content = btn.nextElementSibling;
                 // Close all other dropdowns
                 document.querySelectorAll('.dropdown-content').forEach(d => {
-                    if (d !== content) d.style.display = 'none';
+                    if (d != content) d.style.display = 'none';
                 });
                 content.style.display = content.style.display === 'block' ? 'none' : 'block';
             };
@@ -1015,14 +1015,14 @@
                 // SORTING LOGIC
                 const getPriority = (o) => {
                     // Promo Codes FIRST
-                    if (o.code && o.code !== 'N/A') return 2;
+                    if (o.code && o.code != 'N/A') return 2;
                     return 1;
                 };
 
                 offers.sort((a, b) => {
                     const pA = getPriority(a);
                     const pB = getPriority(b);
-                    if (pA !== pB) return pB - pA;
+                    if (pA != pB) return pB - pA;
 
                     // Date Sort: Expiring Soonest First (Ascending)
                     // "No Date" should be LAST (infinity)
@@ -1038,7 +1038,7 @@
                 offers.forEach((coupon, i) => {
                     const currentPriority = getPriority(coupon);
                     let rowStyle = '';
-                    if (lastPriority !== null && currentPriority !== lastPriority) {
+                    if (lastPriority != null && currentPriority != lastPriority) {
                         rowStyle = 'border-top: 4px solid #cbd5e1;';
                     }
                     lastPriority = currentPriority;
@@ -1051,7 +1051,7 @@
                                                     onload="if(this.naturalWidth<=1&&this.naturalHeight<=1){this.style.display='none'; this.parentElement.innerHTML='';}">`
                         : '';
 
-                    const codeDisplay = (coupon.code && coupon.code !== 'N/A') ? `<span
+                    const codeDisplay = (coupon.code && coupon.code != 'N/A') ? `<span
                                                     class="status-badge status-active"
                                                     style="font-family: monospace; text-transform: uppercase;">${coupon.code}</span>` : `<span
                                                     style="color: var(--text-secondary);"></span>`;
@@ -1170,7 +1170,7 @@
                                                     style="width: 50px; height: 50px; background: #eee; border-radius: 4px;">
                                                 </div>`;
                     const priceDisplay = p.price ? `${p.price} ${p.currency || ''}` : '-';
-                    const isSalePayloadValid = p.salePrice && parseFloat(p.salePrice) !== 0;
+                    const isSalePayloadValid = p.salePrice && parseFloat(p.salePrice) != 0;
                     const salePriceDisplay = isSalePayloadValid ? `<span
                                                     style="color: var(--danger); font-weight: bold;">${p.salePrice}
                                                     ${p.currency || ''}</span>` : '-';
@@ -1412,7 +1412,7 @@
                             if (categoryCell) {
                                 const originalText = categoryCell.getAttribute('data-original-text') || categoryCell.innerText;
 
-                                if (category !== 'all') {
+                                if (category != 'all') {
                                     // Highlight the specific category
                                     // We need to match case-insensitive but preserve original text case
                                     // This simple replace might replace partial words too (e.g. "Cat" in "Category")

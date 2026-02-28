@@ -14,7 +14,7 @@
         <link rel="preload" href="/css/layout/main.css?v=<%= cssVersion %>" as="style">
         <link rel="stylesheet" href="/css/layout/main.css?v=<%= cssVersion %>">
 
-        <% if (typeof settings !=='undefined' ) { %>
+        <% if (typeof settings !='undefined' ) { %>
             <style>
                 :root {
                     /* Fallback to default SCSS variables if not set */
@@ -41,16 +41,16 @@
 </head>
 
 <body>
-    <% if (typeof settings !=='undefined' && settings.bgImageUrl) { %>
+    <% if (typeof settings !='undefined' && settings.bgImageUrl) { %>
         <div class="bg-fixed-layer" style="background-image: url('<%= settings.bgImageUrl %>');"></div>
         <% } %>
 
             <div class="layout">
-                <%- include('header', { settings: typeof settings !=='undefined' ? settings : {} }) %>
+                <%- include('header', { settings: typeof settings !='undefined' ? settings : {} }) %>
                     <%- include('breadcrumbs') %>
                         <%- include('context') %>
                             <%- include('sidebar') %>
-                                <%- include(typeof mainPartial !=='undefined' ? mainPartial : 'main-container' ) %>
+                                <%- include(typeof mainPartial !='undefined' ? mainPartial : 'main-container' ) %>
                                     <%- include('footer') %>
             </div>
             <%- include('footer-scripts') %>

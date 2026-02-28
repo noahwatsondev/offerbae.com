@@ -2,42 +2,42 @@
     <div class="section-header">
         <div class="section-title-area">
             <h2 id="offers-section-title">
-                <%= typeof offersH2 !=='undefined' ? offersH2 : 'Top Offers' %>
+                <%= typeof offersH2 !='undefined' ? offersH2 : 'Top Offers' %>
             </h2>
-            <% if (typeof offersDescription !=='undefined' ) { %>
+            <% if (typeof offersDescription !='undefined' ) { %>
                 <p class="section-description">
                     <%= offersDescription %>
                 </p>
                 <% } %>
         </div>
         <div class="section-actions">
-            <% if (typeof showOffersFilters !=='undefined' && showOffersFilters) { %>
+            <% if (typeof showOffersFilters !='undefined' && showOffersFilters) { %>
                 <div class="section-filters">
                     <label class="checkbox-mini">
                         <input type="checkbox" checked> Promo Codes Only
                     </label>
                 </div>
                 <% } %>
-                    <% if (typeof showOffersLink !=='undefined' && showOffersLink) { %>
+                    <% if (typeof showOffersLink !='undefined' && showOffersLink) { %>
                         <a href="/offers" class="section-link">See All Offers &rarr;</a>
                         <% } %>
         </div>
     </div>
 
     <div class="offer-grid" id="offer-grid">
-        <% if (typeof offers !=='undefined' && offers.length> 0) { %>
+        <% if (typeof offers !='undefined' && offers.length> 0) { %>
             <% offers.forEach(offer=> { %>
-                <%- include('offer-card', { offer, hideLogo: (typeof brand !=='undefined' && brand) ? true : false }) %>
+                <%- include('offer-card', { offer, hideLogo: (typeof brand !='undefined' && brand) ? true : false }) %>
                     <% }) %>
                         <% } else { %>
                             <div class="empty-state">No offers available at the moment.</div>
                             <% } %>
     </div>
 
-    <% if (typeof showOffersPagination !=='undefined' && showOffersPagination) { %>
-        <% if (typeof hasMore !=='undefined' && hasMore) { %>
+    <% if (typeof showOffersPagination !='undefined' && showOffersPagination) { %>
+        <% if (typeof hasMore !='undefined' && hasMore) { %>
             <div class="load-more-container">
-                <a href="?page=<%= (typeof currentPage !== 'undefined' ? currentPage : 1) + 1 %>"
+                <a href="?page=<%= (typeof currentPage != 'undefined' ? currentPage : 1) + 1 %>"
                     class="btn-load-more">Next Page</a>
             </div>
             <% } %>

@@ -1,4 +1,4 @@
-<a href="/brands/<%= brand.slug %>" class="brand-card-wrapper" <% if (typeof showSortData !=='undefined' &&
+<a href="/brands/<%= brand.slug %>" class="brand-card-wrapper" <% if (typeof showSortData !='undefined' &&
     showSortData) { %>
     data-name="<%= brand.name.toLowerCase() %>"
         data-stats-total="<%= (brand.productCount || 0) + (brand.offerCount || 0) %>"
@@ -58,7 +58,7 @@
                                             </div>
                                             <% if (brand.categories && brand.categories.length> 0) { %>
                                                 <div class="brand-categories">
-                                                    <% const cats=typeof categoryLimit !=='undefined' ?
+                                                    <% const cats=typeof categoryLimit !='undefined' ?
                                                         brand.categories.slice(0, categoryLimit) : brand.categories;
                                                         cats.forEach(cat=> {
                                                         %>

@@ -2,16 +2,16 @@
     <div class="section-header">
         <div class="section-title-area">
             <h2 id="products-section-title">
-                <%= typeof productsH2 !=='undefined' ? productsH2 : 'Top Products' %>
+                <%= typeof productsH2 !='undefined' ? productsH2 : 'Top Products' %>
             </h2>
-            <% if (typeof productsDescription !=='undefined' ) { %>
+            <% if (typeof productsDescription !='undefined' ) { %>
                 <p class="section-description">
                     <%= productsDescription %>
                 </p>
                 <% } %>
         </div>
         <div class="section-actions">
-            <% if (typeof showProductsFilters !=='undefined' && showProductsFilters) { %>
+            <% if (typeof showProductsFilters !='undefined' && showProductsFilters) { %>
                 <div class="section-filters">
                     <select class="select-mini">
                         <option>Sort by: Popular</option>
@@ -19,13 +19,13 @@
                     </select>
                 </div>
                 <% } %>
-                    <% if (typeof showProductsLink !=='undefined' && showProductsLink) { %>
+                    <% if (typeof showProductsLink !='undefined' && showProductsLink) { %>
                         <a href="/products" class="section-link">See All Products &rarr;</a>
                         <% } %>
         </div>
     </div>
     <div class="product-grid">
-        <% if (typeof products !=='undefined' && products.length> 0) { %>
+        <% if (typeof products !='undefined' && products.length> 0) { %>
             <% products.forEach(product=> { %>
                 <%- include('product-card', { product }) %>
                     <% }) %>
@@ -33,10 +33,10 @@
                             <p>No products found.</p>
                             <% } %>
     </div>
-    <% if (typeof showProductsPagination !=='undefined' && showProductsPagination) { %>
-        <% if (typeof hasMore !=='undefined' && hasMore) { %>
+    <% if (typeof showProductsPagination !='undefined' && showProductsPagination) { %>
+        <% if (typeof hasMore !='undefined' && hasMore) { %>
             <div class="load-more-container">
-                <a href="?page=<%= (typeof currentPage !== 'undefined' ? currentPage : 1) + 1 %>"
+                <a href="?page=<%= (typeof currentPage != 'undefined' ? currentPage : 1) + 1 %>"
                     class="btn-load-more">Next Page</a>
             </div>
             <% } %>

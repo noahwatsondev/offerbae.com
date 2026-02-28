@@ -2,7 +2,7 @@
     offer.brandName || offer.advertiser, brandLogo: offer.brandLogo || offer.logoUrl, brandSlug: offer.brandSlug ||
     offer.advertiserSlug || '' , code: offer.code, isPromoCode: offer.isPromoCode, description: offer.description,
     clickUrl: offer.clickUrl || offer.link || '' , expiresAt: offer.expiresAt })); %>
-    <div class="offer-card-wrapper<%= typeof compact !== 'undefined' && compact ? ' is-compact' : '' %>"
+    <div class="offer-card-wrapper<%= typeof compact != 'undefined' && compact ? ' is-compact' : '' %>"
         data-offer-id="<%= offer.id %>" data-brand-slug="<%= offer.brandSlug || offer.advertiserSlug || '' %>"
         data-affiliate-url="<%= offer.clickUrl || offer.link || '' %>" data-offer-json="<%= _offerJson %>"
         style="cursor: pointer;" data-code="<%= offer.code %>" data-is-code="<%= offer.isPromoCode %>"
@@ -51,7 +51,7 @@
                         <div class="offer-meta">
                             <span class="offer-expiry">Expires: <%= offer.expiresAt %></span>
                         </div>
-                        <% if (offer.isPromoCode && offer.code && offer.code !=='N/A' ) { %>
+                        <% if (offer.isPromoCode && offer.code && offer.code !='N/A' ) { %>
                             <div class="offer-promo-display is-code">
                                 <span class="promo-code-box">
                                     <%= offer.code %>

@@ -1,5 +1,5 @@
 <%# Offer Detail Modal — rendered server-side when `modalOffer` is present, shown via JS on load %>
-    <% if (typeof modalOffer !=='undefined' && modalOffer) { %>
+    <% if (typeof modalOffer !='undefined' && modalOffer) { %>
         <script>window.__MODAL_OFFER__ = <%-JSON.stringify(modalOffer)%>;</script>
         <% } %>
 

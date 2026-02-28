@@ -1,4 +1,4 @@
-<% if (typeof settings !=='undefined' && settings.headerStyles) { %>
+<% if (typeof settings !='undefined' && settings.headerStyles) { %>
     <style>
         .header {
             <%- settings.headerStyles %>
@@ -8,12 +8,12 @@
         <header class="header" id="header">
             <div class="header-main">
                 <div class="header-logo" onclick="location.href='/'">
-                    <% if (typeof settings !=='undefined' && settings.logoUrl) { %>
+                    <% if (typeof settings !='undefined' && settings.logoUrl) { %>
                         <img src="<%= settings.logoUrl %>" alt="OfferBae Home" class="header-logo-img">
                         <% } %>
                             <span class="header-logo-text"
-                                style="<%= (typeof settings !== 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
-                                <%= (typeof settings !=='undefined' && settings.logoText) ? settings.logoText
+                                style="<%= (typeof settings != 'undefined' && settings.logoStyles) ? settings.logoStyles : '' %>">
+                                <%= (typeof settings !='undefined' && settings.logoText) ? settings.logoText
                                     : 'OfferBae' %>
                             </span>
                 </div>

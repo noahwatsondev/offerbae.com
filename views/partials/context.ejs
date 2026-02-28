@@ -1,19 +1,19 @@
 <div class="context-wrapper">
     <div class="context-inner">
-        <% if (typeof pageH1Sub !=='undefined' && pageH1Sub) { %>
+        <% if (typeof pageH1Sub !='undefined' && pageH1Sub) { %>
             <%# Product page: logo + brand name on line 1, product name on line 2 — all inside H1 %>
                 <h1 class="page-title" style="display: block; width: 100%;">
                     <span style="display: flex; align-items: center; gap: 1.25rem;">
-                        <% if (typeof pageLogo !=='undefined' && pageLogo) { %>
+                        <% if (typeof pageLogo !='undefined' && pageLogo) { %>
                             <span
                                 style="width: 80px; height: 80px; background: white; border-radius: 0 1rem; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
                                 <img src="<%= pageLogo %>"
-                                    alt="<%= typeof pageH1 !== 'undefined' ? pageH1 : 'Brand' %> Logo"
+                                    alt="<%= typeof pageH1 != 'undefined' ? pageH1 : 'Brand' %> Logo"
                                     style="max-width: 100%; max-height: 100%; object-fit: contain;">
                             </span>
                             <% } %>
                                 <span>
-                                    <%= typeof pageH1 !=='undefined' ? pageH1 : '' %>
+                                    <%= typeof pageH1 !='undefined' ? pageH1 : '' %>
                                 </span>
                     </span>
                     <span
@@ -24,22 +24,22 @@
                 <% } else { %>
                     <%# Brand hub / homepage: logo as flex sibling to H1 (original layout) %>
                         <div style="display: flex; align-items: center; gap: 1.5rem; width: 100%;">
-                            <% if (typeof pageLogo !=='undefined' && pageLogo) { %>
+                            <% if (typeof pageLogo !='undefined' && pageLogo) { %>
                                 <div
                                     style="width: 80px; height: 80px; background: white; border-radius: 0 1rem; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
                                     <img src="<%= pageLogo %>"
-                                        alt="<%= typeof pageH1 !== 'undefined' ? pageH1 : 'Brand' %> Logo"
+                                        alt="<%= typeof pageH1 != 'undefined' ? pageH1 : 'Brand' %> Logo"
                                         style="max-width: 100%; max-height: 100%; object-fit: contain;">
                                 </div>
                                 <% } %>
                                     <h1 class="page-title">
-                                        <%= typeof pageH1 !=='undefined' ? pageH1
+                                        <%= typeof pageH1 !='undefined' ? pageH1
                                             : 'Exclusive Products and Savings from the Hottest Online Brands' %>
                                     </h1>
                         </div>
                         <% } %>
 
-                            <% if (typeof pageCategories !=='undefined' && pageCategories && pageCategories.length> 0) {
+                            <% if (typeof pageCategories !='undefined' && pageCategories && pageCategories.length> 0) {
                                 %>
                                 <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem;">
                                     <% pageCategories.forEach(category=> { %>
@@ -50,7 +50,7 @@
                                 </div>
                                 <% } %>
 
-                                    <% if (typeof contextLink !=='undefined' && contextLink) { %>
+                                    <% if (typeof contextLink !='undefined' && contextLink) { %>
                                         <div style="margin-bottom: 2rem;">
                                             <a href="<%= contextLink.url %>" class="context-link-cta">
                                                 <%= contextLink.text %>

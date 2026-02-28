@@ -4,7 +4,7 @@
             <ol>
                 <li><a href="/" class="home-link"><img src="/favicon.png" alt="OfferBae Logo" class="breadcrumb-logo">
                         Home</a></li>
-                <% if (typeof breadcrumbPath !=='undefined' && breadcrumbPath.length> 0) { %>
+                <% if (typeof breadcrumbPath !='undefined' && breadcrumbPath.length> 0) { %>
                     <% breadcrumbPath.forEach(function(crumb, index) { %>
                         <li><span class="separator">&gt;</span></li>
                         <% if (index===breadcrumbPath.length - 1) { %>
