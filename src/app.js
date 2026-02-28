@@ -649,6 +649,12 @@ app.get('/products', populateSidebar, async (req, res) => {
 });
 
 // Fresh Offers Page
+// Redirect legacy /coupons URLs to /offers
+app.get('/coupons', (req, res) => {
+    res.redirect(301, '/offers');
+});
+
+// Primary Offers route
 app.get('/offers', populateSidebar, async (req, res) => {
     try {
         const settings = await getGlobalSettings();
@@ -725,6 +731,20 @@ app.get('/offers', populateSidebar, async (req, res) => {
 // Redirect legacy /coupons/:slug URLs to /offers/:slug
 app.get('/coupons/:slug', (req, res) => {
     res.redirect(301, `/offers/${req.params.slug}`);
+});
+
+// Redirect legacy /brand/:legacySlug to /brands/:newSlug
+// Handles paths like /brand/53708-maytag converting them to /brands/maytag
+app.get('/brand/:legacySlug', (req, res) => {
+    const { legacySlug } = req.params;
+    // Regex matches 1 or more digits, a hyphen, then the rest of the slug
+    const match = legacySlug.match(/^\d+-(.+)$/);
+    if (match) {
+        res.redirect(301, `/brands/${match[1]}`);
+    } else {
+        // Fallback for /brand/something-without-id
+        res.redirect(301, `/brands/${legacySlug}`);
+    }
 });
 
 // Dynamic Route for the Brand Hub
