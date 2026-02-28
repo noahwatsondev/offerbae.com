@@ -10,6 +10,8 @@ const fs = require('fs');
 require('dotenv').config({ override: true });
 
 const app = express();
+app.enable('trust proxy'); // Required for Render/Cloudflare HTTPS detection
+
 
 // --- Helper function to get a secret (Env Var Only) ---
 // We have removed Google Secret Manager to strictly rely on Environment Variables
@@ -107,12 +109,14 @@ app.set('view cache', false); // Disable view caching
 // Domain Canonicalization Middleware
 app.use((req, res, next) => {
     // Redirect www to non-www
+    // We hardcode https to avoid double redirects and ensure stability on Render
     if (req.headers.host && req.headers.host.startsWith('www.')) {
         const nakedDomain = req.headers.host.replace(/^www\./, '');
-        return res.redirect(301, req.protocol + '://' + nakedDomain + req.originalUrl);
+        return res.redirect(301, 'https://' + nakedDomain + req.originalUrl);
     }
     next();
 });
+
 
 // Cache-Control & CSP Middleware
 app.use((req, res, next) => {
