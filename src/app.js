@@ -117,6 +117,93 @@ app.use((req, res, next) => {
 // Favicon Routing
 app.get('/favicon.ico', (req, res) => res.redirect('/favicon.png'));
 
+// SEO: Robots.txt
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send(`User-agent: *
+Allow: /
+Sitemap: https://offerbae.com/sitemap.xml`);
+});
+
+// SEO: Dynamic XML Sitemap
+app.get('/sitemap.xml', async (req, res) => {
+    try {
+        const firebase = require('./config/firebase');
+        const db = firebase.db;
+
+        // Base static URLs
+        const urls = [
+            { loc: 'https://offerbae.com/', priority: '1.0', changefreq: 'daily' },
+            { loc: 'https://offerbae.com/brands', priority: '0.9', changefreq: 'daily' },
+            { loc: 'https://offerbae.com/offers', priority: '0.9', changefreq: 'hourly' },
+            { loc: 'https://offerbae.com/products', priority: '0.8', changefreq: 'hourly' },
+            { loc: 'https://offerbae.com/categories', priority: '0.8', changefreq: 'daily' }
+        ];
+
+        // Fetch valid Advertisers (Brands)
+        // We only want to list brands that have a slug and some offers/products
+        const advSnapshot = await db.collection('advertisers').get();
+        const brandSlugs = new Set();
+
+        advSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.slug && data.slug.length > 1 && (data.offerCount > 0 || data.productCount > 0)) {
+                brandSlugs.add(data.slug);
+                urls.push({
+                    loc: `https://offerbae.com/brands/${data.slug}`,
+                    priority: '0.8',
+                    changefreq: 'daily',
+                    // Use updatedAt if available, otherwise default to current time
+                    lastmod: data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate().toISOString() : new Date().toISOString()
+                });
+            }
+        });
+
+        // Add Categories (based on standard categories used in the DB)
+        // Since categories are dynamically extracted from brand data in the app,
+        // we can derive them from the fetched advertisers.
+        const categorySet = new Set();
+        advSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.primaryCategory && typeof data.primaryCategory === 'string') {
+                const parts = data.primaryCategory.split(/[\/>]/).map(p => p.trim());
+                if (parts[0] && parts[0].toLowerCase() !== 'uncategorized') {
+                    categorySet.add(slugify(parts[0]));
+                }
+            }
+        });
+
+        for (const catSlug of categorySet) {
+            urls.push({
+                loc: `https://offerbae.com/categories/${catSlug}`,
+                priority: '0.7',
+                changefreq: 'weekly'
+            });
+        }
+
+        // Build XML
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+        urls.forEach(u => {
+            xml += '  <url>\n';
+            xml += `    <loc>${u.loc}</loc>\n`;
+            if (u.lastmod) xml += `    <lastmod>${u.lastmod}</lastmod>\n`;
+            if (u.changefreq) xml += `    <changefreq>${u.changefreq}</changefreq>\n`;
+            if (u.priority) xml += `    <priority>${u.priority}</priority>\n`;
+            xml += '  </url>\n';
+        });
+
+        xml += '</urlset>';
+
+        res.header('Content-Type', 'application/xml');
+        res.send(xml);
+    } catch (error) {
+        console.error('Error generating sitemap:', error);
+        res.status(500).end();
+    }
+});
+
 // Chrome DevTools Connectivity
 app.all('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
     res.status(200).json({ ok: true });
@@ -519,7 +606,17 @@ app.get('/', populateSidebar, async (req, res) => {
 
         const finalCategories = await getGlobalCategories(enrichedBrands);
 
+        const schema = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "OfferBae",
+            "url": "https://offerbae.com/",
+            "logo": "https://offerbae.com/favicon.png"
+        };
+
         res.render('page', {
+            schema,
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brands: uniquePerformanceBrands,
             products: topSaleProducts,
@@ -544,7 +641,9 @@ app.get('/', populateSidebar, async (req, res) => {
         });
     } catch (err) {
         console.error('Error fetching settings for fresh build:', err);
-        res.render('page', { settings: {}, brands: [], breadcrumbPath: [] });
+        res.render('page', {
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path), settings: {}, brands: [], breadcrumbPath: []
+        });
     }
 });
 
@@ -575,6 +674,7 @@ app.get('/brands', populateSidebar, async (req, res) => {
 
 
         res.render('page', {
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brands: brandsList,
             categories: finalCategories,
@@ -626,6 +726,7 @@ app.get('/products', populateSidebar, async (req, res) => {
         const finalCategories = await getGlobalCategories();
 
         res.render('page', {
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             products,
             categories: finalCategories,
@@ -707,6 +808,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
         const hasMore = allOffers.length > offset + limit;
 
         res.render('page', {
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             offers: paginatedOffers,
             categories: finalCategories,
@@ -836,7 +938,17 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
         const breadcrumbUrl = isCouponRoute ? `/coupons/${brand.slug}` : `/brands/${brand.slug}`;
         const rootBreadcrumb = isCouponRoute ? { name: 'Coupons', url: '/offers' } : { name: 'Brands', url: '/brands' };
 
+        const schema = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": brand.name,
+            "url": `https://offerbae.com/brands/${brand.slug}`,
+            "logo": brand.logoUrl || "https://offerbae.com/favicon.png"
+        };
+
         res.render('page', {
+            schema,
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brand,
             offers,
@@ -903,6 +1015,7 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
         });
 
         res.render('page', {
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brand,
             products,
@@ -969,6 +1082,7 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
         const hasProducts = !productsCountSnap.empty;
 
         res.render('page', {
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brand,
             offers,
@@ -1038,7 +1152,35 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
 
         const finalCategories = await getGlobalCategories();
 
+        const schema = {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": productDetails.name,
+            "image": productDetails.imageUrl,
+            "description": productDetails.description || `${productDetails.name} by ${productDetails.brandName}`,
+            "brand": {
+                "@type": "Brand",
+                "name": productDetails.brandName
+            }
+        };
+        const price = parseFloat(productDetails.salePrice || productDetails.price) || 0;
+        if (price > 0) {
+            schema.offers = {
+                "@type": "Offer",
+                "priceCurrency": "USD",
+                "price": price,
+                "itemCondition": "https://schema.org/NewCondition",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                    "@type": "Organization",
+                    "name": productDetails.brandName
+                }
+            };
+        }
+
         res.render('page', {
+            schema,
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             productDetails,
             categories: finalCategories,
@@ -1136,7 +1278,19 @@ app.get('/offers/:brandSlug/:offerId', populateSidebar, async (req, res) => {
         // SEO-targeted H1 for "[brand] coupon code" queries
         const pageH1 = `${brand.name} Promo Codes and Discounts`;
 
+        const schema = {
+            "@context": "https://schema.org",
+            "@type": "SaleEvent",
+            "name": modalOffer.name || modalOffer.title || `${brand.name} Offer`,
+            "description": modalOffer.description || `Special offer from ${brand.name}`,
+            "image": brand.logoUrl || "https://offerbae.com/favicon.png",
+            "startDate": new Date().toISOString().split('T')[0],
+            "endDate": modalOffer.endDate ? new Date(modalOffer.endDate).toISOString().split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        };
+
         res.render('page', {
+            schema,
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brand,
             offers,
@@ -1168,6 +1322,7 @@ app.get('/categories', populateSidebar, async (req, res) => {
         const finalCategories = await getGlobalCategories(enrichedBrands);
 
         res.render('page', {
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             categories: finalCategories,
             showBrands: false,
@@ -1204,6 +1359,7 @@ app.get('/categories/:categorySlug', populateSidebar, async (req, res) => {
         // For now, pass down the brands matched to this category.
 
         res.render('page', {
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brands: categoryBrands,
             categories: finalCategories,

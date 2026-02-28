@@ -1,1 +1,31 @@
 <!-- Header Scripts -->
+<% // Resolve fallbacks let finalOgTitle=typeof ogTitle !=='undefined' && ogTitle ? ogTitle : (typeof pageH1
+    !=='undefined' ? pageH1 : 'OfferBae' ); let finalOgDesc=typeof ogDescription !=='undefined' && ogDescription ?
+    ogDescription : (typeof offersDescription !=='undefined' && offersDescription ? offersDescription : (typeof
+    productsDescription !=='undefined' && productsDescription ? productsDescription : (typeof brandsDescription
+    !=='undefined' && brandsDescription ? brandsDescription : (typeof pageH1Sub !=='undefined' ? pageH1Sub
+    : 'Find the best promo codes, coupons, and product deals.' )))); let finalOgImage=typeof ogImage !=='undefined' &&
+    ogImage ? ogImage : (typeof pageLogo !=='undefined' && pageLogo ? pageLogo : 'https://offerbae.com/favicon.png' );
+    %>
+
+    <% if (typeof canonicalUrl !=='undefined' && canonicalUrl) { %>
+        <link rel="canonical" href="<%= canonicalUrl %>" />
+        <meta property="og:url" content="<%= canonicalUrl %>" />
+        <% } %>
+
+            <meta property="og:title" content="<%= finalOgTitle %>" />
+            <meta name="twitter:title" content="<%= finalOgTitle %>" />
+
+            <meta property="og:description" content="<%= finalOgDesc %>" />
+            <meta name="description" content="<%= finalOgDesc %>" />
+            <meta name="twitter:description" content="<%= finalOgDesc %>" />
+
+            <meta property="og:image" content="<%= finalOgImage %>" />
+            <meta name="twitter:image" content="<%= finalOgImage %>" />
+            <meta name="twitter:card" content="summary_large_image" />
+
+            <% if (typeof schema !=='undefined' && schema) { %>
+                <script type="application/ld+json">
+        <%- JSON.stringify(schema) %>
+    </script>
+                <% } %>

@@ -9,7 +9,8 @@
                         <article class="brand-card">
                             <% if (brand.logoUrl) { %>
                                 <div class="brand-logo"
-                                    style="background-image: url('<%= brand.logoUrl %>'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: transparent;">
+                                    style="background-image: url('<%= brand.logoUrl %>'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: transparent;"
+                                    role="img" aria-label="<%= brand.name %> Logo">
                                 </div>
                                 <% } else { %>
                                     <div class="brand-logo"></div>
