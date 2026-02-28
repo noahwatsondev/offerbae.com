@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-        <% const _titleBase=(typeof pageH1 !=='undefined' && pageH1) ? pageH1 : '' ; %>
-            <% const _titleSub=(typeof pageH1Sub !=='undefined' && pageH1Sub) ? ' ' + pageH1Sub : '' ; %>
-                <%= (_titleBase + _titleSub) ? (_titleBase + _titleSub + ' - OfferBae.com' ) : 'OfferBae.com' %>
+        <% var _titleBase=(typeof pageH1 !='undefined' && pageH1) ? pageH1 : '' ; var _titleSub=(typeof pageH1Sub
+            !='undefined' && pageH1Sub) ? ' ' + pageH1Sub : '' ; var _fullTitle='OfferBae.com' ; if (_titleBase ||
+            _titleSub) { _fullTitle=_titleBase + _titleSub + ' - OfferBae.com' ; } %>
+            <%= _fullTitle %>
     </title>
     <% const cssVersion=process.env.CSS_VERSION || '1' ; %>
         <link rel="preload" href="/css/layout/main.css?v=<%= cssVersion %>" as="style">

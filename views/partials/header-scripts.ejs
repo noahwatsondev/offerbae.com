@@ -1,14 +1,14 @@
-<!-- Header Scripts -->
-<% // Resolve fallbacks let finalOgTitle=typeof ogTitle !=='undefined' && ogTitle ? ogTitle : (typeof pageH1
-    !=='undefined' ? pageH1 : 'OfferBae' ); let finalOgDesc=typeof ogDescription !=='undefined' && ogDescription ?
-    ogDescription : (typeof offersDescription !=='undefined' && offersDescription ? offersDescription : (typeof
-    productsDescription !=='undefined' && productsDescription ? productsDescription : (typeof brandsDescription
-    !=='undefined' && brandsDescription ? brandsDescription : (typeof pageH1Sub !=='undefined' ? pageH1Sub
-    : 'Find the best promo codes, coupons, and product deals.' )))); let finalOgImage=typeof ogImage !=='undefined' &&
-    ogImage ? ogImage : (typeof pageLogo !=='undefined' && pageLogo ? pageLogo : 'https://offerbae.com/favicon.png' );
-    %>
+<% var finalOgTitle='OfferBae' ; if (typeof ogTitle !='undefined' && ogTitle) { finalOgTitle=ogTitle; } else if (typeof
+    pageH1 !='undefined' && pageH1) { finalOgTitle=pageH1; } var
+    finalOgDesc='Find the best promo codes, coupons, and product deals.' ; if (typeof ogDescription !='undefined' &&
+    ogDescription) { finalOgDesc=ogDescription; } else if (typeof offersDescription !='undefined' && offersDescription)
+    { finalOgDesc=offersDescription; } else if (typeof productsDescription !='undefined' && productsDescription) {
+    finalOgDesc=productsDescription; } else if (typeof brandsDescription !='undefined' && brandsDescription) {
+    finalOgDesc=brandsDescription; } else if (typeof pageH1Sub !='undefined' && pageH1Sub) { finalOgDesc=pageH1Sub; }
+    var finalOgImage='https://offerbae.com/favicon.png' ; if (typeof ogImage !='undefined' && ogImage) {
+    finalOgImage=ogImage; } else if (typeof pageLogo !='undefined' && pageLogo) { finalOgImage=pageLogo; } %>
 
-    <% if (typeof canonicalUrl !=='undefined' && canonicalUrl) { %>
+    <% if (typeof canonicalUrl !='undefined' && canonicalUrl) { %>
         <link rel="canonical" href="<%= canonicalUrl %>" />
         <meta property="og:url" content="<%= canonicalUrl %>" />
         <% } %>
@@ -24,8 +24,51 @@
             <meta name="twitter:image" content="<%= finalOgImage %>" />
             <meta name="twitter:card" content="summary_large_image" />
 
-            <% if (typeof schema !=='undefined' && schema) { %>
+            <% if (typeof schema !='undefined' && schema) { %>
                 <script type="application/ld+json">
         <%- JSON.stringify(schema) %>
     </script>
                 <% } %>
+
+                    <!-- GA4 Tracking & Affiliate Listeners -->
+                    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2STMM2X6DM"></script>
+                    <script>
+                        window.dataLayer = window.dataLayer || [];
+                        function gtag() { dataLayer.push(arguments); }
+                        gtag('js', new Date());
+                        gtag('config', 'G-2STMM2X6DM');
+
+                        document.addEventListener('click', function (e) {
+                            var link = e.target.closest('a');
+                            if (link && link.hostname && link.hostname !== window.location.hostname) {
+                                var isAffiliate = link.href.indexOf('rakuten') !== -1 ||
+                                    link.href.indexOf('pjatr.com') !== -1 ||
+                                    link.href.indexOf('awin1.com') !== -1 ||
+                                    link.href.indexOf('cj.com') !== -1 ||
+                                    link.href.indexOf('pepperjam') !== -1 ||
+                                    e.target.closest('.btn-primary, .promo-redeem-btn');
+
+                                if (isAffiliate) {
+                                    var brandEl = document.querySelector('.product-brand, .offer-brand');
+                                    var titleEl = document.querySelector('h1') || document.querySelector('.product-title');
+                                    gtag('event', 'affiliate_click', {
+                                        'brand_name': brandEl ? brandEl.innerText : 'unknown',
+                                        'click_url': link.href,
+                                        'click_location': window.location.pathname,
+                                        'item_name': titleEl ? titleEl.innerText : 'Direct Link'
+                                    });
+                                }
+                            }
+
+                            var offerCard = e.target.closest('.offer-card-wrapper');
+                            if (offerCard) {
+                                gtag('event', 'affiliate_click', {
+                                    'brand_name': offerCard.dataset.brandSlug || 'unknown',
+                                    'item_id': offerCard.dataset.offerId,
+                                    'item_type': 'offer',
+                                    'is_promo_code': offerCard.dataset.isCode === 'true',
+                                    'click_location': window.location.pathname
+                                });
+                            }
+                        });
+                    </script>
