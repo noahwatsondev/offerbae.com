@@ -104,11 +104,24 @@ app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'ejs');
 app.set('view cache', false); // Disable view caching
 
-// Global Cache-Control Middleware
+// Domain Canonicalization Middleware
 app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
+    // Redirect www to non-www
+    if (req.headers.host && req.headers.host.startsWith('www.')) {
+        const nakedDomain = req.headers.host.replace(/^www\./, '');
+        return res.redirect(301, req.protocol + '://' + nakedDomain + req.originalUrl);
+    }
+    next();
+});
+
+// Cache-Control & CSP Middleware
+app.use((req, res, next) => {
+    // Only disable caching on API, update scripts, and internal Mission Control
+    if (req.path.startsWith('/api') || req.path.startsWith('/update') || req.path.startsWith('/mission-control')) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+    }
     // Enhanced CSP for local development stability and devtools compatibility
     res.set('Content-Security-Policy', "default-src 'self' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: http:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*;");
     next();
