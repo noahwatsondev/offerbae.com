@@ -321,7 +321,12 @@ h2 {
                     &.home-link {
                         display: inline-flex;
                         align-items: center;
-                        gap: 0.35rem;
+
+                        span[itemprop="name"] {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 0.35rem;
+                        }
 
                         .breadcrumb-logo {
                             height: 1.2em;
