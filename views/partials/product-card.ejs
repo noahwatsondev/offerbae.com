@@ -1,4 +1,4 @@
-<a href="/products/<%= product.brandSlug || (typeof brand != 'undefined' ? brand.slug : 'unknown') %>/<%= product.slug %>"
+<a href="<%= product.clickUrl || product.link || '#' %>" target="_blank" rel="noopener noreferrer"
     class="product-card-wrapper" data-price="<%= product.price %>" data-sale-price="<%= product.salePrice %>"
     data-savings="<%= product.price - product.salePrice %>">
     <article class="product-card">

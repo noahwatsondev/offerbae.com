@@ -1,20 +1,34 @@
 <div class="breadcrumbs-wrapper">
     <div class="breadcrumbs-inner">
         <nav class="breadcrumbs" aria-label="breadcrumb">
-            <ol>
-                <li><a href="/" class="home-link"><img src="/favicon.png" alt="OfferBae Logo" class="breadcrumb-logo">
-                        Home</a></li>
+            <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    <a itemprop="item" href="/" class="home-link">
+                        <span itemprop="name"><img src="/favicon.png" alt="OfferBae Logo" class="breadcrumb-logo">
+                            Home</span>
+                    </a>
+                    <meta itemprop="position" content="1" />
+                </li>
                 <% if (typeof breadcrumbPath !='undefined' && breadcrumbPath.length> 0) { %>
                     <% breadcrumbPath.forEach(function(crumb, index) { %>
                         <li><span class="separator">&gt;</span></li>
                         <% if (index===breadcrumbPath.length - 1) { %>
-                            <li aria-current="page">
-                                <%= crumb.name %>
+                            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"
+                                aria-current="page">
+                                <span itemprop="name">
+                                    <%= crumb.name %>
+                                </span>
+                                <meta itemprop="position" content="<%= index + 2 %>" />
                             </li>
                             <% } else { %>
-                                <li><a href="<%= crumb.url %>">
-                                        <%= crumb.name %>
-                                    </a></li>
+                                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                                    <a itemprop="item" href="<%= crumb.url %>">
+                                        <span itemprop="name">
+                                            <%= crumb.name %>
+                                        </span>
+                                    </a>
+                                    <meta itemprop="position" content="<%= index + 2 %>" />
+                                </li>
                                 <% } %>
                                     <% }); %>
                                         <% } %>

@@ -395,6 +395,24 @@
     }
 }
 
+// Mobile Sticky CTA for Detail Pages
+.product-sticky-cta {
+    @media (max-width: 768px) {
+        position: fixed !important;
+        bottom: 1.5rem;
+        left: 1.5rem;
+        right: 1.5rem;
+        z-index: 50;
+        text-align: center;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--primary-color) !important;
+        background: var(--primary-color) !important;
+        color: white !important;
+        margin-top: 0 !important;
+        width: calc(100% - 3rem) !important;
+        box-sizing: border-box;
+    }
+}
+
 .content {
     grid-area: main;
     padding: 1.5rem;

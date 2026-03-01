@@ -122,9 +122,6 @@
 
     // ---- Handle offer card click ----
     function handleOfferClick(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
         const wrapper = e.currentTarget;
         const offerId = wrapper.dataset.offerId;
         const brandSlug = wrapper.dataset.brandSlug;
@@ -134,24 +131,33 @@
         let offer = {};
         try { offer = JSON.parse(decodeURIComponent(wrapper.dataset.offerJson || '{}')); } catch (_) { }
 
-        // 1. Open affiliate URL in a background tab
-        if (affiliateUrl && affiliateUrl !== '#') {
-            const newTab = window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
-            // Attempt to keep focus on the current tab (works in Chrome/Firefox)
-            if (newTab) {
-                newTab.blur();
-                window.focus();
+        // If it's a Promo Code, we intercept the click to show the modal (for copying) 
+        // while opening the affiliate link in a background tab.
+        if (offer.isPromoCode) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // 1. Open affiliate URL in a background tab
+            if (affiliateUrl && affiliateUrl !== '#') {
+                const newTab = window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
+                // Attempt to keep focus on the current tab (works in Chrome/Firefox)
+                if (newTab) {
+                    newTab.blur();
+                    window.focus();
+                }
             }
-        }
 
-        // 2. Update URL via pushState
-        if (offerId && brandSlug) {
-            _currentBrandSlug = brandSlug;
-            history.pushState({ offerId, brandSlug }, '', '/offers/' + brandSlug + '/' + offerId);
-        }
+            // 2. Update URL via pushState
+            if (offerId && brandSlug) {
+                _currentBrandSlug = brandSlug;
+                history.pushState({ offerId, brandSlug }, '', '/offers/' + brandSlug + '/' + offerId);
+            }
 
-        // 3. Show modal
-        showOfferModal(offer);
+            // 3. Show modal
+            showOfferModal(offer);
+        }
+        // If it's a pure deal (no code needed), we do NOT preventDefault. 
+        // We let the native <a> tag handle the navigation directly to the merchant.
     }
 
     // ---- Attach click handlers to all offer card wrappers ----

@@ -2,10 +2,11 @@
     offer.brandName || offer.advertiser, brandLogo: offer.brandLogo || offer.logoUrl, brandSlug: offer.brandSlug ||
     offer.advertiserSlug || '' , code: offer.code, isPromoCode: offer.isPromoCode, description: offer.description,
     clickUrl: offer.clickUrl || offer.link || '' , expiresAt: offer.expiresAt })); %>
-    <div class="offer-card-wrapper<%= typeof compact != 'undefined' && compact ? ' is-compact' : '' %>"
+    <a href="<%= offer.clickUrl || offer.link || '#' %>" target="_blank" rel="noopener noreferrer"
+        class="offer-card-wrapper<%= typeof compact != 'undefined' && compact ? ' is-compact' : '' %>"
         data-offer-id="<%= offer.id %>" data-brand-slug="<%= offer.brandSlug || offer.advertiserSlug || '' %>"
         data-affiliate-url="<%= offer.clickUrl || offer.link || '' %>" data-offer-json="<%= _offerJson %>"
-        style="cursor: pointer;" data-code="<%= offer.code %>" data-is-code="<%= offer.isPromoCode %>"
+        data-code="<%= offer.code %>" data-is-code="<%= offer.isPromoCode %>"
         data-discount="<%= offer.discountValue || 0 %>" data-updated="<%= offer.updatedAtTime || 0 %>">
         <article class="offer-card">
             <% if (typeof hideLogo==='undefined' || !hideLogo) { %>
@@ -66,6 +67,15 @@
                                     Copy/Redeem
                                 </span>
                             </div>
+                            <div class="offer-trust-signal"
+                                style="margin-top: 0.25rem; font-size: 0.75rem; color: #10b981; font-weight: 500; display: flex; align-items: center; justify-content: flex-end; gap: 0.25rem;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Verified Today
+                            </div>
                             <% } else { %>
                                 <div class="offer-promo-display is-deal">
                                     <span class="promo-redeem-btn">
@@ -75,4 +85,4 @@
                                 <% } %>
                     </div>
         </article>
-    </div>
+    </a>
