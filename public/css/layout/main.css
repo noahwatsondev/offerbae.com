@@ -296,6 +296,10 @@ h2 {
 .breadcrumbs-wrapper .breadcrumbs-inner .breadcrumbs ol a.home-link {
   display: inline-flex;
   align-items: center;
+}
+.breadcrumbs-wrapper .breadcrumbs-inner .breadcrumbs ol a.home-link span[itemprop=name] {
+  display: inline-flex;
+  align-items: center;
   gap: 0.35rem;
 }
 .breadcrumbs-wrapper .breadcrumbs-inner .breadcrumbs ol a.home-link .breadcrumb-logo {
@@ -689,6 +693,7 @@ h2 {
 }
 
 .offer-card {
+  position: relative;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -884,6 +889,23 @@ h2 {
   width: 12px;
   height: 12px;
   stroke-width: 2.5;
+}
+
+@media (max-width: 768px) {
+  .product-sticky-cta {
+    position: fixed !important;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    right: 1.5rem;
+    z-index: 50;
+    text-align: center;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--primary-color) !important;
+    background: var(--primary-color) !important;
+    color: white !important;
+    margin-top: 0 !important;
+    width: calc(100% - 3rem) !important;
+    box-sizing: border-box;
+  }
 }
 
 .content {
