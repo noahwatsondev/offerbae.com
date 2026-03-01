@@ -987,6 +987,7 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             pageH1: `${brand.name}`,
             pageH1Sub: "Explore Products & Offers",
             pageCategories: brand.categories,
+            brandDescription: brandData.description || brandData.savingsGuide || null,
             breadcrumbPath: [
                 { name: 'Brands', url: '/brands' },
                 { name: brand.name, url: `/brands/${brand.slug}` }
@@ -1037,11 +1038,16 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
             };
         });
 
+        const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
+        const currentYear = new Date().getFullYear();
+        const metaTitle = `Shop ${brand.name} Products & Deals - ${currentMonth} ${currentYear}`;
+
         res.render('page', {
             canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brand,
             products,
+            metaTitle,
             categories: finalCategories,
             showBrands: false,
             showOffers: false,
@@ -1050,6 +1056,7 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
             pageLogo: brand.logoUrl,
             pageH1: `${brand.name} Products`,
             pageCategories,
+            brandDescription: brandData.description || brandData.savingsGuide || null,
             contextLink: hasOffers ? {
                 text: '🏷️ Active Offers Available!',
                 url: `/offers/${brandSlug}`
@@ -1104,11 +1111,59 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
             .where('advertiserId', '==', brandId).limit(1).get();
         const hasProducts = !productsCountSnap.empty;
 
+        // Dynamic Meta Title Generation
+        let maxDiscount = 0;
+        offers.forEach(o => {
+            const checkStr = (o.description || '') + ' ' + (o.discountValue || '');
+            const match = checkStr.match(/(\d+)%/);
+            if (match && parseInt(match[1]) > maxDiscount && parseInt(match[1]) <= 100) {
+                maxDiscount = parseInt(match[1]);
+            }
+        });
+        const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
+        const currentYear = new Date().getFullYear();
+        let metaTitle = `${brand.name} Coupons & Promo Codes - ${currentMonth} ${currentYear}`;
+        if (maxDiscount > 0) {
+            metaTitle = `Up to ${maxDiscount}% Off ${brand.name} Coupons - ${currentMonth} ${currentYear}`;
+        }
+
+        // Schema Generation for Coupons
+        let schema = null;
+        if (offers.length > 0) {
+            schema = {
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": `${brand.name} Coupons and Offers`,
+                "itemListElement": offers.slice(0, 10).map((o, index) => {
+                    const item = {
+                        "@type": "DiscountOffer",
+                        "name": o.description || `${brand.name} Offer`,
+                        "description": o.description || `${brand.name} Discount`,
+                    };
+                    if (o.isPromoCode && o.code && o.code !== 'N/A') {
+                        item.discountCode = o.code;
+                    }
+                    if (o.expiresAt) {
+                        try {
+                            const d = new Date(o.expiresAt);
+                            if (!isNaN(d.getTime())) item.validThrough = d.toISOString();
+                        } catch (e) { }
+                    }
+                    return {
+                        "@type": "ListItem",
+                        "position": index + 1,
+                        "item": item
+                    };
+                })
+            };
+        }
+
         res.render('page', {
             canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brand,
             offers,
+            schema,
             categories: finalCategories,
             showBrands: false,
             showProducts: false,
@@ -1117,7 +1172,9 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
             offersDescription: `Verified promo codes and deals from ${brand.name}. Updated ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`,
             pageLogo: brand.logoUrl,
             pageH1: `${brand.name} Promo Codes and Discounts`,
+            metaTitle,
             pageCategories,
+            brandDescription: brandData.description || brandData.savingsGuide || null,
             contextLink: hasProducts ? {
                 text: '📦 View Available Products',
                 url: `/products/${brandSlug}`
