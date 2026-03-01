@@ -70,5 +70,18 @@
                                     'click_location': window.location.pathname
                                 });
                             }
+
+                            var dualLink = e.target.closest('.js-dual-link');
+                            if (dualLink) {
+                                var brandEl = dualLink.querySelector('.product-brand');
+                                var titleEl = dualLink.querySelector('.product-title');
+                                gtag('event', 'affiliate_click', {
+                                    'brand_name': brandEl ? brandEl.innerText : 'unknown',
+                                    'item_name': titleEl ? titleEl.innerText : 'Dual Link Product',
+                                    'item_type': 'product',
+                                    'click_url': dualLink.getAttribute('data-affiliate-url'),
+                                    'click_location': window.location.pathname
+                                });
+                            }
                         });
                     </script>

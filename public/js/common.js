@@ -27,5 +27,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Failed to copy code:', err);
             }
         }
+
+        // Global dual-link handler for SEO-friendly product cards
+        const dualLink = e.target.closest('.js-dual-link');
+        if (dualLink) {
+            const affiliateUrl = dualLink.getAttribute('data-affiliate-url');
+            if (affiliateUrl && affiliateUrl !== '#') {
+                const newTab = window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
+                if (newTab) {
+                    newTab.blur();
+                    window.focus();
+                }
+            }
+            // Do not prevent default; allow the native href to open in the current tab.
+            // GA4 tracking relies on this being an affiliate link click, but since we 
+            // changed the href to a relative URL, we should ensure GA4 still tracks it.
+            // (GA4 tracking is handled in header-scripts.ejs, we may need to adjust it there if needed)
+        }
     });
 });
