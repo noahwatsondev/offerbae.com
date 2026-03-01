@@ -1742,9 +1742,9 @@ app.use((err, req, res, next) => {
 
 // Initialize and Start Server
 initializeApp().then(() => {
-    // Schedule task to run every 4 hours
-    cron.schedule('0 */4 * * *', () => {
-        console.log('CRON: Starting scheduled data sync...');
+    // Run the data sync once a day at 2:00 AM to reduce GCP Billing for Firestore Read/Writes
+    cron.schedule('0 2 * * *', () => {
+        console.log('Running scheduled data sync (Nightly at 2:00 AM)...');
         dataSync.syncAll();
     });
 
