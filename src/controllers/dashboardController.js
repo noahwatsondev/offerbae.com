@@ -1,4 +1,7 @@
 const firebaseConfig = require('../config/firebase');
+const { GoogleGenAI } = require('@google/genai');
+const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
+const secretClient = new SecretManagerServiceClient();
 const dataSync = require('../services/dataSync');
 const imageStore = require('../services/imageStore');
 const multer = require('multer');
@@ -687,6 +690,60 @@ const updateDescription = async (req, res) => {
     }
 };
 
+const generateDescription = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { url } = req.body;
+        const result = await findAdvertiser(id);
+
+        if (!result) {
+            return res.status(404).json({ success: false, error: 'Advertiser not found' });
+        }
+
+        let apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            try {
+                const projectId = process.env.GCP_PROJECT_ID || 'offerbae-com';
+                const name = `projects/${projectId}/secrets/GEMINI_API_KEY/versions/latest`;
+                const [version] = await secretClient.accessSecretVersion({ name });
+                apiKey = version.payload.data.toString('utf8');
+            } catch (err) {
+                console.warn('Failed to get GEMINI_API_KEY from Secret Manager:', err.message);
+            }
+        }
+
+        if (!apiKey) {
+            return res.status(500).json({ success: false, error: 'GEMINI_API_KEY not configured in .env or Secret Manager' });
+        }
+
+        const ai = new GoogleGenAI({ apiKey });
+        const advName = result.adv.name || 'this brand';
+        const advUrl = url || result.adv.url || result.adv.link || '';
+
+        let prompt = `Write a 1-2 paragraph SEO-optimized description for the brand "${advName}".`;
+        if (advUrl && advUrl !== '#') {
+            prompt += ` Use their website at ${advUrl} as context to describe what they sell and their value proposition. Focus on what makes them a good place to shop and save money. Do not mention "coupons", "promo codes", or "deals" in every sentence, focus on the brand itself. Keep it concise, engaging, and directly helpful to a shopper. No introductory text like "Here is a description", just output the description itself.`;
+        } else {
+            prompt += ` Focus on what makes them a good place to shop and save money. Do not mention "coupons", "promo codes", or "deals" in every sentence, focus on the brand itself. Keep it concise, engaging, and directly helpful to a shopper. No introductory text like "Here is a description", just output the description itself.`;
+        }
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                tools: [{ googleSearch: {} }],
+            }
+        });
+
+        const generatedText = response.text || '';
+
+        res.json({ success: true, description: generatedText.trim() });
+    } catch (error) {
+        console.error('Error generating description:', error);
+        res.status(500).json({ success: false, error: 'Internal server error: ' + error.message });
+    }
+};
+
 const proxyImage = async (req, res) => {
     try {
         const { url } = req.query;
@@ -723,6 +780,7 @@ module.exports = {
     resetLogo,
     updateHomeLink,
     updateDescription,
+    generateDescription,
     uploadLogoMiddleware,
     getHomepage,
     getNewHomepage,

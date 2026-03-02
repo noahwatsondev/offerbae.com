@@ -24,6 +24,7 @@
   "dependencies": {
     "@google-cloud/secret-manager": "^6.1.1",
     "@google-cloud/storage": "^7.17.2",
+    "@google/genai": "^1.43.0",
     "axios": "^1.12.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

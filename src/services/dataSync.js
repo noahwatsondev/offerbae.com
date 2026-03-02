@@ -146,6 +146,33 @@ const handleAdvertiserCategories = (network, adv, existingData) => {
     };
 };
 
+/**
+ * Protects manual descriptions from being overwritten by network sync data.
+ */
+const handleAdvertiserDescription = (network, adv, existingData) => {
+    // If the description has ever been manually edited or generated via AI, protect it.
+    if (existingData && (existingData.manualDescription || existingData.isManualDescription || existingData.description !== undefined)) {
+        // If they ever manually updated it via the dashboard route, it will have manualDescription.
+        // We also want to protect it if it natively has a description already from a previous sync
+        // and we just don't want to blindly overwrite it or if the user edited it directly in DB.
+
+        // Strict requirement: "if the value has been updated manually at any point, do not update... 
+        // no need to even check if it has changed on their side"
+        if (existingData.manualDescription || existingData.isManualDescription) {
+            return {
+                description: existingData.manualDescription || existingData.description,
+                isManualDescription: true
+            };
+        }
+    }
+
+    // Default: use the fresh network description
+    return {
+        description: adv.description || null,
+        isManualDescription: false
+    };
+};
+
 const recalculateAdvertiserCounts = async (network, advertiserId) => {
     try {
         const db = firebaseConfig.db;
@@ -271,6 +298,7 @@ const syncRakutenAdvertisers = async () => {
 
         const logoResults = await handleAdvertiserLogo(network, adv, existingData);
         const catResults = handleAdvertiserCategories(network, adv, existingData);
+        const descResults = handleAdvertiserDescription(network, adv, existingData);
         const affiliateHomeUrl = deepLinksMap[advId] || (existingData && existingData.affiliateHomeUrl) || null;
 
         const currentData = {
@@ -282,7 +310,8 @@ const syncRakutenAdvertisers = async () => {
             categories: catResults.categories,
             isManualCategory: catResults.isManualCategory,
             country: adv.country || 'Unknown',
-            description: adv.description || null,
+            description: descResults.description,
+            isManualDescription: descResults.isManualDescription,
             logoUrl: logoResults.logoUrl,
             storageLogoUrl: logoResults.storageLogoUrl,
             isManualLogo: logoResults.isManualLogo,
@@ -448,6 +477,7 @@ const syncCJAdvertisers = async () => {
         const existingData = await getAdvertiser(network, adv.id);
         const logoResults = await handleAdvertiserLogo(network, adv, existingData);
         const catResults = handleAdvertiserCategories(network, adv, existingData);
+        const descResults = handleAdvertiserDescription(network, adv, existingData);
 
         const result = await upsertAdvertiser({
             id: adv.id,
@@ -455,7 +485,8 @@ const syncCJAdvertisers = async () => {
             name: adv.name,
             status: adv.status || 'joined',
             url: adv.url || '',
-            description: adv.description || null,
+            description: descResults.description,
+            isManualDescription: descResults.isManualDescription,
             categories: catResults.categories,
             isManualCategory: catResults.isManualCategory,
             country: adv.country || 'Unknown',
@@ -597,6 +628,7 @@ const syncAWINAdvertisers = async () => {
         const existingData = await getAdvertiser(network, adv.id);
         const logoResults = await handleAdvertiserLogo(network, adv, existingData);
         const catResults = handleAdvertiserCategories(network, adv, existingData);
+        const descResults = handleAdvertiserDescription(network, adv, existingData);
 
         const result = await upsertAdvertiser({
             id: adv.id,
@@ -604,7 +636,8 @@ const syncAWINAdvertisers = async () => {
             name: adv.name,
             status: adv.status || 'joined',
             url: adv.url || '',
-            description: adv.description || null,
+            description: descResults.description,
+            isManualDescription: descResults.isManualDescription,
             categories: catResults.categories,
             isManualCategory: catResults.isManualCategory,
             country: adv.country || 'Unknown',
@@ -737,6 +770,7 @@ const syncPepperjamAdvertisers = async () => {
         const existingData = await getAdvertiser(network, adv.id);
         const logoResults = await handleAdvertiserLogo(network, adv, existingData);
         const catResults = handleAdvertiserCategories(network, adv, existingData);
+        const descResults = handleAdvertiserDescription(network, adv, existingData);
 
         const result = await upsertAdvertiser({
             id: adv.id,
@@ -747,7 +781,8 @@ const syncPepperjamAdvertisers = async () => {
             categories: catResults.categories,
             isManualCategory: catResults.isManualCategory,
             country: 'Unknown',
-            description: adv.description || null,
+            description: descResults.description,
+            isManualDescription: descResults.isManualDescription,
             logoUrl: logoResults.logoUrl,
             storageLogoUrl: logoResults.storageLogoUrl,
             isManualLogo: logoResults.isManualLogo,

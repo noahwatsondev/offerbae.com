@@ -320,6 +320,7 @@ app.post('/api/advertiser/:id/logo/upload', dashboardController.uploadLogoMiddle
 app.post('/api/advertiser/:id/logo/reset', dashboardController.resetLogo);
 app.post('/api/advertiser/:id/homelink', express.json(), dashboardController.updateHomeLink);
 app.post('/api/advertiser/:id/description', express.json(), dashboardController.updateDescription);
+app.post('/api/advertiser/:id/generate-description', express.json(), dashboardController.generateDescription);
 app.get('/api/products/search', dashboardController.globalProductSearch);
 app.get('/api/proxy-image', dashboardController.proxyImage);
 app.get('/mission-control', dashboardController.getDashboardData);
@@ -378,7 +379,7 @@ const mapOfferDoc = (doc, overrides = {}) => {
         code: resolvedCode || data.code,
         isPromoCode: resolvedIsPromoCode,
         discountBadge: resolvedIsPromoCode ? 'CODE' : (data.description?.match(/(\d+%)|(\$\d+)/)?.[0] || 'DEAL'),
-        discountValue: extractCodeFromDescription(data.description) ? 0 : (data.discountValue || 0),
+        discountValue: resolvedIsPromoCode ? extractDiscountValue(data.description) : (data.discountValue || 0),
         updatedAtTime: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : (data.updatedAtTime || 0),
         ...overrides
     };
@@ -923,7 +924,6 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
                     if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
                 } catch (e) { }
             }
-            // Auto-extract code from description if the stored code field is invalid
             const extractedCode = !isRealCode(data.code) ? extractCodeFromDescription(data.description) : null;
             const resolvedCode = isRealCode(data.code) ? data.code : extractedCode;
             return {
@@ -934,9 +934,275 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
                 isPromoCode: isRealCode(resolvedCode),
                 brandSlug: brand.slug,
                 brandLogo: brand.logoUrl,
-                discountBadge: isRealCode(resolvedCode) ? 'CODE' : (data.description?.match(/(\d+%)|(\$\d+)/)?.[0] || 'DEAL')
+                discountBadge: isRealCode(resolvedCode) ? 'CODE' : (data.description?.match(/(\d+%)|(\\$\d+)/)?.[0] || 'DEAL')
             };
         });
+
+        // 3. Fetch Products for this Brand
+        const productsSnapshot = await db.collection('products')
+            .where('advertiserId', '==', brandId)
+            .limit(20)
+            .get();
+
+        const products = productsSnapshot.docs.map(doc => mapProductDoc(doc, { brandSlug: slugify((doc.data().advertiserName || doc.data().advertiser || '')) }));
+
+        const isCouponRoute = req.path.startsWith('/coupons');
+
+        const pageH1 = isCouponRoute
+            ? `10+ ${brand.name} Promo Codes, Coupons & Discounts (${new Date().getFullYear()})`
+            : `${brand.name}`;
+
+        const pageH1Sub = isCouponRoute
+            ? "Verified Offers & Deals"
+            : "Explore Products & Offers";
+
+        const schema = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": brand.name,
+            "url": `https://offerbae.com/brands/${brand.slug}`,
+            "logo": brand.logoUrl || "https://offerbae.com/favicon.png"
+        };
+
+        res.render('page', {
+            schema,
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
+            settings,
+            brand,
+            offers,
+            products,
+            categories: finalCategories,
+            showBrands: false,
+            showProducts: products.length > 0,
+            showOffers: offers.length > 0,
+            productsH2: "Top Products",
+            offersH2: "Partner Perks",
+            offersDescription: `Active promo codes and top deals from ${brand.name}.`,
+            pageLogo: brand.logoUrl,
+            pageH1: `${brand.name}`,
+            pageH1Sub: "Explore Products & Offers",
+            pageCategories: brand.categories,
+            brandDescription: brandData.manualDescription || brandData.description || brandData.savingsGuide || null,
+            brandWebsiteUrl: brandData.manualHomeUrl || brandData.advertiserUrl || brandData.url || (brandData.raw_data && brandData.raw_data.advertiserUrl) || null,
+            breadcrumbPath: [
+                { name: 'Brands', url: '/brands' },
+                { name: brand.name, url: `/brands/${brand.slug}` }
+            ]
+        });
+    } catch (err) {
+        console.error('Error resolving brand hub:', err);
+        res.status(500).send("Error loading Brand Hub");
+    }
+});
+
+
+// Redirect legacy /coupons URLs to /offers
+app.get('/coupons', (req, res) => {
+    res.redirect(301, '/offers');
+});
+
+// Primary Offers route
+app.get('/offers', populateSidebar, async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const db = firebaseAdmin.firestore();
+        const enrichedBrands = await getEnrichedAdvertisers();
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 60;
+        const offset = (page - 1) * limit;
+
+        // Map logoUrls
+        const brandLogoMap = new Map();
+        enrichedBrands.forEach(b => {
+            const brandId = (b.id || b.advertiserId || b.data_id || (b.raw_data && b.raw_data.id))?.toString();
+            if (brandId && b.logoUrl) brandLogoMap.set(brandId, b.logoUrl);
+        });
+
+        // We fetch all code-bearing offers for sorting/paging on server
+        // Note: For very large datasets, we'd want to index discountValue and updatedAtTime in Firestore
+        const offersSnapshot = await db.collection('offers')
+            .get();
+
+        const allOffers = offersSnapshot.docs
+            .map(doc => {
+                const data = doc.data();
+                let expiresAt = 'Ongoing';
+                if (data.endDate) {
+                    try {
+                        const date = new Date(data.endDate);
+                        if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
+                    } catch (e) { }
+                }
+
+                const offId = (data.advertiserId || data.id || data.data_id)?.toString();
+                return mapOfferDoc(doc, {
+                    updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
+                    discountValue: extractDiscountValue(data.description || data.name),
+                    brandSlug: data.advertiserSlug || slugify(data.advertiser || data.advertiserName || ''),
+                    brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
+                });
+            })
+            .filter(o => o.code && o.code !== 'N/A' && o.code !== '')
+            .sort((a, b) => {
+                if (b.discountValue !== a.discountValue) return b.discountValue - a.discountValue;
+                return b.updatedAtTime - a.updatedAtTime;
+            });
+
+        const paginatedOffers = allOffers.slice(offset, offset + limit);
+        const finalCategories = await getGlobalCategories(enrichedBrands);
+        const hasMore = allOffers.length > offset + limit;
+
+        res.render('page', {
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
+            settings,
+            offers: paginatedOffers,
+            categories: finalCategories,
+            showBrands: false,
+            showProducts: false,
+            showOffers: true,
+            offersH2: "Offers",
+            showOffersFilters: true,
+            showOffersPagination: true,
+            pageH1: "Latest Promo Codes & Coupon Offers",
+            currentPage: page,
+            limit,
+            hasMore,
+            breadcrumbPath: [{ name: 'Offers', url: '/offers' }]
+        });
+    } catch (err) {
+        console.error('Error loading fresh offers:', err);
+        res.status(500).send("Error loading Offers");
+    }
+});
+
+// Redirect legacy /coupons/:slug URLs to /offers/:slug
+app.get('/coupons/:slug', (req, res) => {
+    res.redirect(301, `/offers/${req.params.slug}`);
+});
+
+// Redirect legacy /brand/:legacySlug to /brands/:newSlug
+// Handles paths like /brand/53708-maytag converting them to /brands/maytag
+app.get('/brand/:legacySlug', (req, res) => {
+    const { legacySlug } = req.params;
+    // Regex matches 1 or more digits, a hyphen, then the rest of the slug
+    const match = legacySlug.match(/^\d+-(.+)$/);
+    if (match) {
+        res.redirect(301, `/brands/${match[1]}`);
+    } else {
+        // Fallback for /brand/something-without-id
+        res.redirect(301, `/brands/${legacySlug}`);
+    }
+});
+
+// Dynamic Route for the Brand Hub
+    } catch (err) {
+        console.error('Error loading fresh products:', err);
+        res.status(500).send("Error loading Products");
+    }
+});
+
+// Fresh Offers Page
+// Redirect legacy /coupons URLs to /offers
+app.get('/coupons', (req, res) => {
+    res.redirect(301, '/offers');
+});
+
+// Primary Offers route
+app.get('/offers', populateSidebar, async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const db = firebaseAdmin.firestore();
+        const enrichedBrands = await getEnrichedAdvertisers();
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 60;
+        const offset = (page - 1) * limit;
+
+        // Map logoUrls
+        const brandLogoMap = new Map();
+        enrichedBrands.forEach(b => {
+            const brandId = (b.id || b.advertiserId || b.data_id || (b.raw_data && b.raw_data.id))?.toString();
+            if (brandId && b.logoUrl) brandLogoMap.set(brandId, b.logoUrl);
+        });
+
+        // We fetch all code-bearing offers for sorting/paging on server
+        // Note: For very large datasets, we'd want to index discountValue and updatedAtTime in Firestore
+        const offersSnapshot = await db.collection('offers')
+            .get();
+
+        const allOffers = offersSnapshot.docs
+            .map(doc => {
+                const data = doc.data();
+                let expiresAt = 'Ongoing';
+                if (data.endDate) {
+                    try {
+                        const date = new Date(data.endDate);
+                        if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
+                    } catch (e) { }
+                }
+
+                const offId = (data.advertiserId || data.id || data.data_id)?.toString();
+                return mapOfferDoc(doc, {
+                    updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
+                    discountValue: extractDiscountValue(data.description || data.name),
+                    brandSlug: data.advertiserSlug || slugify(data.advertiser || data.advertiserName || ''),
+                    brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
+                });
+            })
+            .filter(o => o.code && o.code !== 'N/A' && o.code !== '')
+            .sort((a, b) => {
+                if (b.discountValue !== a.discountValue) return b.discountValue - a.discountValue;
+                return b.updatedAtTime - a.updatedAtTime;
+            });
+
+        const paginatedOffers = allOffers.slice(offset, offset + limit);
+        const finalCategories = await getGlobalCategories(enrichedBrands);
+        const hasMore = allOffers.length > offset + limit;
+
+        res.render('page', {
+            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
+            settings,
+            offers: paginatedOffers,
+            categories: finalCategories,
+            showBrands: false,
+            showProducts: false,
+            showOffers: true,
+            offersH2: "Offers",
+            showOffersFilters: true,
+            showOffersPagination: true,
+            pageH1: "Latest Promo Codes & Coupon Offers",
+            currentPage: page,
+            limit,
+            hasMore,
+            breadcrumbPath: [{ name: 'Offers', url: '/offers' }]
+        });
+    } catch (err) {
+        console.error('Error loading fresh offers:', err);
+        res.status(500).send("Error loading Offers");
+    }
+});
+
+// Redirect legacy /coupons/:slug URLs to /offers/:slug
+app.get('/coupons/:slug', (req, res) => {
+    res.redirect(301, `/offers/${req.params.slug}`);
+});
+
+// Redirect legacy /brand/:legacySlug to /brands/:newSlug
+// Handles paths like /brand/53708-maytag converting them to /brands/maytag
+app.get('/brand/:legacySlug', (req, res) => {
+    const { legacySlug } = req.params;
+    // Regex matches 1 or more digits, a hyphen, then the rest of the slug
+    const match = legacySlug.match(/^\d+-(.+)$/);
+    if (match) {
+        res.redirect(301, `/brands/${match[1]}`);
+    } else {
+        // Fallback for /brand/something-without-id
+        res.redirect(301, `/brands/${legacySlug}`);
+    }
+});
+
+// Dynamic Route for the Brand Hub
 
         // 3. Fetch Products for this Brand
         const productsSnapshot = await db.collection('products')
@@ -987,7 +1253,8 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             pageH1: `${brand.name}`,
             pageH1Sub: "Explore Products & Offers",
             pageCategories: brand.categories,
-            brandDescription: brandData.description || brandData.savingsGuide || null,
+            brandDescription: brandData.manualDescription || brandData.description || brandData.savingsGuide || null,
+            brandWebsiteUrl: brandData.manualHomeUrl || brandData.advertiserUrl || brandData.url || (brandData.raw_data && brandData.raw_data.advertiserUrl) || null,
             breadcrumbPath: [
                 { name: 'Brands', url: '/brands' },
                 { name: brand.name, url: `/brands/${brand.slug}` }
@@ -1056,7 +1323,8 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
             pageLogo: brand.logoUrl,
             pageH1: `${brand.name} Products`,
             pageCategories,
-            brandDescription: brandData.description || brandData.savingsGuide || null,
+            brandDescription: brandData.manualDescription || brandData.description || brandData.savingsGuide || null,
+            brandWebsiteUrl: brandData.manualHomeUrl || brandData.advertiserUrl || brandData.url || (brandData.raw_data && brandData.raw_data.advertiserUrl) || null,
             contextLink: hasOffers ? {
                 text: '🏷️ Active Offers Available!',
                 url: `/offers/${brandSlug}`
@@ -1174,7 +1442,8 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
             pageH1: `${brand.name} Promo Codes and Discounts`,
             metaTitle,
             pageCategories,
-            brandDescription: brandData.description || brandData.savingsGuide || null,
+            brandDescription: brandData.manualDescription || brandData.description || brandData.savingsGuide || null,
+            brandWebsiteUrl: brandData.manualHomeUrl || brandData.advertiserUrl || brandData.url || (brandData.raw_data && brandData.raw_data.advertiserUrl) || null,
             contextLink: hasProducts ? {
                 text: '📦 View Available Products',
                 url: `/products/${brandSlug}`
@@ -1381,6 +1650,7 @@ app.get('/offers/:brandSlug/:offerId', populateSidebar, async (req, res) => {
             showOffers: offers.length > 0,
             offersH2: `${brand.name} Promo Codes & Offers`,
             offersDescription: `Verified promo codes and deals from ${brand.name}. Updated ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`,
+            brandWebsiteUrl: brandData.manualHomeUrl || brandData.advertiserUrl || brandData.url || (brandData.raw_data && brandData.raw_data.advertiserUrl) || null,
             pageLogo: brand.logoUrl,
             pageH1,
             breadcrumbPath: [

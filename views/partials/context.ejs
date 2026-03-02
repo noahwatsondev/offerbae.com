@@ -57,12 +57,22 @@
                                         </div>
                                         <% } %>
 
-                                            <% if (typeof contextLink !='undefined' && contextLink) { %>
+                                            <% if (typeof brandWebsiteUrl !='undefined' && brandWebsiteUrl) { %>
                                                 <div style="margin-bottom: 2rem;">
-                                                    <a href="<%= contextLink.url %>" class="context-link-cta">
-                                                        <%= contextLink.text %>
+                                                    <a href="<%= brandWebsiteUrl %>" target="_blank"
+                                                        class="context-link-cta">
+                                                        Visit the <%= typeof brand !='undefined' ? brand.name : 'Brand'
+                                                            %> Website
                                                     </a>
                                                 </div>
                                                 <% } %>
+
+                                                    <% if (typeof contextLink !='undefined' && contextLink) { %>
+                                                        <div style="margin-bottom: 2rem;">
+                                                            <a href="<%= contextLink.url %>" class="context-link-cta">
+                                                                <%= contextLink.text %>
+                                                            </a>
+                                                        </div>
+                                                        <% } %>
     </div>
 </div>
