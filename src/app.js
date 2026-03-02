@@ -1095,12 +1095,6 @@ app.get('/brand/:legacySlug', (req, res) => {
     }
 });
 
-// Dynamic Route for the Brand Hub
-    } catch (err) {
-        console.error('Error loading fresh products:', err);
-        res.status(500).send("Error loading Products");
-    }
-});
 
 // Fresh Offers Page
 // Redirect legacy /coupons URLs to /offers
@@ -1202,69 +1196,6 @@ app.get('/brand/:legacySlug', (req, res) => {
     }
 });
 
-// Dynamic Route for the Brand Hub
-
-        // 3. Fetch Products for this Brand
-        const productsSnapshot = await db.collection('products')
-            .where('advertiserId', '==', brandId)
-            .limit(20)
-            .get();
-
-        const products = productsSnapshot.docs.map(doc => mapProductDoc(doc, { brandSlug: slugify((doc.data().advertiserName || doc.data().advertiser || '')) }));
-
-
-
-        const isCouponRoute = req.path.startsWith('/coupons');
-
-        const pageH1 = isCouponRoute
-            ? `10+ ${brand.name} Promo Codes, Coupons & Discounts (${new Date().getFullYear()})`
-            : `${brand.name}`;
-
-        const pageH1Sub = isCouponRoute
-            ? "Verified Offers & Deals"
-            : "Explore Products & Offers";
-
-        const breadcrumbUrl = isCouponRoute ? `/coupons/${brand.slug}` : `/brands/${brand.slug}`;
-        const rootBreadcrumb = isCouponRoute ? { name: 'Coupons', url: '/offers' } : { name: 'Brands', url: '/brands' };
-
-        const schema = {
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": brand.name,
-            "url": `https://offerbae.com/brands/${brand.slug}`,
-            "logo": brand.logoUrl || "https://offerbae.com/favicon.png"
-        };
-
-        res.render('page', {
-            schema,
-            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
-            settings,
-            brand,
-            offers,
-            products,
-            categories: finalCategories,
-            showBrands: false,
-            showProducts: products.length > 0,
-            showOffers: offers.length > 0,
-            productsH2: "Top Products",
-            offersH2: "Partner Perks",
-            offersDescription: `Active promo codes and top deals from ${brand.name}.`,
-            pageLogo: brand.logoUrl,
-            pageH1: `${brand.name}`,
-            pageH1Sub: "Explore Products & Offers",
-            pageCategories: brand.categories,
-            brandDescription: brandData.manualDescription || brandData.description || brandData.savingsGuide || null,
-            brandWebsiteUrl: brandData.manualHomeUrl || brandData.advertiserUrl || brandData.url || (brandData.raw_data && brandData.raw_data.advertiserUrl) || null,
-            breadcrumbPath: [
-                { name: 'Brands', url: '/brands' },
-                { name: brand.name, url: `/brands/${brand.slug}` }
-            ]
-        });
-    } catch (err) {
-        console.error('Error resolving brand hub:', err);
-        res.status(500).send("Error loading Brand Hub");
-    }
-});
 
 // Products page for a brand — /products/:brandSlug
 // Shows only products for that brand; links to /offers/:brandSlug for coupons
