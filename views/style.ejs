@@ -36,11 +36,12 @@
 
         @media (max-width: 768px) {
             .container {
-                padding: 0 1rem 1.5rem;
+                padding: 0;
             }
 
             .card {
-                padding: 1.25rem;
+                padding: 1rem !important;
+                border-radius: 0 !important;
             }
 
             [style*="grid-template-columns: repeat(2, 1fr)"] {
@@ -84,7 +85,6 @@
             margin-top: 0;
             margin-bottom: 1.5rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
         }
 
         .form-group {
