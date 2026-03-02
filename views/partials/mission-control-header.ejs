@@ -1,0 +1,91 @@
+<style>
+    header.mc-header {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 0.75rem 0;
+        margin-bottom: 2rem;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    header.mc-header .header-container {
+        padding: 0 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0 auto;
+        max-width: 1200px;
+    }
+
+    header.mc-header h1 {
+        font-size: 1.15rem;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    header.mc-header h1 a {
+        text-decoration: none;
+        color: var(--text-main);
+        transition: color 0.2s;
+    }
+
+    header.mc-header h1 a:hover {
+        color: var(--primary);
+    }
+
+    header.mc-header .nav-links {
+        display: flex;
+        gap: 1.25rem;
+    }
+
+    header.mc-header .nav-link {
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        padding: 0.4rem 0.75rem;
+        border-radius: 6px;
+    }
+
+    header.mc-header .nav-link:hover {
+        color: var(--text-main);
+        background: var(--bg);
+    }
+
+    header.mc-header .nav-link.active {
+        color: var(--primary);
+        background: #eef2ff;
+    }
+
+    @media (max-width: 768px) {
+        header.mc-header .header-container {
+            padding: 0 1rem;
+        }
+
+        header.mc-header h1 {
+            font-size: 1rem;
+        }
+
+        header.mc-header .nav-links {
+            gap: 0.5rem;
+        }
+
+        header.mc-header .nav-link {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.6rem;
+        }
+    }
+</style>
+
+<header class="mc-header">
+    <div class="header-container">
+        <h1><a href="/mission-control">Mission Control</a></h1>
+        <div class="nav-links">
+            <a href="/mission-control/style" class="nav-link <%= active === 'style' ? 'active' : '' %>">Style</a>
+            <a href="/mission-control/docs" class="nav-link <%= active === 'docs' ? 'active' : '' %>">Docs</a>
+        </div>
+    </div>
+</header>

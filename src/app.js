@@ -241,8 +241,9 @@ app.use(express.static(path.join(__dirname, '../public'), {
 // Explicit manual sync route for debugging/triggering
 app.get('/update/full-sync', async (req, res) => {
     try {
-        await dataSync.syncAll();
-        res.send('Sync initiated. Check server logs.');
+        // Run in background, don't await
+        dataSync.syncAll().catch(e => console.error(e));
+        res.send('Global Sync Started');
     } catch (e) {
         res.status(500).send(e.message);
     }
@@ -306,7 +307,7 @@ app.get('/api/sync-history/:network', async (req, res) => {
 // Routes
 // Routes
 // Routes
-app.get('/mission-control/architecture', dashboardController.getArchitecture);
+app.get('/mission-control/docs', dashboardController.getDocs);
 app.get('/mission-control/style', dashboardController.getStyle);
 app.post('/mission-control/style', (req, res, next) => {
 

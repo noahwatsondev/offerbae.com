@@ -29,13 +29,8 @@ const updateStyle = async (req, res) => {
     try {
         const {
             logoText, logoStyles, headerStyles, headerNavLinksColor, footerStyles,
-            filterInputStyles, categorySelectedStyles, categoryLinkStyles, categoryHoverStyles,
             bgColor, defaultLinkColor,
-            colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorViolet,
-            offersCtaStyles, productsCtaStyles, offersCtaCountStyles, productsCtaCountStyles,
-            categoriesHeading, categoriesHeadingStyles,
-            offerRowStyles, offerImageStyles, offerPromoCodeStyles, offerTitleStyles, offerTimeLeftStyles,
-            productRowStyles, productImageStyles, productTitleStyles, productPriceStyles, productSalePriceStyles
+            colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorViolet
         } = req.body;
         const files = req.files || {};
 
@@ -45,10 +40,6 @@ const updateStyle = async (req, res) => {
             headerStyles,
             headerNavLinksColor,
             footerStyles,
-            filterInputStyles,
-            categorySelectedStyles,
-            categoryLinkStyles,
-            categoryHoverStyles,
             bgColor,
             defaultLinkColor,
             colorRed,
@@ -56,23 +47,7 @@ const updateStyle = async (req, res) => {
             colorYellow,
             colorGreen,
             colorBlue,
-            colorViolet,
-            offersCtaStyles,
-            productsCtaStyles,
-            offersCtaCountStyles,
-            productsCtaCountStyles,
-            categoriesHeading,
-            categoriesHeadingStyles,
-            offerRowStyles,
-            offerImageStyles,
-            offerPromoCodeStyles,
-            offerTitleStyles,
-            offerTimeLeftStyles,
-            productRowStyles,
-            productImageStyles,
-            productTitleStyles,
-            productPriceStyles,
-            productSalePriceStyles
+            colorViolet
         };
 
         // Remove undefined keys so they don't break Firestore or overwrite existing settings with undefined (if merge logic was different)
@@ -176,105 +151,6 @@ const getDashboardData = async (req, res) => {
     }
 };
 
-const getHomepage = async (req, res) => {
-    console.log('ENTER: getHomepage');
-    try {
-        const advertisers = await getEnrichedAdvertisers();
-        const settings = await getGlobalSettings();
-        const totalOffers = advertisers.reduce((sum, adv) => sum + (adv.offerCount || 0), 0);
-
-        const networkStats = {
-            Rakuten: { advertisers: 0, offers: 0, products: 0 },
-            CJ: { advertisers: 0, offers: 0, products: 0 },
-            AWIN: { advertisers: 0, offers: 0, products: 0 },
-            Pepperjam: { advertisers: 0, offers: 0, products: 0 }
-        };
-
-        advertisers.forEach(adv => {
-            const net = adv.network;
-            if (networkStats[net]) {
-                networkStats[net].advertisers++;
-                networkStats[net].offers += (adv.offerCount || 0);
-                networkStats[net].products += (adv.productCount || 0);
-            }
-        });
-
-        res.render('index', {
-            advertisers,
-            offerCounts: {},
-            productCounts: {},
-            saleProductCounts: {},
-            settings: settings,
-            pageH1: 'Brands',
-            stats: {
-                rakuten: networkStats.Rakuten.advertisers,
-                cj: networkStats.CJ.advertisers,
-                awin: networkStats.AWIN.advertisers,
-                pepperjam: networkStats.Pepperjam.advertisers,
-                totalProducts: 0, // Not used in index currently but kept for interface stability
-                totalAdvertisers: advertisers.length,
-                totalCoupons: totalOffers,
-                networkDetailed: networkStats
-            }
-        });
-    } catch (error) {
-        res.status(500).send('Error loading brands page: ' + error.message);
-    }
-};
-
-const getNewHomepage = async (req, res) => {
-    try {
-        const settings = await getGlobalSettings();
-        const db = firebaseConfig.db;
-
-        // Fetch a larger pool of products with savingsAmount
-        // This allows us to filter for brand diversity in memory
-        const productsSnapshot = await db.collection('products')
-            .where('savingsAmount', '>', 0)
-            .orderBy('savingsAmount', 'desc')
-            .limit(24)
-            .get();
-
-        console.log(`[Homepage] Fetched ${productsSnapshot.size} top savings products`);
-
-        const topSaleProducts = productsSnapshot.docs.map(doc => {
-            const product = doc.data();
-            return {
-                ...product,
-                id: doc.id,
-                price: parseFloat(product.price) || 0,
-                salePrice: parseFloat(product.salePrice) || 0,
-                savings: product.savingsAmount || 0
-            };
-        });
-
-        console.log(`[Homepage] Rendering ${topSaleProducts.length} top products`);
-
-        const advertisers = await getEnrichedAdvertisers();
-
-        res.render('home', {
-            settings,
-            topSaleProducts,
-            advertisers,
-            pageH1: 'Best Deals'
-        });
-    } catch (e) {
-        console.error('Error loading homepage:', e);
-        res.status(500).send('Error loading homepage: ' + e.message);
-    }
-};
-
-const getComingSoon = async (req, res) => {
-    try {
-        const settings = await getGlobalSettings();
-        res.render('coming-soon', { settings, pageH1: 'OfferBae' });
-    } catch (e) {
-        res.status(500).send('Error loading homepage: ' + e.message);
-    }
-};
-
-
-
 const refreshData = async (req, res) => {
     console.log('ENTER: refreshData');
     try {
@@ -290,9 +166,9 @@ const refreshData = async (req, res) => {
     }
 };
 
-const getArchitecture = async (req, res) => {
+const getDocs = async (req, res) => {
     try {
-        res.render('architecture', { pageH1: 'Mission Control' });
+        res.render('docs', { pageH1: 'Mission Control' });
     } catch (error) {
         res.status(500).send('Error loading architecture page: ' + error.message);
     }
@@ -782,10 +658,7 @@ module.exports = {
     updateDescription,
     generateDescription,
     uploadLogoMiddleware,
-    getHomepage,
-    getNewHomepage,
-    getComingSoon,
-    getArchitecture,
+    getDocs,
     getStyle,
     updateStyle,
     uploadStyleMiddleware,
