@@ -43,7 +43,8 @@
                                 %>
                                 <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem;">
                                     <% pageCategories.forEach(category=> { %>
-                                        <a href="/categories/<%= category.slug %>" class="category-pill">
+                                        <a href="<%= category.slug === '' ? '/brands' : '/categories/' + category.slug %>"
+                                            class="category-pill">
                                             <%= category.name %>
                                         </a>
                                         <% }) %>
