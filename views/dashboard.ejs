@@ -34,7 +34,7 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 1.5rem 2rem;
+            padding: 0;
         }
 
         @media (max-width: 768px) {
@@ -62,7 +62,7 @@
 
         .stat-card {
             background: var(--surface);
-            padding: 1.5rem;
+            padding: 1rem;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border);
@@ -774,29 +774,30 @@
         <script>
             // Debug log
 
-            getProxiedUrl = (url) => {
+            window.getProxiedUrl = (url) => {
                 if (!url) return '';
                 if (url.startsWith(' http')) { return `/api/proxy-image?url=${encodeURIComponent(url)}`; } return url;
-            }; // Toggle Dropdown window.toggleDropdown=(btn)=> {
-            const content = btn.nextElementSibling;
-            const row = btn.closest('tr');
+            }; window.toggleDropdown = (btn) => {
+                const content = btn.nextElementSibling;
+                const row = btn.closest('tr');
 
-            // Close all other dropdowns
-            document.querySelectorAll('.dropdown-content').forEach(d => {
-                if (d != content) {
-                    d.style.display = 'none';
-                    d.closest('tr').classList.remove('z-elevated');
+                // Close all other dropdowns
+                document.querySelectorAll('.dropdown-content').forEach(d => {
+                    if (d !== content) {
+                        d.style.display = 'none';
+                        const otherRow = d.closest('tr');
+                        if (otherRow) otherRow.classList.remove('z-elevated');
+                    }
+                });
+
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                    row.classList.remove('z-elevated');
+                } else {
+                    content.style.display = 'block';
+                    row.classList.add('z-elevated');
                 }
-            });
-
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-                row.classList.remove('z-elevated');
-            } else {
-                content.style.display = 'block';
-                row.classList.add('z-elevated');
-            }
-                                                        };
+            };
 
             // Close dropdowns when clicking outside
             window.onclick = function (event) {
@@ -849,10 +850,10 @@
                     }
                 });
 
-                // Reorder rows in the DOM
-                // Note: We need to move the associated hidden rows (lazy
-                loaded
-                                                            ones) as well
+                /* Reorder rows in the DOM
+                // Note: We need to move the associated hidden rows
+                (lazyloaded ones) as well */
+
                 rows.forEach(row => {
                     table.appendChild(row); // Moves the brand row
 
@@ -1002,8 +1003,8 @@
 
                     try {
                         icon.classList.add('spin');
-                        // Use lowercase for route e.g. /update/rakuten-sync or
-                        /update/full - sync
+                        /* Use lowercase for route e.g. /update/rakuten-sync or
+                        /update/full - sync */
                         const endpoint = network === 'all' ? '/update/full-sync' :
                             `/update/${network.toLowerCase()}-sync`;
                         const res = await fetch(endpoint);
@@ -1240,36 +1241,36 @@
                 // Re-attach listeners for dynamically created elements
                 const searchInput =
                     container.querySelector('.offer-search-input');
-                searchInput.addEventListener('input', (e) => {
-                    const term = e.target.value.toLowerCase();
-                    const rows = container.querySelectorAll('tbody tr');
-                    rows.forEach(row => {
-                        // Skip explicit image rows (IDs starting with img-)
-                        if (row.id && row.id.startsWith('img-')) return;
 
-                        const code = row.cells[1].textContent.toLowerCase();
-                        const desc = row.cells[2].textContent.toLowerCase();
-                        const match = code.includes(term) || desc.includes(term);
-                        row.style.display = match ? '' : 'none';
-
-                        const nextRow = row.nextElementSibling;
-                        if (nextRow && nextRow.id && nextRow.id.startsWith('img-')) {
-                            if (!match) nextRow.style.display = 'none';
-                        }
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        const term = e.target.value.toLowerCase();
+                        const rows = container.querySelectorAll('tbody tr');
+                        rows.forEach(row => {
+                            if (row.id && row.id.startsWith('img-')) return;
+                            const code = row.cells[1].textContent.toLowerCase();
+                            const desc = row.cells[2].textContent.toLowerCase();
+                            const match = code.includes(term) || desc.includes(term);
+                            row.style.display = match ? '' : 'none';
+                            const nextRow = row.nextElementSibling;
+                            if (nextRow && nextRow.id && nextRow.id.startsWith('img-')) {
+                                if (!match) nextRow.style.display = 'none';
+                            }
+                        });
                     });
-                });
+                }
 
-                container.querySelectorAll('.toggle-image-thumb').forEach(el
-                    => {
-                    el.addEventListener('click', (e) => {
-                        const targetId = e.target.dataset.target;
-                        const targetRow = document.getElementById(targetId);
-                        if (targetRow) {
-                            const isHidden = targetRow.style.display === 'none';
-                            targetRow.style.display = isHidden ? 'table-row' : 'none';
-                        }
+                container.querySelectorAll('.toggle-image-thumb')
+                    .forEach((el) => {
+                        el.addEventListener('click', (e) => {
+                            const targetId = e.target.dataset.target;
+                            const targetRow = document.getElementById(targetId);
+                            if (targetRow) {
+                                const isHidden = targetRow.style.display === 'none';
+                                targetRow.style.display = isHidden ? 'table-row' : 'none';
+                            }
+                        });
                     });
-                });
             };
 
             const renderProductsTable = (container, products) => {
@@ -1465,117 +1466,117 @@
 
 
                 // LAZY LOAD OFFERS
-                document.querySelectorAll('.toggle-offers-btn').forEach(btn
-                    => {
-                    btn.addEventListener('click', async (e) => {
+                document.querySelectorAll('.toggle-offers-btn')
+                    .forEach((btn) => {
+                        btn.addEventListener('click', async (e) => {
 
-                        const advId = btn.dataset.advId;
-                        const rowId = `offers-row-${advId}`;
-                        const contentId = `offers-content-${advId}`;
-                        const offersRow = document.getElementById(rowId);
-                        const contentDiv = document.getElementById(contentId);
-                        const isLoaded = btn.dataset.loaded === 'true';
+                            const advId = btn.dataset.advId;
+                            const rowId = `offers-row-${advId}`;
+                            const contentId = `offers-content-${advId}`;
+                            const offersRow = document.getElementById(rowId);
+                            const contentDiv = document.getElementById(contentId);
+                            const isLoaded = btn.dataset.loaded === 'true';
 
-                        if (!offersRow) return;
+                            if (!offersRow) return;
 
-                        if (isLoaded) {
-                            const isHidden = offersRow.style.display === 'none';
-                            offersRow.style.display = isHidden ? 'table-row' : 'none';
+                            if (isLoaded) {
+                                const isHidden = offersRow.style.display === 'none';
+                                offersRow.style.display = isHidden ? 'table-row' : 'none';
+                                const textSpan = btn.querySelector('span:first-child');
+                                if (textSpan) {
+                                    textSpan.textContent = isHidden ?
+                                        textSpan.textContent.replace('Show', 'Hide') :
+                                        textSpan.textContent.replace('Hide', 'Show');
+                                }
+                                return;
+                            }
+
+                            offersRow.style.display = 'table-row';
                             const textSpan = btn.querySelector('span:first-child');
                             if (textSpan) {
-                                textSpan.textContent = isHidden ?
-                                    textSpan.textContent.replace('Show', 'Hide') :
-                                    textSpan.textContent.replace('Hide', 'Show');
+                                textSpan.textContent = textSpan.textContent.replace('Show',
+                                    'Hide');
                             }
-                            return;
-                        }
 
-                        offersRow.style.display = 'table-row';
-                        const textSpan = btn.querySelector('span:first-child');
-                        if (textSpan) {
-                            textSpan.textContent = textSpan.textContent.replace('Show',
-                                'Hide');
-                        }
+                            try {
+                                const res = await fetch(`/api/advertiser/${advId}/offers`);
+                                const data = await res.json();
 
-                        try {
-                            const res = await fetch(`/api/advertiser/${advId}/offers`);
-                            const data = await res.json();
-
-                            if (data.success && data.offers) {
-                                renderOffersTable(contentDiv, data.offers, advId);
-                                btn.dataset.loaded = 'true';
-                            } else {
-                                contentDiv.innerHTML = `<div
+                                if (data.success && data.offers) {
+                                    renderOffersTable(contentDiv, data.offers, advId);
+                                    btn.dataset.loaded = 'true';
+                                } else {
+                                    contentDiv.innerHTML = `<div
                                                                 style="color:red; padding:1rem;">Failed
                                                                 to load
                                                                 offers.</div>`;
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            contentDiv.innerHTML = `<div
+                                }
+                            } catch (err) {
+                                console.error(err);
+                                contentDiv.innerHTML = `<div
                                                                 style="color:red; padding:1rem;">Error
                                                                 loading
                                                                 offers.</div>`;
-                        }
+                            }
+                        });
                     });
-                });
 
                 // LAZY LOAD PRODUCTS
-                document.querySelectorAll('.toggle-products-btn').forEach(btn
-                    => {
-                    btn.addEventListener('click', async (e) => {
+                document.querySelectorAll('.toggle-products-btn')
+                    .forEach((btn) => {
+                        btn.addEventListener('click', async (e) => {
 
-                        const advId = btn.dataset.advId;
-                        const rowId = `products-row-${advId}`;
-                        const contentId = `products-content-${advId}`;
-                        const productRow = document.getElementById(rowId);
-                        const contentDiv = document.getElementById(contentId);
-                        const isLoaded = btn.dataset.loaded === 'true';
+                            const advId = btn.dataset.advId;
+                            const rowId = `products-row-${advId}`;
+                            const contentId = `products-content-${advId}`;
+                            const productRow = document.getElementById(rowId);
+                            const contentDiv = document.getElementById(contentId);
+                            const isLoaded = btn.dataset.loaded === 'true';
 
-                        if (!productRow) return;
+                            if (!productRow) return;
 
-                        if (isLoaded) {
-                            const isHidden = productRow.style.display === 'none';
-                            productRow.style.display = isHidden ? 'table-row' : 'none';
+                            if (isLoaded) {
+                                const isHidden = productRow.style.display === 'none';
+                                productRow.style.display = isHidden ? 'table-row' : 'none';
+                                const textSpan = btn.querySelector('span:first-child');
+                                if (textSpan) {
+                                    textSpan.textContent = isHidden ?
+                                        textSpan.textContent.replace('Show', 'Hide') :
+                                        textSpan.textContent.replace('Hide', 'Show');
+                                }
+                                return;
+                            }
+
+                            productRow.style.display = 'table-row';
                             const textSpan = btn.querySelector('span:first-child');
                             if (textSpan) {
-                                textSpan.textContent = isHidden ?
-                                    textSpan.textContent.replace('Show', 'Hide') :
-                                    textSpan.textContent.replace('Hide', 'Show');
+                                textSpan.textContent = textSpan.textContent.replace('Show',
+                                    'Hide');
                             }
-                            return;
-                        }
 
-                        productRow.style.display = 'table-row';
-                        const textSpan = btn.querySelector('span:first-child');
-                        if (textSpan) {
-                            textSpan.textContent = textSpan.textContent.replace('Show',
-                                'Hide');
-                        }
+                            try {
+                                const res = await
+                                    fetch(`/api/advertiser/${advId}/products`);
+                                const data = await res.json();
 
-                        try {
-                            const res = await
-                                fetch(`/api/advertiser/${advId}/products`);
-                            const data = await res.json();
-
-                            if (data.success && data.products) {
-                                renderProductsTable(contentDiv, data.products);
-                                btn.dataset.loaded = 'true';
-                            } else {
-                                contentDiv.innerHTML = `<div
+                                if (data.success && data.products) {
+                                    renderProductsTable(contentDiv, data.products);
+                                    btn.dataset.loaded = 'true';
+                                } else {
+                                    contentDiv.innerHTML = `<div
                                                                 style="color:red; padding:1rem;">Failed
                                                                 to load
                                                                 products.</div>`;
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            contentDiv.innerHTML = `<div
+                                }
+                            } catch (err) {
+                                console.error(err);
+                                contentDiv.innerHTML = `<div
                                                                 style="color:red; padding:1rem;">Error
                                                                 loading
                                                                 products.</div>`;
-                        }
+                            }
+                        });
                     });
-                });
 
                 // MAIN FILTER LOGIC
                 // Stats elements
@@ -1589,26 +1590,26 @@
 
                 const closeAllSubTables = () => {
                     // Close Offer Rows
-                    document.querySelectorAll('[id^="offers-row-"]').forEach(row
-                        => {
-                        row.style.display = 'none';
-                    });
+                    document.querySelectorAll('[id^="offers-row-"]')
+                        .forEach((row) => {
+                            row.style.display = 'none';
+                        });
                     // Reset Offer Buttons
-                    document.querySelectorAll('.toggle-offers-btn').forEach(btn
-                        => {
-                        btn.textContent = btn.textContent.replace('Hide', 'Show');
-                    });
+                    document.querySelectorAll('.toggle-offers-btn')
+                        .forEach((btn) => {
+                            btn.textContent = btn.textContent.replace('Hide', 'Show');
+                        });
 
                     // Close Product Rows
-                    document.querySelectorAll('[id^="products-row-"]').forEach(row
-                        => {
-                        row.style.display = 'none';
-                    });
+                    document.querySelectorAll('[id^="products-row-"]')
+                        .forEach((row) => {
+                            row.style.display = 'none';
+                        });
                     // Reset Product Buttons
-                    document.querySelectorAll('.toggle-products-btn').forEach(btn
-                        => {
-                        btn.textContent = btn.textContent.replace('Hide', 'Show');
-                    });
+                    document.querySelectorAll('.toggle-products-btn')
+                        .forEach((btn) => {
+                            btn.textContent = btn.textContent.replace('Hide', 'Show');
+                        });
                 };
 
                 // Escape Regex Helper
@@ -1655,15 +1656,15 @@
                                     categoryCell.getAttribute('data-original-text')
                                     || categoryCell.innerText;
                                 if (category != 'all') {
-                                                            // Highlight the specific category
-                                                            // We need to match case-insensitive but preserve original
-                                                            text case
-                                    // This simple replace might replace partial words too (e.g.
-                                    "Cat"
+                                    // Highlight the specific category
+                                    /* We need to match case-insensitive but preserve original
+                                    text case */
+                                    /* This simple replace might replace partial words too (e.g.
+                                    "Cat" */
                                     // in "Category")
                                     // But typically categories are distinct terms.
-                                    // For exact word matching we'd need \b but categories often
-                                    contain
+                                    /* For exact word matching we'd need \b but categories often
+                                    contain */
                                     // spaces / symbols.
                                     // Let's stick to simple literal match for now as requested.
                                     const safeCategory = escapeRegExp(category);
