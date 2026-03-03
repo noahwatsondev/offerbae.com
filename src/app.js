@@ -206,6 +206,20 @@ app.get('/sitemap.xml', async (req, res) => {
             });
         }
 
+        // Fetch Published Love Letters
+        const lettersSnapshot = await db.collection('love_letters').where('published', '==', true).get();
+        urls.push({ loc: 'https://offerbae.com/loveletters', priority: '0.9', changefreq: 'daily' });
+
+        lettersSnapshot.forEach(doc => {
+            const data = doc.data();
+            urls.push({
+                loc: `https://offerbae.com/loveletters/${data.slug}-${doc.id}`,
+                priority: '0.8',
+                changefreq: 'weekly',
+                lastmod: data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate().toISOString() : new Date().toISOString()
+            });
+        });
+
         // Build XML
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
         xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
