@@ -1232,6 +1232,10 @@ app.get('/brand/:legacySlug', (req, res) => {
 app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
     try {
         const { brandSlug } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = 100; // Force 100 per page exactly
+        const offset = (page - 1) * limit;
+
         const settings = await getGlobalSettings();
         const firebase = require('./config/firebase');
         const db = firebase.db;
@@ -1249,8 +1253,37 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
         };
 
         const productsSnapshot = await db.collection('products')
-            .where('advertiserId', '==', brandId).limit(40).get();
-        const products = productsSnapshot.docs.map(doc => mapProductDoc(doc, { brandSlug }));
+            .where('advertiserId', '==', brandId).get();
+
+        const allProducts = productsSnapshot.docs.map(doc => mapProductDoc(doc, { brandSlug }));
+
+        // Sort: On-sale first (by most savings amount to least), then regular priced items
+        allProducts.sort((a, b) => {
+            const aSalePrice = Number(a.salePrice || 0);
+            const aOriginalPrice = Number(a.price || 0);
+            const bSalePrice = Number(b.salePrice || 0);
+            const bOriginalPrice = Number(b.price || 0);
+
+            const aIsSale = aSalePrice > 0 && aSalePrice < aOriginalPrice;
+            const bIsSale = bSalePrice > 0 && bSalePrice < bOriginalPrice;
+
+            if (aIsSale && !bIsSale) return -1;
+            if (!aIsSale && bIsSale) return 1;
+
+            // Both are sale items, sort by savings descending
+            if (aIsSale && bIsSale) {
+                const aSavings = aOriginalPrice - aSalePrice;
+                const bSavings = bOriginalPrice - bSalePrice;
+                return bSavings - aSavings;
+            }
+
+            // Both are non-sale, no specific sort
+            return 0;
+        });
+
+        const paginatedProducts = allProducts.slice(offset, offset + limit);
+        const hasMore = allProducts.length > offset + limit;
+        const totalPages = Math.ceil(allProducts.length / limit);
 
         // Check if there are any offers to show the link
         const offersCountSnap = await db.collection('offers')
@@ -1274,12 +1307,17 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
             canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brand,
-            products,
+            products: paginatedProducts,
             metaTitle,
             categories: finalCategories,
             showBrands: false,
             showOffers: false,
-            showProducts: products.length > 0,
+            showProducts: paginatedProducts.length > 0,
+            showProductsPagination: true,
+            currentPage: page,
+            limit,
+            hasMore,
+            totalPages,
             productsH2: `${brand.name} Products`,
             pageLogo: brand.logoUrl,
             pageH1: `${brand.name} Products`,
