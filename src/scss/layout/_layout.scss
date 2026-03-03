@@ -38,17 +38,49 @@ body {
             "main"
             "footer";
         grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto 1fr auto;
 
-        .content {
-            margin: 0 auto;
-            max-width: 1200px;
-            width: 100%;
+        // Let wrapping items stay full-width
+        >.header,
+        >.breadcrumbs-wrapper,
+        >.context-wrapper,
+        >.content,
+        >.footer {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: block !important;
         }
 
-        .context-wrapper .context-inner {
-            margin: 0 auto;
-            max-width: 1200px;
-            width: 100%;
+        // Force centering on the internal areas
+        .header-main,
+        .breadcrumbs-inner,
+        .context-inner,
+        .footer__container,
+        .container,
+        .global-search,
+        .categories-scroll,
+        .section-header,
+        .product-grid,
+        .offer-grid,
+        .brand-grid,
+        .loveletters-grid,
+        .hero-section {
+            width: 100% !important;
+            max-width: 1200px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            box-sizing: border-box;
+            float: none !important;
+        }
+
+        .header-main {
+            display: flex !important;
+        }
+
+        .content {
+            // main tag stays 100% wide row, but its standard children sections
+            // will rely on the .container class to center.
+            padding: 0 !important;
         }
     }
 }

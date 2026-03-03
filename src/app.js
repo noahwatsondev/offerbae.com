@@ -525,19 +525,33 @@ app.get('/', populateSidebar, async (req, res) => {
         const settings = await getGlobalSettings();
         const enrichedBrands = await getEnrichedAdvertisers();
 
-        // Fetch top 6 on-sale products for the premium carousel
+        // Fetch top 18 on-sale products for the premium carousel
         const db = firebaseAdmin.firestore();
-        const productsSnapshot = await db.collection('products')
+        let productsSnapshot = await db.collection('products')
             .where('savingsAmount', '>', 0)
             .orderBy('savingsAmount', 'desc')
             .limit(18)
             .get();
 
-        const topSaleProducts = productsSnapshot.docs.map(doc => mapProductDoc(doc));
+        let topSaleProductsMap = productsSnapshot.docs.map(doc => mapProductDoc(doc));
 
-        // Fetch active offers with codes and sort by discount/recency
+        // Fallback: If no on-sale products, get newest products globally
+        if (topSaleProductsMap.length === 0) {
+            productsSnapshot = await db.collection('products')
+                .orderBy('updatedAt', 'desc')
+                .limit(18)
+                .get();
+            topSaleProductsMap = productsSnapshot.docs.map(doc => mapProductDoc(doc));
+        }
+
+        const topSaleProducts = topSaleProductsMap;
+
+        // Fetch active offers - LIMIT for homepage performance
+        console.log('[DEBUG] Fetching trending products...');
         const offersSnapshot = await db.collection('offers')
+            .limit(100)
             .get();
+        console.log(`[DEBUG] Found ${offersSnapshot.size} offers for homepage processing.`);
 
         // Map logoUrls from enrichedBrands for quick lookup
         const brandLogoMap = new Map();
@@ -548,7 +562,7 @@ app.get('/', populateSidebar, async (req, res) => {
             }
         });
 
-        const topOffers = offersSnapshot.docs
+        const allOffersMapped = offersSnapshot.docs
             .map(doc => {
                 const data = doc.data();
                 let expiresAt = 'Ongoing';
@@ -568,16 +582,22 @@ app.get('/', populateSidebar, async (req, res) => {
                     brandSlug: data.advertiserSlug || slugify(data.advertiser || data.advertiserName || ''),
                     brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
                 });
-            })
-            .filter(o => o.code && o.code !== 'N/A' && o.code !== '') // Stick to codes only
-            .sort((a, b) => {
-                // Sort by discountValue desc, then updatedAtTime desc
-                if (b.discountValue !== a.discountValue) {
-                    return b.discountValue - a.discountValue;
-                }
+            });
+
+        // Try to get code-bearing offers first
+        let topOffers = allOffersMapped.filter(o => o.code && o.code !== 'N/A' && o.code !== '');
+
+        if (topOffers.length > 0) {
+            topOffers = topOffers.sort((a, b) => {
+                if (b.discountValue !== a.discountValue) return b.discountValue - a.discountValue;
                 return b.updatedAtTime - a.updatedAtTime;
-            })
-            .slice(0, 9);
+            }).slice(0, 9);
+        } else {
+            // Fallback: Just take newest offers if no codes found
+            topOffers = allOffersMapped
+                .sort((a, b) => b.updatedAtTime - a.updatedAtTime)
+                .slice(0, 9);
+        }
 
         // Three-tier brand priority, each tier sorted by total count (products + offers) desc
         const brandSortByTotal = (a, b) =>
@@ -621,7 +641,16 @@ app.get('/', populateSidebar, async (req, res) => {
             .sort(tier3Sort)
             .map(mapBrand);
 
-        const allTiers = [...tier1, ...tier2, ...tier3];
+        let allTiers = [...tier1, ...tier2, ...tier3];
+
+        // Fallback: If no tiered brands, just take any top advertisers
+        if (allTiers.length === 0) {
+            allTiers = enrichedBrands
+                .filter(b => (b.productCount > 0) || (b.offerCount > 0))
+                .sort(brandSortByTotal)
+                .slice(0, 16)
+                .map(mapBrand);
+        }
 
         // Deduplicate by name and take first 16
         const seenNames = new Set();
@@ -635,8 +664,13 @@ app.get('/', populateSidebar, async (req, res) => {
         }
 
         const finalCategories = await getGlobalCategories(enrichedBrands);
-        const heroLetter = await loveLettersService.getHeroLetter();
         const latestArticles = await loveLettersService.getLatestArticles(3); // Show latest 3 on homepage
+        let heroLetter = await loveLettersService.getHeroLetter();
+
+        // Fallback: Use latest article as hero if none explicitly set
+        if (!heroLetter && latestArticles.length > 0) {
+            heroLetter = latestArticles[0];
+        }
 
         let heroProducts = [];
         if (heroLetter && heroLetter.relatedBrandId) {
@@ -659,6 +693,13 @@ app.get('/', populateSidebar, async (req, res) => {
             "logo": "https://offerbae.com/favicon.png"
         };
 
+        console.log('[DEBUG] Rendering homepage with:', {
+            brandsCount: uniquePerformanceBrands.length,
+            productsCount: topSaleProducts.length,
+            offersCount: topOffers.length,
+            hasHero: !!heroLetter
+        });
+
         res.render('page', {
             schema,
             canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
@@ -678,6 +719,7 @@ app.get('/', populateSidebar, async (req, res) => {
             showBrands: true,
             showProducts: true,
             showOffers: true,
+            isHomepage: true,
             hideSidebar: true,
             brandsH2: "Partner Brands",
             brandsDescription: "Explore our curated directory of premium brand partners.",
@@ -754,7 +796,7 @@ app.get('/products', populateSidebar, async (req, res) => {
         const db = firebaseAdmin.firestore();
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 60;
+        const limit = parseInt(req.query.limit) || 100;
         const onSale = req.query.onSale !== 'false'; // Default to true
         const offset = (page - 1) * limit;
 
@@ -817,7 +859,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
         const enrichedBrands = await getEnrichedAdvertisers();
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 60;
+        const limit = parseInt(req.query.limit) || 100;
         const offset = (page - 1) * limit;
 
         // Map logoUrls
@@ -971,10 +1013,39 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
         // 3. Fetch Products for this Brand
         const productsSnapshot = await db.collection('products')
             .where('advertiserId', '==', brandId)
-            .limit(20)
             .get();
 
-        const products = productsSnapshot.docs.map(doc => mapProductDoc(doc, { brandSlug: slugify((doc.data().advertiserName || doc.data().advertiser || '')) }));
+        const allProducts = productsSnapshot.docs.map(doc => mapProductDoc(doc, { brandSlug: brand.slug }));
+
+        // Sort: On-sale first (by most savings amount to least), then regular priced items
+        allProducts.sort((a, b) => {
+            const aSalePrice = Number(a.salePrice || 0);
+            const aOriginalPrice = Number(a.price || 0);
+            const bSalePrice = Number(b.salePrice || 0);
+            const bOriginalPrice = Number(b.price || 0);
+
+            const aIsSale = aSalePrice > 0 && aSalePrice < aOriginalPrice;
+            const bIsSale = bSalePrice > 0 && bSalePrice < bOriginalPrice;
+
+            if (aIsSale && !bIsSale) return -1;
+            if (!aIsSale && bIsSale) return 1;
+
+            // Both are sale items, sort by savings descending
+            if (aIsSale && bIsSale) {
+                const aSavings = aOriginalPrice - aSalePrice;
+                const bSavings = bOriginalPrice - bSalePrice;
+                return bSavings - aSavings;
+            }
+
+            return 0;
+        });
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 100;
+        const offset = (page - 1) * limit;
+        const products = allProducts.slice(offset, offset + limit);
+        const hasMore = allProducts.length > offset + limit;
+        const totalPages = Math.ceil(allProducts.length / limit);
 
         const isCouponRoute = req.path.startsWith('/coupons');
 
@@ -1004,6 +1075,11 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             categories: finalCategories,
             showBrands: false,
             showProducts: products.length > 0,
+            showProductsPagination: true,
+            currentPage: page,
+            limit,
+            hasMore,
+            totalPages,
             showOffers: offers.length > 0,
             productsH2: "Top Products",
             offersH2: "Partner Perks",
@@ -1039,7 +1115,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
         const enrichedBrands = await getEnrichedAdvertisers();
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 60;
+        const limit = parseInt(req.query.limit) || 100;
         const offset = (page - 1) * limit;
 
         // Map logoUrls
@@ -1140,7 +1216,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
         const enrichedBrands = await getEnrichedAdvertisers();
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 60;
+        const limit = parseInt(req.query.limit) || 100;
         const offset = (page - 1) * limit;
 
         // Map logoUrls
@@ -1183,6 +1259,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
         const paginatedOffers = allOffers.slice(offset, offset + limit);
         const finalCategories = await getGlobalCategories(enrichedBrands);
         const hasMore = allOffers.length > offset + limit;
+        const totalPages = Math.ceil(allOffers.length / limit);
 
         res.render('page', {
             canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
@@ -1199,6 +1276,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
             currentPage: page,
             limit,
             hasMore,
+            totalPages,
             breadcrumbPath: [{ name: 'Offers', url: '/offers' }]
         });
     } catch (err) {
@@ -1378,6 +1456,10 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
             .where('advertiserId', '==', brandId).limit(1).get();
         const hasProducts = !productsCountSnap.empty;
 
+        const totalPages = 1; // Brand offer pages aren't paginated yet, but let's pass it for the template
+        const currentPage = 1;
+        const hasMore = false;
+
         // Dynamic Meta Title Generation
         let maxDiscount = 0;
         offers.forEach(o => {
@@ -1441,6 +1523,9 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
             pageH1: `${brand.name} Promo Codes and Discounts`,
             metaTitle,
             pageCategories,
+            currentPage,
+            totalPages,
+            hasMore,
             brandDescription: brandData.manualDescription || brandData.description || brandData.savingsGuide || null,
             brandWebsiteUrl: brandData.manualHomeUrl || brandData.advertiserUrl || brandData.url || (brandData.raw_data && brandData.raw_data.advertiserUrl) || null,
             contextLink: hasProducts ? {

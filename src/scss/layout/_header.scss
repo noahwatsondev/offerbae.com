@@ -47,21 +47,24 @@
         display: flex;
         align-items: center;
         gap: 2rem;
-        padding-right: 2rem;
+        flex: 1;
+        justify-content: flex-end;
+        padding-right: 1.5rem;
 
         .nav-link {
-            text-decoration: none;
-            color: var(--nav-link-color, $text-color);
-            font-weight: 500;
-            font-size: 1.25rem;
-            transition: color 0.2s ease;
+            text-decoration: none !important;
+            color: var(--nav-link-color, #111827);
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
             font-style: italic;
+            white-space: nowrap;
 
             &:hover {
-                color: $primary-color;
+                color: var(--primary-color) !important;
+                transform: translateY(-1px);
             }
         }
-
     }
 
     .category-pill {

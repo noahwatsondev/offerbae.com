@@ -1,0 +1,15 @@
+<% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+<div class="pagination">
+    <% if (currentPage > 1) { %>
+    <a href="?page=<%= currentPage - 1 %>" class="btn-outline">Previous</a>
+    <% } %>
+
+    <div class="page-indicator">
+        Page <%= currentPage %> of <%= totalPages %>
+    </div>
+
+    <% if (hasMore) { %>
+    <a href="?page=<%= currentPage + 1 %>" class="btn-outline">Next Page</a>
+    <% } %>
+</div>
+<% } %>

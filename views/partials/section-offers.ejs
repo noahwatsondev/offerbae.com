@@ -35,11 +35,6 @@
     </div>
 
     <% if (typeof showOffersPagination !='undefined' && showOffersPagination) { %>
-        <% if (typeof hasMore !='undefined' && hasMore) { %>
-            <div class="load-more-container">
-                <a href="?page=<%= (typeof currentPage != 'undefined' ? currentPage : 1) + 1 %>"
-                    class="btn-load-more">Next Page</a>
-            </div>
+        <%- include('pagination') %>
             <% } %>
-                <% } %>
 </section>
