@@ -49,13 +49,16 @@
         <div class="bg-fixed-layer" style="background-image: url('<%= settings.bgImageUrl %>');"></div>
         <% } %>
 
-            <div class="layout">
+            <div class="layout <%= typeof hideSidebar !== 'undefined' && hideSidebar ? 'no-sidebar' : '' %>">
                 <%- include('header', { settings: typeof settings !='undefined' ? settings : {} }) %>
                     <%- include('breadcrumbs') %>
                         <%- include('context') %>
-                            <%- include('sidebar') %>
-                                <%- include(typeof mainPartial !='undefined' ? mainPartial : 'main-container' ) %>
-                                    <%- include('footer') %>
+                            <% if (typeof hideSidebar==='undefined' || !hideSidebar) { %>
+                                <%- include('sidebar') %>
+                                    <% } %>
+                                        <%- include(typeof mainPartial !='undefined' ? mainPartial : 'main-container' )
+                                            %>
+                                            <%- include('footer') %>
             </div>
             <%- include('footer-scripts') %>
                 <%- include('section-offer-modal') %>

@@ -29,6 +29,28 @@ body {
     position: relative;
     z-index: 1;
     background: rgba(255, 255, 255, .9);
+
+    &.no-sidebar {
+        grid-template-areas:
+            "header"
+            "breadcrumbs"
+            "context"
+            "main"
+            "footer";
+        grid-template-columns: 1fr;
+
+        .content {
+            margin: 0 auto;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .context-wrapper .context-inner {
+            margin: 0 auto;
+            max-width: 1200px;
+            width: 100%;
+        }
+    }
 }
 
 .categories-wrapper {

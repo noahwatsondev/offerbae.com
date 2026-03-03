@@ -36,6 +36,20 @@ body {
   z-index: 1;
   background: rgba(255, 255, 255, 0.9);
 }
+.layout.no-sidebar {
+  grid-template-areas: "header" "breadcrumbs" "context" "main" "footer";
+  grid-template-columns: 1fr;
+}
+.layout.no-sidebar .content {
+  margin: 0 auto;
+  max-width: 1200px;
+  width: 100%;
+}
+.layout.no-sidebar .context-wrapper .context-inner {
+  margin: 0 auto;
+  max-width: 1200px;
+  width: 100%;
+}
 
 .categories-wrapper {
   width: 100%;

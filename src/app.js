@@ -678,6 +678,7 @@ app.get('/', populateSidebar, async (req, res) => {
             showBrands: true,
             showProducts: true,
             showOffers: true,
+            hideSidebar: true,
             brandsH2: "Partner Brands",
             brandsDescription: "Explore our curated directory of premium brand partners.",
             productsH2: "Trending Products",
