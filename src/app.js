@@ -788,6 +788,8 @@ Object.keys(staticPages).forEach(slug => {
                 showBrands: false,
                 showProducts: false,
                 showOffers: false,
+                hideContext: true,
+                hideSidebar: true,
                 canonicalUrl: 'https://offerbae.com/' + slug,
                 infoTitle: staticPages[slug].title,
                 infoContent: staticPages[slug].content,
