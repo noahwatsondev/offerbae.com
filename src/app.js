@@ -6,6 +6,7 @@ const loveLettersController = require('./controllers/loveLettersController');
 const loveLettersService = require('./services/loveLettersService');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
+const { generateDailyLoveLetters } = require('./jobs/loveLetterGenerator');
 const { getGlobalSettings, getEnrichedAdvertisers, isRealCode, slugify, extractCodeFromDescription, getGlobalCategories } = require('./services/db');
 const firebaseAdmin = require('firebase-admin');
 const fs = require('fs');
@@ -261,6 +262,17 @@ app.post('/api/loveletters/upsert', express.json({ limit: '10mb' }), loveLetters
 app.post('/api/loveletters/upload', loveLettersController.uploadMiddleware, loveLettersController.apiUploadImage);
 app.post('/api/loveletters/set-hero', express.json(), loveLettersController.apiSetHeroLetter);
 app.delete('/api/loveletters/:id', loveLettersController.apiDeleteArticle);
+
+// Automated Jobs
+app.get('/api/jobs/generate-love-letters', async (req, res) => {
+    try {
+        await generateDailyLoveLetters();
+        res.status(200).json({ success: true, message: "Love Letters generation process completed successfully. Check drafts." });
+    } catch (error) {
+        console.error('Trigger Error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // Mission Control Dashboard Routes (Restoring accidentally deleted ones)
 app.get('/mission-control', dashboardController.getDashboardData);
@@ -2100,6 +2112,12 @@ initializeApp().then(() => {
     cron.schedule('0 2 * * *', () => {
         console.log('Running scheduled data sync (Nightly at 2:00 AM)...');
         dataSync.syncAll();
+    });
+
+    // Run the Love Letter generator once a day at 12:00 PM (Noon)
+    cron.schedule('0 12 * * *', () => {
+        console.log('Running scheduled Love Letter generation (Noon)...');
+        generateDailyLoveLetters().catch(console.error);
     });
 
     app.listen(config.port, () => {

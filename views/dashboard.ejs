@@ -212,6 +212,7 @@
             padding-bottom: 2rem !important;
             border-bottom: 0;
             padding-top: 2rem !important;
+            white-space: nowrap;
         }
 
         .stat-sub {
@@ -492,13 +493,14 @@
                                         </svg>
                                     </th>
                                     <th>Logo</th>
-                                    <th onclick="sortTable(1)" style="cursor: pointer;">Name ↕</th>
-                                    <th onclick="sortTable(2)" style="cursor: pointer;">Description ↕</th>
-                                    <th onclick="sortTable(3)" style="cursor: pointer;">Network ↕</th>
-                                    <th onclick="sortTable(4)" style="cursor: pointer;">Status ↕</th>
-                                    <th onclick="sortTable(5, 'number')" style="cursor: pointer;">Offers ↕</th>
-                                    <th onclick="sortTable(6, 'number')" style="cursor: pointer;">Products ↕</th>
-                                    <th onclick="sortTable(7)" style="cursor: pointer;">Categories ↕</th>
+                                    <th onclick="sortTable(2)" style="cursor: pointer;">Name ↕</th>
+                                    <th onclick="sortTable(3)" style="cursor: pointer;">Description ↕</th>
+                                    <th onclick="sortTable(4)" style="cursor: pointer;">Network ↕</th>
+                                    <th onclick="sortTable(5)" style="cursor: pointer;">Status ↕</th>
+                                    <th onclick="sortTable(6, 'number')" style="cursor: pointer;">Partnered ↕</th>
+                                    <th onclick="sortTable(7, 'number')" style="cursor: pointer;">Offers ↕</th>
+                                    <th onclick="sortTable(8, 'number')" style="cursor: pointer;">Products ↕</th>
+                                    <th onclick="sortTable(9)" style="cursor: pointer;">Categories ↕</th>
                                 </tr>
                             </thead>
 
@@ -635,6 +637,7 @@
                                             display: -webkit-box;
                                             -webkit-line-clamp: 2;
                                             -webkit-box-orient: vertical;
+                                            line-clamp: 2;
                                             overflow: hidden;
                                             text-overflow: ellipsis;
                                             font-size: 0.8rem;
@@ -660,50 +663,23 @@
                                                 <%= adv.status %>
                                             </span>
                                         </td>
-                                        <% var offCount=adv.offerCount || 0; %>
-                                            <td data-sort="<%= offCount %>">
-                                                <% if (offCount> 0) { %>
-                                                    <!-- Lazy Load Button for Offers -->
-
-
-                                                    <button class="toggle-offers-btn" data-adv-id="<%= adv.id %>"
-                                                        data-loaded="false" style="
-                                            background: none;
-                                            border: 1px solid var(--primary);
-                                            color: var(--primary);
-                                            padding: 0.25rem 0.5rem;
-                                            border-radius: 4px;
-                                            cursor: pointer;
-                                            font-size: 0.75rem;
-                                            font-weight: 600;
-                                            white-space: nowrap;
-                                            min-width: 100px;
-                                            display: flex;
-                                            align-items: center;
-                                            justify-content: center;
-                                            gap: 6px;
-                                        ">
-                                                        <span>Show (<%= offCount.toLocaleString() %>)</span>
-                                                        <% if (adv.hasPromoCodes) { %>
-                                                            <span title="Promo codes available" style="
-                                                background-color: #22c55e; 
-                                                color: white; 
-                                                border-radius: 4px; 
-                                                padding: 1px 4px; 
-                                                font-size: 0.6rem; 
-                                                font-weight: 700;
-                                            ">CODE</span>
-                                                            <% } %>
-                                                    </button>
-                                                    <% } else { %>
-                                                        <span
-                                                            style="color: var(--text-secondary); font-size: 0.75rem;"></span>
-                                                        <% } %>
+                                        <% const createdAt=adv.createdAt ? new Date(adv.createdAt) : null; const
+                                            timeSort=createdAt ? createdAt.getTime() : 0; const dateDisplay=createdAt ?
+                                            createdAt.toLocaleDateString('en-US', { month: 'short' , day: '2-digit' ,
+                                            year: 'numeric' }) : 'N/A' ; %>
+                                            <td data-sort="<%= timeSort %>">
+                                                <span
+                                                    style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap;">
+                                                    <%= dateDisplay %>
+                                                </span>
                                             </td>
-                                            <% var pCount=adv.productCount || 0; %>
-                                                <td data-sort="<%= pCount %>">
-                                                    <% if (pCount> 0) { %>
-                                                        <button class="toggle-products-btn" data-adv-id="<%= adv.id %>"
+                                            <% var offCount=adv.offerCount || 0; %>
+                                                <td data-sort="<%= offCount %>">
+                                                    <% if (offCount> 0) { %>
+                                                        <!-- Lazy Load Button for Offers -->
+
+
+                                                        <button class="toggle-offers-btn" data-adv-id="<%= adv.id %>"
                                                             data-loaded="false" style="
                                             background: none;
                                             border: 1px solid var(--primary);
@@ -720,17 +696,16 @@
                                             justify-content: center;
                                             gap: 6px;
                                         ">
-                                                            <span>Show (<%= pCount.toLocaleString() %>)</span>
-                                                            <% if (adv.saleProductCount> 0) { %>
-                                                                <span title="<%= adv.saleProductCount %> items on sale"
-                                                                    style="
-                                                    background-color: #ef4444; 
-                                                    color: white; 
-                                                    border-radius: 4px; 
-                                                    padding: 1px 4px; 
-                                                    font-size: 0.6rem; 
-                                                    font-weight: 700;
-                                                ">SALE</span>
+                                                            <span>Show (<%= offCount.toLocaleString() %>)</span>
+                                                            <% if (adv.hasPromoCodes) { %>
+                                                                <span title="Promo codes available" style="
+                                                background-color: #22c55e; 
+                                                color: white; 
+                                                border-radius: 4px; 
+                                                padding: 1px 4px; 
+                                                font-size: 0.6rem; 
+                                                font-weight: 700;
+                                            ">CODE</span>
                                                                 <% } %>
                                                         </button>
                                                         <% } else { %>
@@ -738,11 +713,50 @@
                                                                 style="color: var(--text-secondary); font-size: 0.75rem;"></span>
                                                             <% } %>
                                                 </td>
-                                                <td class="category-cell"
-                                                    data-original-text="<%= (adv.categories || []).join(', ') %>"
-                                                    data-sort="<%= (adv.categories || []).join(', ').toLowerCase() %>"
-                                                    style="white-space: nowrap;">
-                                                    <%= (adv.categories || []).join(', ') %>
+                                                <% var pCount=adv.productCount || 0; %>
+                                                    <td data-sort="<%= pCount %>">
+                                                        <% if (pCount> 0) { %>
+                                                            <button class="toggle-products-btn"
+                                                                data-adv-id="<%= adv.id %>" data-loaded="false" style="
+                                            background: none;
+                                            border: 1px solid var(--primary);
+                                            color: var(--primary);
+                                            padding: 0.25rem 0.5rem;
+                                            border-radius: 4px;
+                                            cursor: pointer;
+                                            font-size: 0.75rem;
+                                            font-weight: 600;
+                                            white-space: nowrap;
+                                            min-width: 100px;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            gap: 6px;
+                                        ">
+                                                                <span>Show (<%= pCount.toLocaleString() %>)</span>
+                                                                <% if (adv.saleProductCount> 0) { %>
+                                                                    <span
+                                                                        title="<%= adv.saleProductCount %> items on sale"
+                                                                        style="
+                                                    background-color: #ef4444; 
+                                                    color: white; 
+                                                    border-radius: 4px; 
+                                                    padding: 1px 4px; 
+                                                    font-size: 0.6rem; 
+                                                    font-weight: 700;
+                                                ">SALE</span>
+                                                                    <% } %>
+                                                            </button>
+                                                            <% } else { %>
+                                                                <span
+                                                                    style="color: var(--text-secondary); font-size: 0.75rem;"></span>
+                                                                <% } %>
+                                                    </td>
+                                                    <td class="category-cell"
+                                                        data-original-text="<%= (adv.categories || []).join(', ') %>"
+                                                        data-sort="<%= (adv.categories || []).join(', ').toLowerCase() %>"
+                                                        style="white-space: nowrap;">
+                                                        <%= (adv.categories || []).join(', ') %>
                                         </td>
                             </tr>
 
@@ -818,7 +832,8 @@
             // Trigger hidden file input
             window.triggerUpload = (advId) => {
                 // Trim just in case
-                const input = document.getElementById(`upload-${advId.trim()}`);
+                const input =
+                    document.getElementById(`upload-${advId.trim()}`);
                 if (input) input.click();
             };
 
@@ -827,7 +842,8 @@
 
             window.sortTable = (n, type = 'string') => {
                 const table = document.querySelector('table tbody');
-                let rows = Array.from(table.querySelectorAll('tr.brand-row'));
+                let rows =
+                    Array.from(table.querySelectorAll('tr.brand-row'));
 
                 // Toggle direction
                 sortDirection[n] = !sortDirection[n];
@@ -848,9 +864,8 @@
                         // String sorting
                         valA = valA.toLowerCase();
                         valB = valB.toLowerCase();
-                        if (valA < valB) return isAsc ? -1 : 1; if (valA > valB) return
-                        isAsc ? 1
-                            : -1;
+                        if (valA < valB) return isAsc ? -1 : 1; if (valA > valB)
+                            return isAsc ? 1 : -1;
                         return 0;
                     }
                 });
@@ -862,9 +877,9 @@
                 rows.forEach(row => {
                     table.appendChild(row); // Moves the brand row
 
-                    // Move potential lazy load rows if they exist and are
-                    associated
-                    const advId = row.querySelector('.logo-cell').dataset.advId;
+                    // Move potential lazy load rows if they exist and are associated
+                    const advId =
+                        row.querySelector('.logo-cell').dataset.advId;
                     const offersRow =
                         document.getElementById(`offers-row-${advId}`);
                     const productsRow =
@@ -914,16 +929,10 @@
 
             // Handle Reset
             window.resetLogo = async (advId) => {
-                if (!confirm('Are you sure you want to reset the logo?'))
-                    return;
-
+                if (!confirm('Are you sure you want to reset the logo?')) return;
                 try {
-                    const res = await
-                        fetch(`/api/advertiser/${advId}/logo/reset`, {
-                            method: 'POST'
-                        });
+                    const res = await fetch(`/api/advertiser/${advId}/logo/reset`, { method: 'POST' });
                     const data = await res.json();
-
                     if (data.success) {
                         location.reload();
                     } else {
@@ -944,7 +953,8 @@
 
             window.openHomeLinkModal = (advId, currentUrl) => {
                 const modal = document.getElementById('homeLinkModal');
-                const input = document.getElementById('modalHomeLinkInput');
+                const input =
+                    document.getElementById('modalHomeLinkInput');
                 if (!modal || !input) return;
 
                 currentAdvId = advId.trim();
@@ -961,7 +971,8 @@
 
             window.submitHomeLink = async () => {
                 if (!currentAdvId) return;
-                const input = document.getElementById('modalHomeLinkInput');
+                const input =
+                    document.getElementById('modalHomeLinkInput');
                 const btn = document.getElementById('modalSubmitBtn');
 
                 const homeLink = input.value.trim();
@@ -1003,14 +1014,15 @@
                     const syncMsg = network === 'all' ? 'All Networks' :
                         network;
                     if (!confirm(`Sync ${syncMsg} data now? This may take a
-                                                            minute.`))
+                                                                minute.`))
                         return;
 
                     try {
                         icon.classList.add('spin');
                         /* Use lowercase for route e.g. /update/rakuten-sync or
                         /update/full - sync */
-                        const endpoint = network === 'all' ? '/update/full-sync' :
+                        const endpoint = network === 'all' ? '/update/full-sync'
+                            :
                             `/update/${network.toLowerCase()}-sync`;
                         const res = await fetch(endpoint);
                         const text = await res.text();
@@ -1043,8 +1055,9 @@
                                     month: 'short', day: '2-digit', year: 'numeric',
                                     hour: '2-digit', minute: '2-digit'
                                 });
-                        container.innerHTML = `<div>Sync complete - ${dateStr}</div>
-                                                            `;
+                        container.innerHTML = `<div>Sync complete - ${dateStr}
+                                                                </div>
+                                                                `;
 
                         // If we want more, toggle?
                     }
@@ -1061,7 +1074,8 @@
                     let isAnySyncRunning = false;
                     Object.keys(state).forEach(network => {
                         const netState = state[network];
-                        if (netState.status === 'running') isAnySyncRunning = true;
+                        if (netState.status === 'running') isAnySyncRunning =
+                            true;
 
                         const icon =
                             document.querySelector(`.reicon[data-network="${network}"]`);
@@ -1099,47 +1113,48 @@
             const renderOffersTable = (container, offers, advId) => {
 
                 if (offers.length === 0) {
-                    container.innerHTML = `<div style="padding:1rem;">No offers
-                                                                found.
-                                                            </div>`;
+                    container.innerHTML = `<div style="padding:1rem;">No
+                                                                    offers
+                                                                    found.
+                                                                </div>`;
                     return;
                 }
 
                 let html = `
-                                                            <div
-                                                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                                                <strong style="color: var(--text-primary);">Offers
-                                                                    (${offers.length})</strong>
-                                                                <input type="text" class="offer-search-input"
-                                                                    placeholder="Search offers..."
-                                                                    style="padding: 0.25rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; width: 200px;">
-                                                            </div>
-                                                            <table style="width: 100%; font-size: 0.8rem;">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            Image</th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            Code</th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            Description
-                                                                        </th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            Start Date
-                                                                        </th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            End Date</th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            Action</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>`;
+                                                                <div
+                                                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                                                    <strong style="color: var(--text-primary);">Offers
+                                                                        (${offers.length})</strong>
+                                                                    <input type="text" class="offer-search-input"
+                                                                        placeholder="Search offers..."
+                                                                        style="padding: 0.25rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; width: 200px;">
+                                                                </div>
+                                                                <table style="width: 100%; font-size: 0.8rem;">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                Image</th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                Code</th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                Description
+                                                                            </th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                Start Date
+                                                                            </th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                End Date</th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                Action</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>`;
 
                 // SORTING LOGIC
                 const getPriority = (o) => {
@@ -1162,8 +1177,8 @@
                         Date(b.endDate).getTime() :
                         Infinity;
 
-                    if (dateA === Infinity && dateB === Infinity) return
-                    0;
+                    if (dateA === Infinity && dateB === Infinity)
+                        return 0;
                     return dateA - dateB;
                 });
 
@@ -1180,67 +1195,70 @@
 
                     const imgBtn = coupon.imageUrl ?
                         `<img src="${getProxiedUrl(coupon.imageUrl)}"
-                                                                        class="toggle-image-thumb"
-                                                                        data-target="img-${advId}-${i}"
-                                                                        style="height: 30px; width: auto; max-width: 50px; object-fit: contain; cursor: pointer; border-radius: 4px; border: 1px solid #e2e8f0; vertical-align: middle; background: white;"
-                                                                        alt="Show" title="Click to view full image"
-                                                                        onload="if(this.naturalWidth<=1&&this.naturalHeight<=1){this.style.display='none'; this.parentElement.innerHTML='';}">`
+                                                                            class="toggle-image-thumb"
+                                                                            data-target="img-${advId}-${i}"
+                                                                            style="height: 30px; width: auto; max-width: 50px; object-fit: contain; cursor: pointer; border-radius: 4px; border: 1px solid #e2e8f0; vertical-align: middle; background: white;"
+                                                                            alt="Show" title="Click to view full image"
+                                                                            onload="if(this.naturalWidth<=1&&this.naturalHeight<=1){this.style.display='none'; this.parentElement.innerHTML='';}">`
                         : '';
 
-                    const codeDisplay = (coupon.code && coupon.code !=
+                    const codeDisplay = (coupon.code && coupon.code
+                        !=
                         'N/A') ?
                         `<span class="status-badge status-active"
-                                                                        style="font-family: monospace; text-transform: uppercase;">${coupon.code}</span>`
+                                                                            style="font-family: monospace; text-transform: uppercase;">${coupon.code}</span>`
                         : `<span
-                                                                        style="color: var(--text-secondary);"></span>`;
+                                                                            style="color: var(--text-secondary);"></span>`;
 
                     const startDate = coupon.startDate ? new
-                        Date(coupon.startDate).toLocaleDateString() : '';
+                        Date(coupon.startDate).toLocaleDateString() :
+                        '';
                     const endDate = coupon.endDate ? new
                         Date(coupon.endDate).toLocaleDateString() : '';
 
                     html += `
-                                                                    <tr style="${rowStyle}">
-                                                                        <td
-                                                                            style="padding: 0.5rem; height: 32px; white-space: nowrap;">
-                                                                            ${imgBtn}</td>
-                                                                        <td
-                                                                            style="padding: 0.5rem; white-space: nowrap;">
-                                                                            ${codeDisplay}</td>
-                                                                        <td
-                                                                            style="padding: 0.5rem; white-space: nowrap;">
-                                                                            ${coupon.description || ''}</td>
-                                                                        <td
-                                                                            style="padding: 0.5rem; color: green; white-space: nowrap;">
-                                                                            ${startDate}</td>
-                                                                        <td
-                                                                            style="padding: 0.5rem; color: red; white-space: nowrap;">
-                                                                            ${endDate}</td>
-                                                                        <td
-                                                                            style="padding: 0.5rem; white-space: nowrap;">
-                                                                            <a href="${coupon.link}" target="_blank"
-                                                                                class="action-link">Link</a>
-                                                                        </td>
-                                                                    </tr>`;
+                                                                        <tr style="${rowStyle}">
+                                                                            <td
+                                                                                style="padding: 0.5rem; height: 32px; white-space: nowrap;">
+                                                                                ${imgBtn}</td>
+                                                                            <td
+                                                                                style="padding: 0.5rem; white-space: nowrap;">
+                                                                                ${codeDisplay}</td>
+                                                                            <td
+                                                                                style="padding: 0.5rem; white-space: nowrap;">
+                                                                                ${coupon.description || ''}</td>
+                                                                            <td
+                                                                                style="padding: 0.5rem; color: green; white-space: nowrap;">
+                                                                                ${startDate}</td>
+                                                                            <td
+                                                                                style="padding: 0.5rem; color: red; white-space: nowrap;">
+                                                                                ${endDate}</td>
+                                                                            <td
+                                                                                style="padding: 0.5rem; white-space: nowrap;">
+                                                                                <a href="${coupon.link}" target="_blank"
+                                                                                    class="action-link">Link</a>
+                                                                            </td>
+                                                                        </tr>`;
 
                     if (coupon.imageUrl) {
                         html += `
-                                                                    <tr id="img-${advId}-${i}" style="display: none;">
-                                                                        <td colspan="6"
-                                                                            style="padding: 1rem; background-color: #f8fafc; text-align: center;">
-                                                                            <img src="${getProxiedUrl(coupon.imageUrl)}"
-                                                                                alt="Offer Image"
-                                                                                onload="if(this.naturalWidth<=1&&this.naturalHeight<=1){this.parentElement.parentElement.remove();}"
-                                                                                onerror="this.style.display='none'; this.parentElement.parentElement.style.display='none';"
-                                                                                style="max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-height: 50px; background: white;">
-                                                                        </td>
-                                                                    </tr>`;
+                                                                        <tr id="img-${advId}-${i}"
+                                                                            style="display: none;">
+                                                                            <td colspan="6"
+                                                                                style="padding: 1rem; background-color: #f8fafc; text-align: center;">
+                                                                                <img src="${getProxiedUrl(coupon.imageUrl)}"
+                                                                                    alt="Offer Image"
+                                                                                    onload="if(this.naturalWidth<=1&&this.naturalHeight<=1){this.parentElement.parentElement.remove();}"
+                                                                                    onerror="this.style.display='none'; this.parentElement.parentElement.style.display='none';"
+                                                                                    style="max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-height: 50px; background: white;">
+                                                                            </td>
+                                                                        </tr>`;
                     }
                 });
 
                 html += `
-                                                                </tbody>
-                                                            </table>`;
+                                                                    </tbody>
+                                                                </table>`;
                 container.innerHTML = html;
 
                 // Re-attach listeners for dynamically created elements
@@ -1255,10 +1273,12 @@
                             if (row.id && row.id.startsWith('img-')) return;
                             const code = row.cells[1].textContent.toLowerCase();
                             const desc = row.cells[2].textContent.toLowerCase();
-                            const match = code.includes(term) || desc.includes(term);
+                            const match = code.includes(term) ||
+                                desc.includes(term);
                             row.style.display = match ? '' : 'none';
                             const nextRow = row.nextElementSibling;
-                            if (nextRow && nextRow.id && nextRow.id.startsWith('img-')) {
+                            if (nextRow && nextRow.id &&
+                                nextRow.id.startsWith('img-')) {
                                 if (!match) nextRow.style.display = 'none';
                             }
                         });
@@ -1272,7 +1292,8 @@
                             const targetRow = document.getElementById(targetId);
                             if (targetRow) {
                                 const isHidden = targetRow.style.display === 'none';
-                                targetRow.style.display = isHidden ? 'table-row' : 'none';
+                                targetRow.style.display = isHidden ? 'table-row' :
+                                    'none';
                             }
                         });
                     });
@@ -1281,120 +1302,125 @@
             const renderProductsTable = (container, products) => {
                 if (products.length === 0) {
                     container.innerHTML = `<div style="padding:1rem;">No
-                                                                products found.
-                                                            </div>`;
+                                                                    products found.
+                                                                </div>`;
                     return;
                 }
 
                 let html = `
-                                                            <div
-                                                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                                                <strong style="color: var(--text-primary);">Products
-                                                                    (${products.length})</strong>
-                                                                <input type="text" class="product-search-input"
-                                                                    placeholder="Search products..."
-                                                                    style="padding: 0.25rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; width: 200px;">
-                                                            </div>
-                                                            <table style="width: 100%; font-size: 0.8rem;">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            Image</th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            Name</th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            SKU</th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            <div
-                                                                                style="display: flex; align-items: center; gap: 4px;">
-                                                                                Description
-                                                                                <span class="toggle-desc-btn"
-                                                                                    style="cursor: pointer; display: flex; align-items: center; color: var(--text-secondary);"
-                                                                                    title="Expand All">
-                                                                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                        width="14" height="14"
-                                                                                        viewBox="0 0 24 24" fill="none"
-                                                                                        stroke="currentColor"
-                                                                                        stroke-width="2"
-                                                                                        stroke-linecap="round"
-                                                                                        stroke-linejoin="round">
-                                                                                        <polyline
-                                                                                            points="15 3 21 3 21 9">
-                                                                                        </polyline>
-                                                                                        <polyline
-                                                                                            points="9 21 3 21 3 15">
-                                                                                        </polyline>
-                                                                                        <line x1="21" y1="3" x2="14"
-                                                                                            y2="10">
-                                                                                        </line>
-                                                                                        <line x1="3" y1="21" x2="10"
-                                                                                            y2="14">
-                                                                                        </line>
-                                                                                    </svg>
-                                                                                </span>
-                                                                            </div>
-                                                                        </th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            Price</th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            Sale Price
-                                                                        </th>
-                                                                        <th
-                                                                            style="background: transparent; padding: 0.5rem;">
-                                                                            Link</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>`;
+                                                                <div
+                                                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                                                    <strong style="color: var(--text-primary);">Products
+                                                                        (${products.length})</strong>
+                                                                    <input type="text" class="product-search-input"
+                                                                        placeholder="Search products..."
+                                                                        style="padding: 0.25rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; width: 200px;">
+                                                                </div>
+                                                                <table style="width: 100%; font-size: 0.8rem;">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                Image</th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                Name</th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                SKU</th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                <div
+                                                                                    style="display: flex; align-items: center; gap: 4px;">
+                                                                                    Description
+                                                                                    <span class="toggle-desc-btn"
+                                                                                        style="cursor: pointer; display: flex; align-items: center; color: var(--text-secondary);"
+                                                                                        title="Expand All">
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                                            width="14" height="14"
+                                                                                            viewBox="0 0 24 24"
+                                                                                            fill="none"
+                                                                                            stroke="currentColor"
+                                                                                            stroke-width="2"
+                                                                                            stroke-linecap="round"
+                                                                                            stroke-linejoin="round">
+                                                                                            <polyline
+                                                                                                points="15 3 21 3 21 9">
+                                                                                            </polyline>
+                                                                                            <polyline
+                                                                                                points="9 21 3 21 3 15">
+                                                                                            </polyline>
+                                                                                            <line x1="21" y1="3" x2="14"
+                                                                                                y2="10">
+                                                                                            </line>
+                                                                                            <line x1="3" y1="21" x2="10"
+                                                                                                y2="14">
+                                                                                            </line>
+                                                                                        </svg>
+                                                                                    </span>
+                                                                                </div>
+                                                                            </th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                Price</th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                Sale Price
+                                                                            </th>
+                                                                            <th
+                                                                                style="background: transparent; padding: 0.5rem;">
+                                                                                Link</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>`;
 
                 products.forEach(p => {
                     const img = p.imageUrl ? `<img
-                                                                        src="${getProxiedUrl(p.imageUrl)}"
-                                                                        style="width: 50px; height: 50px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;">`
+                                                                            src="${getProxiedUrl(p.imageUrl)}"
+                                                                            style="width: 50px; height: 50px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;">`
                         : `<div
-                                                                        style="width: 50px; height: 50px; background: #eee; border-radius: 4px;">
-                                                                    </div>`;
+                                                                            style="width: 50px; height: 50px; background: #eee; border-radius: 4px;">
+                                                                        </div>`;
                     const priceDisplay = p.price ? `${p.price}
-                                                                    ${p.currency ||
+                                                                        ${p.currency ||
                         ''}` : '-';
                     const isSalePayloadValid = p.salePrice &&
                         parseFloat(p.salePrice) != 0;
-                    const salePriceDisplay = isSalePayloadValid ? `<span
-                                                                        style="color: var(--danger); font-weight: bold;">${p.salePrice}
-                                                                        ${p.currency || ''}</span>` : '-';
+                    const salePriceDisplay = isSalePayloadValid ?
+                        `<span
+                                                                            style="color: var(--danger); font-weight: bold;">${p.salePrice}
+                                                                            ${p.currency || ''}</span>` : '-';
 
                     html += `
-                                                                    <tr>
-                                                                        <td style="padding: 0.5rem; width: 60px;">${img}
-                                                                        </td>
-                                                                        <td style="padding: 0.5rem;">${p.name || ''}
-                                                                        </td>
-                                                                        <td style="padding: 0.5rem;">${p.sku || ''}</td>
-                                                                        <td class="desc-cell"
-                                                                            style="padding: 0.5rem; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                                                            title="${p.description || ''}">
-                                                                            ${p.description ||
+                                                                        <tr>
+                                                                            <td style="padding: 0.5rem; width: 60px;">
+                                                                                ${img}
+                                                                            </td>
+                                                                            <td style="padding: 0.5rem;">${p.name || ''}
+                                                                            </td>
+                                                                            <td style="padding: 0.5rem;">${p.sku || ''}
+                                                                            </td>
+                                                                            <td class="desc-cell"
+                                                                                style="padding: 0.5rem; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                                                                title="${p.description || ''}">
+                                                                                ${p.description ||
                         ''}</td>
-                                                                        <td style="padding: 0.5rem;">${priceDisplay}
-                                                                        </td>
-                                                                        <td style="padding: 0.5rem;">${salePriceDisplay}
-                                                                        </td>
+                                                                            <td style="padding: 0.5rem;">${priceDisplay}
+                                                                            </td>
+                                                                            <td style="padding: 0.5rem;">
+                                                                                ${salePriceDisplay}
+                                                                            </td>
 
-                                                                        <td style="padding: 0.5rem;"><a href="${p.link}"
-                                                                                target="_blank"
-                                                                                class="action-link">Link</a>
-                                                                        </td>
-                                                                    </tr>`;
+                                                                            <td style="padding: 0.5rem;"><a
+                                                                                    href="${p.link}" target="_blank"
+                                                                                    class="action-link">Link</a>
+                                                                            </td>
+                                                                        </tr>`;
                 });
 
                 html += `
-                                                                </tbody>
-                                                            </table>`;
+                                                                    </tbody>
+                                                                </table>`;
                 container.innerHTML = html;
 
                 // Description Expand/Collapse Logic
@@ -1402,7 +1428,8 @@
                     container.querySelector('.toggle-desc-btn');
                 if (toggleBtn) {
                     toggleBtn.addEventListener('click', () => {
-                        const isExpanded = toggleBtn.dataset.expanded === 'true';
+                        const isExpanded = toggleBtn.dataset.expanded ===
+                            'true';
                         const cells = container.querySelectorAll('.desc-cell');
 
                         cells.forEach(cell => {
@@ -1421,27 +1448,27 @@
                         if (!isExpanded) {
                             toggleBtn.title = "Collapse All";
                             toggleBtn.innerHTML = `<svg
-                                                                xmlns="http://www.w3.org/2000/svg" width="14"
-                                                                height="14" viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2"
-                                                                stroke-linecap="round" stroke-linejoin="round">
-                                                                <polyline points="4 14 10 14 10 20"></polyline>
-                                                                <polyline points="20 10 14 10 14 4"></polyline>
-                                                                <line x1="14" y1="10" x2="21" y2="3"></line>
-                                                                <line x1="3" y1="21" x2="10" y2="14"></line>
-                                                            </svg>`;
+                                                                    xmlns="http://www.w3.org/2000/svg" width="14"
+                                                                    height="14" viewBox="0 0 24 24" fill="none"
+                                                                    stroke="currentColor" stroke-width="2"
+                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    <polyline points="4 14 10 14 10 20"></polyline>
+                                                                    <polyline points="20 10 14 10 14 4"></polyline>
+                                                                    <line x1="14" y1="10" x2="21" y2="3"></line>
+                                                                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                                                                </svg>`;
                         } else {
                             toggleBtn.title = "Expand All";
                             toggleBtn.innerHTML = `<svg
-                                                                xmlns="http://www.w3.org/2000/svg" width="14"
-                                                                height="14" viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2"
-                                                                stroke-linecap="round" stroke-linejoin="round">
-                                                                <polyline points="15 3 21 3 21 9"></polyline>
-                                                                <polyline points="9 21 3 21 3 15"></polyline>
-                                                                <line x1="21" y1="3" x2="14" y2="10"></line>
-                                                                <line x1="3" y1="21" x2="10" y2="14"></line>
-                                                            </svg>`;
+                                                                    xmlns="http://www.w3.org/2000/svg" width="14"
+                                                                    height="14" viewBox="0 0 24 24" fill="none"
+                                                                    stroke="currentColor" stroke-width="2"
+                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    <polyline points="15 3 21 3 21 9"></polyline>
+                                                                    <polyline points="9 21 3 21 3 15"></polyline>
+                                                                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                                                                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                                                                </svg>`;
                         }
                     });
                 }
@@ -1462,7 +1489,8 @@
 
             document.addEventListener('DOMContentLoaded', () => {
 
-                const searchInput = document.getElementById('search-input');
+                const searchInput =
+                    document.getElementById('search-input');
                 const networkFilter =
                     document.getElementById('network-filter');
                 const categoryFilter =
@@ -1486,7 +1514,8 @@
 
                             if (isLoaded) {
                                 const isHidden = offersRow.style.display === 'none';
-                                offersRow.style.display = isHidden ? 'table-row' : 'none';
+                                offersRow.style.display = isHidden ? 'table-row' :
+                                    'none';
                                 const textSpan = btn.querySelector('span:first-child');
                                 if (textSpan) {
                                     textSpan.textContent = isHidden ?
@@ -1499,12 +1528,14 @@
                             offersRow.style.display = 'table-row';
                             const textSpan = btn.querySelector('span:first-child');
                             if (textSpan) {
-                                textSpan.textContent = textSpan.textContent.replace('Show',
-                                    'Hide');
+                                textSpan.textContent =
+                                    textSpan.textContent.replace('Show',
+                                        'Hide');
                             }
 
                             try {
-                                const res = await fetch(`/api/advertiser/${advId}/offers`);
+                                const res = await
+                                    fetch(`/api/advertiser/${advId}/offers`);
                                 const data = await res.json();
 
                                 if (data.success && data.offers) {
@@ -1512,16 +1543,16 @@
                                     btn.dataset.loaded = 'true';
                                 } else {
                                     contentDiv.innerHTML = `<div
-                                                                style="color:red; padding:1rem;">Failed
-                                                                to load
-                                                                offers.</div>`;
+                                                                    style="color:red; padding:1rem;">Failed
+                                                                    to load
+                                                                    offers.</div>`;
                                 }
                             } catch (err) {
                                 console.error(err);
                                 contentDiv.innerHTML = `<div
-                                                                style="color:red; padding:1rem;">Error
-                                                                loading
-                                                                offers.</div>`;
+                                                                    style="color:red; padding:1rem;">Error
+                                                                    loading
+                                                                    offers.</div>`;
                             }
                         });
                     });
@@ -1542,7 +1573,8 @@
 
                             if (isLoaded) {
                                 const isHidden = productRow.style.display === 'none';
-                                productRow.style.display = isHidden ? 'table-row' : 'none';
+                                productRow.style.display = isHidden ? 'table-row' :
+                                    'none';
                                 const textSpan = btn.querySelector('span:first-child');
                                 if (textSpan) {
                                     textSpan.textContent = isHidden ?
@@ -1555,8 +1587,9 @@
                             productRow.style.display = 'table-row';
                             const textSpan = btn.querySelector('span:first-child');
                             if (textSpan) {
-                                textSpan.textContent = textSpan.textContent.replace('Show',
-                                    'Hide');
+                                textSpan.textContent =
+                                    textSpan.textContent.replace('Show',
+                                        'Hide');
                             }
 
                             try {
@@ -1569,16 +1602,16 @@
                                     btn.dataset.loaded = 'true';
                                 } else {
                                     contentDiv.innerHTML = `<div
-                                                                style="color:red; padding:1rem;">Failed
-                                                                to load
-                                                                products.</div>`;
+                                                                    style="color:red; padding:1rem;">Failed
+                                                                    to load
+                                                                    products.</div>`;
                                 }
                             } catch (err) {
                                 console.error(err);
                                 contentDiv.innerHTML = `<div
-                                                                style="color:red; padding:1rem;">Error
-                                                                loading
-                                                                products.</div>`;
+                                                                    style="color:red; padding:1rem;">Error
+                                                                    loading
+                                                                    products.</div>`;
                             }
                         });
                     });
@@ -1586,7 +1619,8 @@
                 // MAIN FILTER LOGIC
                 // Stats elements
                 const totalEl = document.getElementById('total-count');
-                const rakutenEl = document.getElementById('rakuten-count');
+                const rakutenEl =
+                    document.getElementById('rakuten-count');
                 const cjEl = document.getElementById('cj-count');
                 const awinEl = document.getElementById('awin-count');
                 const pepperjamEl =
@@ -1602,7 +1636,8 @@
                     // Reset Offer Buttons
                     document.querySelectorAll('.toggle-offers-btn')
                         .forEach((btn) => {
-                            btn.textContent = btn.textContent.replace('Hide', 'Show');
+                            btn.textContent = btn.textContent.replace('Hide',
+                                'Show');
                         });
 
                     // Close Product Rows
@@ -1613,14 +1648,14 @@
                     // Reset Product Buttons
                     document.querySelectorAll('.toggle-products-btn')
                         .forEach((btn) => {
-                            btn.textContent = btn.textContent.replace('Hide', 'Show');
+                            btn.textContent = btn.textContent.replace('Hide',
+                                'Show');
                         });
                 };
 
                 // Escape Regex Helper
                 function escapeRegExp(string) {
-                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $&
-                    means
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 }
 
                 const filterTable = () => {
@@ -1639,10 +1674,12 @@
                         const rowName = row.dataset.name;
                         const rowNetwork = row.dataset.network;
                         const rowCategories = row.dataset.categories;
-                        const categoryCell = row.querySelector('.category-cell');
+                        const categoryCell =
+                            row.querySelector('.category-cell');
 
                         const matchesSearch = rowName.includes(searchTerm);
-                        const matchesNetwork = network === 'all' || rowNetwork ===
+                        const matchesNetwork = network === 'all' || rowNetwork
+                            ===
                             network;
                         const matchesCategory = category === 'all' ||
                             rowCategories.includes(category.toLowerCase());
@@ -1658,24 +1695,15 @@
                             // HIGHLIGHTING LOGIC
                             if (categoryCell) {
                                 const originalText =
-                                    categoryCell.getAttribute('data-original-text')
-                                    || categoryCell.innerText;
+                                    categoryCell.getAttribute('data-original-text') ||
+                                    categoryCell.innerText;
                                 if (category != 'all') {
-                                    // Highlight the specific category
-                                    /* We need to match case-insensitive but preserve original
-                                    text case */
-                                    /* This simple replace might replace partial words too (e.g.
-                                    "Cat" */
-                                    // in "Category")
-                                    // But typically categories are distinct terms.
-                                    /* For exact word matching we'd need \b but categories often
-                                    contain */
-                                    // spaces / symbols.
-                                    // Let's stick to simple literal match for now as requested.
-                                    const safeCategory = escapeRegExp(category);
+                                    // Escape special chars for regex
+                                    const safeCategory =
+                                        category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                                     const regex = new RegExp(`(${safeCategory})`, 'gi');
-                                    const highlightedHtml = originalText.replace(regex, '<span ' +
-                                        ' style="background-color: yellow;"> </span> ');
+                                    const highlightedHtml = originalText.replace(regex,
+                                        '<span style="background-color: yellow;">$1</span>');
                                     categoryCell.innerHTML = highlightedHtml;
                                 } else {
                                     // Reset to original plain text
@@ -1691,7 +1719,8 @@
                     rakutenEl.textContent = rakutenCount;
                     cjEl.textContent = cjCount;
                     awinEl.textContent = awinCount;
-                    if (pepperjamEl) pepperjamEl.textContent = pepperjamCount;
+                    if (pepperjamEl) pepperjamEl.textContent =
+                        pepperjamCount;
                 };
 
                 searchInput.addEventListener('input', filterTable);
@@ -1701,8 +1730,8 @@
             });
         </script>
 
-                                                            <!-- Home Link Modal -->
-                                                            <div id="homeLinkModal" style="
+                                                                <!-- Home Link Modal -->
+                                                                <div id="homeLinkModal" style="
         display: none;
         position: fixed;
         top: 0;
@@ -1714,36 +1743,37 @@
         align-items: center;
         z-index: 1000;
     ">
-                                                                <div style="
+                                                                    <div style="
             background: white;
             padding: 2rem;
             border-radius: 8px;
             width: 400px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         ">
-                                                                    <h3
-                                                                        style="margin-top: 0; margin-bottom: 1rem; color: var(--text-primary);">
-                                                                        Enter Homepage Affiliate URL
-                                                                    </h3>
-                                                                    <input type="text" id="modalHomeLinkInput"
-                                                                        placeholder="https://..." style="
+                                                                        <h3
+                                                                            style="margin-top: 0; margin-bottom: 1rem; color: var(--text-primary);">
+                                                                            Enter Homepage Affiliate URL
+                                                                        </h3>
+                                                                        <input type="text" id="modalHomeLinkInput"
+                                                                            placeholder="https://..." style="
                 width: 100%;
                 padding: 0.5rem;
                 margin-bottom: 1rem;
                 border: 1px solid var(--border);
                 border-radius: 4px;
             ">
-                                                                    <div
-                                                                        style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                                                                        <button onclick="closeHomeLinkModal()" style="
+                                                                        <div
+                                                                            style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                                                                            <button onclick="closeHomeLinkModal()"
+                                                                                style="
                     background: transparent;
                     border: 1px solid var(--border);
                     padding: 0.5rem 1rem;
                     border-radius: 4px;
                     cursor: pointer;
                 ">Cancel</button>
-                                                                        <button id="modalSubmitBtn"
-                                                                            onclick="submitHomeLink()" style="
+                                                                            <button id="modalSubmitBtn"
+                                                                                onclick="submitHomeLink()" style="
                     background: var(--primary);
                     color: white;
                     border: none;
@@ -1751,9 +1781,9 @@
                     border-radius: 4px;
                     cursor: pointer;
                 ">Save</button>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
                     </div>
 
                     <!-- Description Modal -->

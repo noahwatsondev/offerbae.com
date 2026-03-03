@@ -127,7 +127,13 @@
         <div class="container">
             <div class="header-actions">
                 <h2>Love Letters Content</h2>
-                <a href="/mission-control/loveletters/edit/new" class="btn">+ New Letter</a>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="generateLetters()" class="btn" id="generate-btn"
+                        style="background-color: #10b981;">
+                        <span id="generate-text">✨ Generate Drafts</span>
+                    </button>
+                    <a href="/mission-control/loveletters/edit/new" class="btn">+ New Letter</a>
+                </div>
             </div>
 
             <% if (articles.length===0) { %>
@@ -166,8 +172,11 @@
                                                         </span>
                                                     </div>
                                                     <div class="article-meta">
-                                                        Last updated: <%= article.updatedAt ? new
-                                                            Date(article.updatedAt).toLocaleDateString() : 'Never' %>
+                                                        Last updated: <%= article.updatedAt ?
+                                                            (article.updatedAt._seconds ? new
+                                                            Date(article.updatedAt._seconds * 1000).toLocaleDateString()
+                                                            : new Date(article.updatedAt).toLocaleDateString())
+                                                            : 'Never' %>
                                                             • Slug: <%= article.slug %>
                                                     </div>
                                                 </div>
@@ -220,6 +229,38 @@
                 } catch (err) {
                     console.error(err);
                     alert('Error setting hero letter');
+                }
+            }
+
+            async function generateLetters() {
+                const btn = document.getElementById('generate-btn');
+                const text = document.getElementById('generate-text');
+                const originalText = text.innerHTML;
+
+                if (!confirm('This will trigger the AI to write 3 new love letter drafts based on current data. Proceed?')) return;
+
+                btn.disabled = true;
+                btn.style.opacity = '0.7';
+                text.innerHTML = '✨ Generating... (Takes ~30s)';
+
+                try {
+                    const res = await fetch('/api/jobs/generate-love-letters');
+                    const result = await res.json();
+
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Error generating letters: ' + (result.error || 'Unknown error'));
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                        text.innerHTML = originalText;
+                    }
+                } catch (err) {
+                    console.error('Error generating letters:', err);
+                    alert('Error triggering generation sequence.');
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    text.innerHTML = originalText;
                 }
             }
         </script>

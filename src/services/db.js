@@ -367,7 +367,7 @@ const updateGlobalSettings = async (settings) => {
 // In-memory TTL cache for advertisers (60s)
 let _advertiserCache = null;
 let _advertiserCacheAt = 0;
-const ADVERTISER_TTL = 60_000;
+const ADVERTISER_TTL = 1000; // Force refresh during debugging
 
 const getEnrichedAdvertisers = async () => {
     if (_advertiserCache && Date.now() - _advertiserCacheAt < ADVERTISER_TTL) {
@@ -377,21 +377,32 @@ const getEnrichedAdvertisers = async () => {
         const advSnapshot = await firebase.db.collection(COLLECTIONS.ADVERTISERS).get();
 
         const advertisers = [];
+        console.log(`[DEBUG] Fetched ${advSnapshot.size} advertisers from Firestore.`);
         advSnapshot.forEach(doc => {
             const data = doc.data();
+            const created = doc.createTime ? doc.createTime.toDate() : null;
             advertisers.push({
                 ...data,
                 productCount: data.productCount || 0,
                 saleProductCount: data.saleProductCount || 0,
                 offerCount: data.offerCount || 0,
-                logoUrl: data.storageLogoUrl || data.logoUrl || (data.raw_data && data.raw_data.logoUrl ? data.raw_data.logoUrl : null)
+                logoUrl: data.storageLogoUrl || data.logoUrl || (data.raw_data && data.raw_data.logoUrl ? data.raw_data.logoUrl : null),
+                createdAt: created
             });
         });
 
-        // Sort: Product Count (Desc) -> Name (Asc)
+        // Debug log Sample
+        if (advertisers.length > 0) {
+            console.log(`[DEBUG] Sample Advertiser: ${advertisers[0].name}, createdAt: ${advertisers[0].createdAt}`);
+        }
+
+        // Sort: Latest Added to Earliest (createdAt DESC), then Name (ASC)
         advertisers.sort((a, b) => {
-            if (b.productCount !== a.productCount) {
-                return b.productCount - a.productCount;
+            const timeA = a.createdAt ? a.createdAt.getTime() : 0;
+            const timeB = b.createdAt ? b.createdAt.getTime() : 0;
+
+            if (timeB !== timeA) {
+                return timeB - timeA;
             }
             return (a.name || '').localeCompare(b.name || '');
         });

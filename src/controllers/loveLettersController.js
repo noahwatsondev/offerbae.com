@@ -87,6 +87,7 @@ const getEditor = async (req, res) => {
         const { id } = req.params;
         const settings = await getGlobalSettings();
         const brands = await getEnrichedAdvertisers();
+        brands.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         let article = null;
         if (id && id !== 'new') {
