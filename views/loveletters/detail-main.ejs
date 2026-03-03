@@ -1,0 +1,279 @@
+<main class="content article-main">
+    <article class="article-container">
+        <header class="article-header">
+            <div class="article-meta">
+                <span class="category-pill">Love Letters</span>
+                <span class="separator">•</span>
+                <span class="publish-date">
+                    <%= article.publishedAt ? new Date(article.publishedAt).toLocaleDateString(undefined, {
+                        month: 'long' , day: 'numeric' , year: 'numeric' }) : 'Draft' %>
+                </span>
+            </div>
+            <h1>
+                <%= article.title %>
+            </h1>
+            <% if (article.excerpt) { %>
+                <p class="article-subtitle">
+                    <%= article.excerpt %>
+                </p>
+                <% } %>
+        </header>
+
+        <% if (article.featuredImage) { %>
+            <div class="article-featured-image">
+                <img src="<%= article.featuredImage %>" alt="<%= article.title %>">
+            </div>
+            <% } %>
+
+                <div class="article-content" id="article-body">
+                    <% let blocks=[]; try { blocks=JSON.parse(article.content || '{"blocks":[]}' ).blocks; } catch(e) {
+                        console.error('Error parsing blocks', e); } %>
+
+                        <% blocks.forEach(block=> { %>
+                            <div class="ce-block">
+                                <div class="ce-block__content">
+                                    <% if (block.type==='header' ) { %>
+                                        <h<%= block.data.level %> class="ce-header"><%- block.data.text %></h<%=
+                                            block.data.level %>>
+                                        <% } else if (block.type==='paragraph' ) { %>
+                                            <p class="ce-paragraph"><%- block.data.text %></p>
+                                            <% } else if (block.type==='list' ) { %>
+                                                <% if (block.data.style==='ordered' ) { %>
+                                                    <ol class="ce-list">
+                                                        <% block.data.items.forEach(item=> { %>
+                                                            <li><%- item %></li>
+                                                            <% }); %>
+                                                    </ol>
+                                                    <% } else { %>
+                                                        <ul class="ce-list">
+                                                            <% block.data.items.forEach(item=> { %>
+                                                                <li><%- item %></li>
+                                                                <% }); %>
+                                                        </ul>
+                                                        <% } %>
+                                                            <% } else if (block.type==='image' ) { %>
+                                                                <figure class="ce-image">
+                                                                    <img src="<%= block.data.file.url %>"
+                                                                        alt="<%= block.data.caption || '' %>">
+                                                                    <% if (block.data.caption) { %>
+                                                                        <figcaption>
+                                                                            <%= block.data.caption %>
+                                                                        </figcaption>
+                                                                        <% } %>
+                                                                </figure>
+                                                                <% } else if (block.type==='quote' ) { %>
+                                                                    <blockquote class="ce-quote">
+                                                                        <p><%- block.data.text %></p>
+                                                                        <% if (block.data.caption) { %>
+                                                                            <cite>
+                                                                                <%= block.data.caption %>
+                                                                            </cite>
+                                                                            <% } %>
+                                                                    </blockquote>
+                                                                    <% } %>
+                                </div>
+                            </div>
+                            <% }); %>
+                </div>
+
+                <footer class="article-footer">
+                    <div class="share-box">
+                        <p>Love this letter? Share it with your friends.</p>
+                        <div class="share-links">
+                            <a href="https://twitter.com/intent/tweet?url=https://offerbae.com/loveletters/<%= article.slug %>-<%= article.id %>&text=<%= encodeURIComponent(article.title) %>"
+                                target="_blank">Twitter</a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=https://offerbae.com/loveletters/<%= article.slug %>-<%= article.id %>"
+                                target="_blank">Facebook</a>
+                            <a
+                                href="mailto:?subject=<%= encodeURIComponent(article.title) %>&body=Check this out: https://offerbae.com/loveletters/<%= article.slug %>-<%= article.id %>">Email</a>
+                        </div>
+                    </div>
+                </footer>
+    </article>
+</main>
+
+<style>
+    .article-main {
+        background: var(--surface, #fff);
+        padding: 6rem 0 10rem;
+    }
+
+    .article-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .article-header {
+        margin-bottom: 4rem;
+        text-align: center;
+    }
+
+    .article-meta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+    }
+
+    .category-pill {
+        color: var(--primary-color, #4f46e5);
+    }
+
+    .separator {
+        color: var(--border, #e2e8f0);
+    }
+
+    .publish-date {
+        color: var(--text-secondary, #64748b);
+    }
+
+    .article-header h1 {
+        font-size: 3.5rem;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+        margin: 0 0 2rem 0;
+        color: var(--text-main, #0f172a);
+    }
+
+    .article-subtitle {
+        font-size: 1.4rem;
+        color: var(--text-secondary, #64748b);
+        line-height: 1.5;
+        font-weight: 500;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .article-featured-image {
+        margin-bottom: 5rem;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .article-featured-image img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .article-content {
+        font-size: 1.15rem;
+        line-height: 1.7;
+        color: var(--text-main, #1e293b);
+    }
+
+    .article-content p {
+        margin-bottom: 1.75rem;
+    }
+
+    .ce-header {
+        margin: 3rem 0 1.5rem 0;
+        font-weight: 850;
+        letter-spacing: -0.02em;
+    }
+
+    h2.ce-header {
+        font-size: 2.25rem;
+    }
+
+    h3.ce-header {
+        font-size: 1.75rem;
+    }
+
+    .ce-image {
+        margin: 3rem -4rem;
+        text-align: center;
+    }
+
+    .ce-image img {
+        border-radius: 12px;
+        max-width: 100%;
+    }
+
+    .ce-image figcaption {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary, #64748b);
+        font-style: italic;
+    }
+
+    .ce-quote {
+        margin: 3rem 0;
+        padding-left: 2rem;
+        border-left: 4px solid var(--primary-color, #4f46e5);
+        font-style: italic;
+        font-size: 1.5rem;
+        color: var(--text-main, #0f172a);
+    }
+
+    .ce-list {
+        margin-bottom: 2rem;
+        padding-left: 1.5rem;
+    }
+
+    .ce-list li {
+        margin-bottom: 0.75rem;
+    }
+
+    .article-footer {
+        margin-top: 8rem;
+        padding-top: 4rem;
+        border-top: 1px solid var(--border, #e2e8f0);
+    }
+
+    .share-box {
+        text-align: center;
+        background: #f8fafc;
+        padding: 3rem;
+        border-radius: 24px;
+    }
+
+    .share-box p {
+        font-weight: 800;
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .share-links {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+    }
+
+    .share-links a {
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+        color: var(--primary-color, #4f46e5);
+        text-decoration: none;
+    }
+
+    @media (max-width: 1024px) {
+        .ce-image {
+            margin: 3rem 0;
+        }
+
+        .article-header h1 {
+            font-size: 2.75rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .article-header h1 {
+            font-size: 2.25rem;
+        }
+
+        .article-main {
+            padding: 4rem 0 6rem;
+        }
+    }
+</style>

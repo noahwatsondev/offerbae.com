@@ -1,0 +1,89 @@
+<main class="content">
+    <section class="section loveletters-hero">
+        <div class="hero-content">
+            <span class="eyebrow">From Our Heart to Yours</span>
+            <h1>Love Letters</h1>
+            <p>Curated stories, deep dives, and expert picks to help you shop smarter and live better.</p>
+        </div>
+    </section>
+
+    <div class="loveletters-list-container">
+        <div class="loveletters-grid">
+            <% articles.forEach(article=> { %>
+                <%- include('../partials/loveletter-card', { article: article }) %>
+                    <% }); %>
+        </div>
+    </div>
+</main>
+
+<style>
+    .loveletters-hero {
+        padding: 6rem 0 4rem;
+        text-align: center;
+        background: linear-gradient(180deg, rgba(79, 70, 229, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+        border-radius: 0 0 40px 40px;
+        margin-bottom: 4rem;
+    }
+
+    .loveletters-hero .eyebrow {
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--primary-color, #4f46e5);
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .loveletters-hero h1 {
+        font-size: 3.5rem;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        margin: 0 0 1.5rem 0;
+        color: var(--text-main, #0f172a);
+    }
+
+    .loveletters-hero p {
+        font-size: 1.25rem;
+        color: var(--text-secondary, #64748b);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .loveletters-list-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-bottom: 8rem;
+    }
+
+    .loveletters-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2.5rem;
+    }
+
+    @media (max-width: 1024px) {
+        .loveletters-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .loveletters-hero h1 {
+            font-size: 2.75rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .loveletters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .loveletters-hero {
+            padding: 4rem 1.5rem;
+        }
+
+        .loveletters-hero h1 {
+            font-size: 2.25rem;
+        }
+    }
+</style>

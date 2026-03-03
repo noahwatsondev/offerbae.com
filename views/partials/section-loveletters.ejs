@@ -1,0 +1,98 @@
+<section class="section loveletters-section">
+    <div class="section-header">
+        <div class="h2-container">
+            <h2>
+                <%= typeof loveLettersH2 !=='undefined' ? loveLettersH2 : 'Love Letters' %>
+            </h2>
+            <% if (typeof loveLettersDescription !=='undefined' ) { %>
+                <p class="section-description">
+                    <%= loveLettersDescription %>
+                </p>
+                <% } %>
+        </div>
+        <% if (typeof showLoveLettersLink !=='undefined' && showLoveLettersLink) { %>
+            <a href="/loveletters" class="view-all">View All Letters →</a>
+            <% } %>
+    </div>
+
+    <div class="grid loveletters-grid">
+        <% articles.forEach(article=> { %>
+            <%- include('loveletter-card', { article: article }) %>
+                <% }); %>
+    </div>
+</section>
+
+<style>
+    .loveletters-section {
+        padding: 4rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .loveletters-section .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 3rem;
+        border-bottom: 1px solid var(--border, #e2e8f0);
+        padding-bottom: 1.5rem;
+    }
+
+    .loveletters-section .h2-container h2 {
+        font-size: 0.85rem;
+        color: var(--text-secondary, #64748b);
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-weight: 800;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .loveletters-section .section-description {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-main, #0f172a);
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .loveletters-section .view-all {
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--primary-color, #4f46e5);
+        text-decoration: none;
+        padding: 0.6rem 1rem;
+        border-radius: 999px;
+        background: #f1f5f9;
+        transition: all 0.2s;
+    }
+
+    .loveletters-section .view-all:hover {
+        background: #e2e8f0;
+        transform: translateX(4px);
+    }
+
+    .loveletters-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+        .loveletters-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .loveletters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .loveletters-section .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+    }
+</style>

@@ -1,0 +1,305 @@
+<section class="section hero-section">
+    <div class="hero-bg" style="background-image: url('<%= heroLetter.featuredImage %>');">
+        <div class="hero-overlay"></div>
+    </div>
+
+    <div class="hero-container container">
+        <div class="hero-flex">
+            <div class="hero-content">
+                <span class="hero-eyebrow">From Our Heart to Yours</span>
+                <h2 class="hero-title">
+                    <%= heroLetter.title %>
+                </h2>
+
+                <div class="hero-letter-paper">
+                    <div class="paper-content">
+                        <p class="letter-excerpt">
+                            <%= heroLetter.excerpt || 'Read our latest editorial pick and brand stories...' %>
+                        </p>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                            <a href="/loveletters/<%= heroLetter.slug %>-<%= heroLetter.id %>" class="letter-cta">
+                                Read the Full Letter
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side Featured Items -->
+            <% if (typeof heroProducts !=='undefined' && heroProducts.length> 0) { %>
+                <div class="hero-featured">
+                    <div class="featured-label">Hand-picked by Bae</div>
+                    <div class="featured-cards-stack">
+                        <% heroProducts.slice(0, 2).forEach(product=> { %>
+                            <div class="hero-card-small">
+                                <%- include('product-card', { product: product }) %>
+                            </div>
+                            <% }) %>
+                    </div>
+                </div>
+                <% } %>
+        </div>
+    </div>
+</section>
+
+<style>
+    .hero-section {
+        position: relative;
+        padding: 0;
+        margin-bottom: 2rem;
+        min-height: 620px;
+        display: flex;
+        align-items: flex-start;
+        overflow: visible;
+    }
+
+    .hero-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 480px;
+        background-size: cover;
+        background-position: center;
+        z-index: 1;
+        border-radius: 0 0 40px 40px;
+        overflow: hidden;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.1) 100%);
+    }
+
+    .hero-container {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+    }
+
+    .hero-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: stretch;
+        gap: 4rem;
+        padding-top: 3rem;
+    }
+
+    .hero-content {
+        max-width: 700px;
+        color: white;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding-left: 2rem;
+    }
+
+    .hero-featured {
+        width: 320px;
+        flex-shrink: 0;
+        z-index: 5;
+    }
+
+    .featured-label {
+        font-size: 0.75rem;
+        font-weight: 850;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.9);
+        letter-spacing: 0.15em;
+        margin-bottom: 1rem;
+        text-align: right;
+        padding-top: 4rem;
+    }
+
+    .featured-cards-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .hero-card-small {
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transform: rotate(1deg);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .hero-card-small:nth-child(even) {
+        transform: rotate(-1deg);
+    }
+
+    .hero-card-small:hover {
+        transform: scale(1.05) rotate(0deg);
+        z-index: 10;
+    }
+
+    /* Override standard product card styles inside hero to make them compact */
+    .hero-card-small .product-card {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .hero-card-small .product-image-container {
+        height: 120px !important;
+    }
+
+    .hero-card-small .product-info {
+        padding: 1rem;
+    }
+
+    .hero-card-small .product-title {
+        font-size: 0.9rem;
+    }
+
+    .hero-eyebrow {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 850;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        margin-bottom: 1.5rem;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        background: none !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .hero-title {
+        font-size: 4rem;
+        line-height: 1.05;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        margin: 0 0 4rem 0;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        background: none !important;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .hero-letter-paper {
+        background: #fff;
+        color: #1e293b;
+        padding: 2.25rem 2.5rem;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+        position: relative;
+        max-width: 550px;
+        z-index: 10;
+        border: 1px solid var(--border, #e2e8f0);
+        margin-top: auto;
+    }
+
+    .letter-excerpt {
+        font-size: 1.15rem;
+        line-height: 1.6;
+        margin-bottom: 0;
+        font-weight: 500;
+        color: #334155;
+    }
+
+    .letter-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 850;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        color: var(--primary-color, #4f46e5);
+        text-decoration: none;
+        letter-spacing: 0.1em;
+        transition: all 0.2s;
+    }
+
+    .letter-cta:hover {
+        gap: 1.25rem;
+        color: #4338ca;
+    }
+
+    @media (max-width: 1024px) {
+        .hero-flex {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 3rem;
+        }
+
+        .hero-content {
+            padding-top: 0;
+            padding-left: 0;
+            max-width: 100%;
+        }
+
+        .hero-featured {
+            width: 100%;
+        }
+
+        .featured-label {
+            text-align: left;
+            padding-top: 0;
+            color: var(--text-secondary, #64748b);
+            margin-bottom: 1.5rem;
+        }
+
+        .featured-cards-stack {
+            flex-direction: row;
+            gap: 1.5rem;
+        }
+
+        .hero-card-small {
+            flex: 1;
+            transform: none !important;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+        }
+
+        .hero-letter-paper {
+            max-width: 100%;
+            padding: 2.5rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .hero-section {
+            min-height: auto;
+            padding-top: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .hero-bg {
+            height: 350px;
+            border-radius: 0 0 24px 24px;
+        }
+
+        .hero-title {
+            font-size: 2.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .hero-letter-paper {
+            max-width: 100%;
+            margin-top: 0;
+            padding: 2rem;
+        }
+
+        .featured-cards-stack {
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+    }
+</style>

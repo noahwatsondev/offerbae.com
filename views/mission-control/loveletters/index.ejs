@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love Letters Admin | OfferBae</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: opacity 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .article-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .article-info h3 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.1rem;
+        }
+
+        .article-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .badge-published {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-draft {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-link {
+            text-decoration: none;
+            color: var(--primary);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .action-link.delete {
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../../partials/mission-control-header', { active: 'loveletters' }) %>
+
+        <div class="container">
+            <div class="header-actions">
+                <h2>Love Letters Content</h2>
+                <a href="/mission-control/loveletters/edit/new" class="btn">+ New Letter</a>
+            </div>
+
+            <% if (articles.length===0) { %>
+                <div
+                    style="text-align: center; padding: 4rem; background: var(--surface); border: 1px dashed var(--border); border-radius: 12px;">
+                    <p style="color: var(--text-secondary);">No love letters yet. Start writing your first one!</p>
+                </div>
+                <% } %>
+
+                    <div class="article-list">
+                        <% articles.forEach(article=> { %>
+                            <div class="article-card">
+                                <div style="display: flex; align-items: center; gap: 1.5rem;">
+                                    <% if (article.published) { %>
+                                        <div style="text-align: center;">
+                                            <input type="radio" name="hero-letter" id="hero-<%= article.id %>"
+                                                <%=article.isHero ? 'checked' : '' %>
+                                            onchange="setHeroLetter('<%= article.id %>')"
+                                                style="cursor: pointer; width: 1.25rem; height: 1.25rem; accent-color:
+                                                var(--primary);">
+                                                <label for="hero-<%= article.id %>"
+                                                    style="display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-secondary); margin-top: 0.25rem;">HERO</label>
+                                        </div>
+                                        <% } else { %>
+                                            <div style="width: 2rem;"></div>
+                                            <% } %>
+
+                                                <div class="article-info">
+                                                    <div style="display: flex; align-items: center;">
+                                                        <h3>
+                                                            <%= article.title %>
+                                                        </h3>
+                                                        <span
+                                                            class="badge <%= article.published ? 'badge-published' : 'badge-draft' %>">
+                                                            <%= article.published ? 'Published' : 'Draft' %>
+                                                        </span>
+                                                    </div>
+                                                    <div class="article-meta">
+                                                        Last updated: <%= article.updatedAt ? new
+                                                            Date(article.updatedAt).toLocaleDateString() : 'Never' %>
+                                                            • Slug: <%= article.slug %>
+                                                    </div>
+                                                </div>
+                                </div>
+                                <div class="actions">
+                                    <a href="/mission-control/loveletters/edit/<%= article.id %>"
+                                        class="action-link">Edit</a>
+                                    <a href="/loveletters/<%= article.slug %>-<%= article.id %>" target="_blank"
+                                        class="action-link">View</a>
+                                    <button onclick="deleteArticle('<%= article.id %>')" class="action-link delete"
+                                        style="background: none; border: none; cursor: pointer; padding: 0;">Delete</button>
+                                </div>
+                            </div>
+                            <% }); %>
+                    </div>
+        </div>
+
+        <script>
+            async function deleteArticle(id) {
+                if (!confirm('Are you sure you want to delete this love letter? This cannot be undone.')) return;
+
+                try {
+                    const res = await fetch(`/api/loveletters/${id}`, { method: 'DELETE' });
+                    const result = await res.json();
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting article: ' + result.error);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error deleting article');
+                }
+            }
+
+            async function setHeroLetter(id) {
+                try {
+                    const res = await fetch('/api/loveletters/set-hero', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        // Success, we can show a brief message or just let it be
+                        console.log('Hero letter updated');
+                    } else {
+                        alert('Error setting hero letter: ' + (result.error || 'Unknown error'));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error setting hero letter');
+                }
+            }
+        </script>
+</body>
+
+</html>

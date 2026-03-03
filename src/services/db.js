@@ -405,6 +405,33 @@ const getEnrichedAdvertisers = async () => {
     }
 };
 
+const getGlobalCategories = async (prefetchedBrands = null) => {
+    const enrichedBrands = prefetchedBrands || await getEnrichedAdvertisers();
+
+    const categoryMap = new Map();
+    enrichedBrands.forEach(b => {
+        const cats = b.categories || (b.raw_data && b.raw_data.categories) || [];
+        cats.forEach(c => {
+            if (c && !categoryMap.has(c)) {
+                categoryMap.set(c, slugify(c));
+            }
+        });
+    });
+    const categoriesRaw = Array.from(categoryMap.entries())
+        .map(([name, slug]) => ({ name: name.trim(), slug }));
+
+    const otherItems = categoriesRaw.filter(c => c.name.toLowerCase().includes('other'));
+    const mainCategories = categoriesRaw.filter(c => !c.name.toLowerCase().includes('other'))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+    return [
+        { name: 'All Categories', slug: '' },
+        ...mainCategories,
+        ...otherItems
+    ];
+};
+
+
 const isRealCode = (code) => {
     if (!code) return false;
     const clean = String(code).trim().toLowerCase();
@@ -484,7 +511,9 @@ module.exports = {
     getGlobalSettings,
     updateGlobalSettings,
     getEnrichedAdvertisers,
+    getGlobalCategories,
     slugify,
+
     isRealCode,
     cleanOfferCode,
     extractCodeFromDescription

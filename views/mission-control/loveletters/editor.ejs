@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= article ? 'Edit: ' + article.title : 'New Love Letter' %> | OfferBae
+    </title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/list@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/image@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/link@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/marker@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/inline-code@latest"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem 8rem;
+        }
+
+        .editor-header {
+            margin-bottom: 2rem;
+        }
+
+        .title-input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .title-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.3;
+        }
+
+        .excerpt-input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            resize: none;
+        }
+
+        #editorjs {
+            min-height: 400px;
+        }
+
+        /* Editor.js Clean Styling */
+        .ce-block__content,
+        .ce-toolbar__content {
+            max-width: 800px;
+        }
+
+        .sticky-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            z-index: 2000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .meta-group {
+            margin-top: 4rem;
+            padding-top: 4rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #f8fafc;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .status-pill.published {
+            background: #dcfce7;
+            color: #166534;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../../partials/mission-control-header', { active: 'loveletters' }) %>
+
+        <div class="container">
+            <div class="editor-header">
+                <input type="text" id="article-title" class="title-input" placeholder="Give it a title..."
+                    value="<%= article ? article.title : '' %>">
+                <textarea id="article-excerpt" class="excerpt-input" rows="2"
+                    placeholder="Write a short excerpt for the grid..."><%= article ? article.excerpt : '' %></textarea>
+            </div>
+
+            <script type="application/json" id="article-content-data">
+<%- (article && article.content) ? article.content.replace(/<\//g, "<\\/") : "{}" %>
+            </script>
+            <div id="editorjs"></div>
+
+            <div class="meta-group">
+                <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem;">SEO & Metadata</h2>
+
+                <div class="form-group">
+                    <label>Slug</label>
+                    <input type="text" id="article-slug" class="form-input" placeholder="Generated from title..."
+                        value="<%= article ? article.slug : '' %>">
+                </div>
+
+                <div class="form-group">
+                    <label>Featured Image URL (GCS Link)</label>
+                    <input type="text" id="article-featured-image" class="form-input"
+                        placeholder="e.g. /logos/some-brand.png" value="<%= article ? article.featuredImage : '' %>">
+                </div>
+
+                <div class="form-group">
+                    <label>Related Brand ID (Optional)</label>
+                    <select id="article-related-brand" class="form-input">
+                        <option value="">None</option>
+                        <% brands.forEach(brand=> { %>
+                            <option value="<%= brand.id %>" <%=article && article.relatedBrandId===brand.id ? 'selected'
+                                : '' %>><%= brand.name %>
+                            </option>
+                            <% }); %>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>SEO Title</label>
+                    <input type="text" id="article-seo-title" class="form-input"
+                        value="<%= article ? article.seoTitle : '' %>">
+                </div>
+
+                <div class="form-group">
+                    <label>SEO Description</label>
+                    <textarea id="article-seo-description" class="form-input"
+                        rows="3"><%= article ? article.seoDescription : '' %></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="sticky-bar">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <a href="/mission-control/loveletters" class="btn btn-outline"
+                    style="text-decoration: none;">Discard</a>
+                <div id="status-display" class="status-pill <%= article && article.published ? 'published' : '' %>">
+                    <%= article && article.published ? 'Published' : 'Draft' %>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button onclick="saveArticle(false)" class="btn btn-outline">Save Draft</button>
+                <button onclick="saveArticle(true)" class="btn">Publish Letter</button>
+            </div>
+        </div>
+
+        <script>
+            // Tools are loaded as global variables by jsDelivr
+            const toolsConfig = {};
+
+            // Helper to add tool if available (tries multiple global names)
+            function addTool(key, possibleNames) {
+                if (typeof possibleNames === 'string') possibleNames = [possibleNames];
+
+                for (const name of possibleNames) {
+                    if (typeof window[name] !== 'undefined') {
+                        toolsConfig[key] = window[name];
+                        return;
+                    }
+                }
+                console.warn(`EditorJS Tool "${key}" not found (checked: ${possibleNames.join(', ')})`);
+            }
+
+            addTool('header', ['Header']);
+            addTool('list', ['List', 'NestedList']);
+
+            // Image tool requires endpoints config to not crash on file select
+            if (typeof ImageTool !== 'undefined' || typeof Image !== 'undefined') {
+                const imgClass = window.ImageTool || window.Image;
+                toolsConfig['image'] = {
+                    class: imgClass,
+                    config: {
+                        endpoints: {
+                            byFile: '/api/loveletters/upload', // Backend upload route
+                            byUrl: '/api/proxy-image?url='    // Use existing proxy for external URLs
+                        }
+                    }
+                };
+            }
+
+            addTool('quote', ['Quote']);
+            addTool('marker', ['MarkerTool', 'Marker']);
+            addTool('inlineCode', ['InlineCode']);
+            addTool('linkTool', ['LinkTool', 'Link']);
+
+            const editor = new EditorJS({
+                holder: 'editorjs',
+                tools: toolsConfig,
+                placeholder: 'Tell a story worth reading...',
+                data: (function () {
+                    try {
+                        const el = document.getElementById('article-content-data');
+                        const val = el ? el.textContent.trim() : '{}';
+                        return (val && val !== '{}') ? JSON.parse(val) : {};
+                    } catch (e) {
+                        console.error('Data parse error:', e);
+                        return {};
+                    }
+                })(),
+                autofocus: true,
+                onReady: () => {
+                    console.log('Editor.js is ready!');
+                }
+            });
+
+            async function saveArticle(publish = false) {
+                try {
+                    const outputData = await editor.save();
+                    const title = document.getElementById('article-title').value;
+                    const excerpt = document.getElementById('article-excerpt').value;
+                    const slug = document.getElementById('article-slug').value || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+                    const data = {
+                        id: '<%= article ? article.id : "" %>',
+                        title,
+                        excerpt,
+                        slug,
+                        content: JSON.stringify(outputData),
+                        featuredImage: document.getElementById('article-featured-image').value,
+                        relatedBrandId: document.getElementById('article-related-brand').value,
+                        seoTitle: document.getElementById('article-seo-title').value,
+                        seoDescription: document.getElementById('article-seo-description').value,
+                        published: publish,
+                        publishedAt: publish ? new Date() : null
+                    };
+
+                    const res = await fetch('/api/loveletters/upsert', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await res.json();
+                    if (result.success) {
+                        window.location.href = '/mission-control/loveletters';
+                    } else {
+                        alert('Error saving: ' + result.error);
+                    }
+                } catch (err) {
+                    console.error('Saving failed:', err);
+                    alert('Connection error while saving');
+                }
+            }
+        </script>
+</body>
+
+</html>

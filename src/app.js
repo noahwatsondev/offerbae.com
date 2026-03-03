@@ -2,9 +2,11 @@ const express = require('express');
 const path = require('path');
 const config = require('./config/env');
 const dashboardController = require('./controllers/dashboardController');
+const loveLettersController = require('./controllers/loveLettersController');
+const loveLettersService = require('./services/loveLettersService');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
-const { getGlobalSettings, getEnrichedAdvertisers, isRealCode, slugify, extractCodeFromDescription } = require('./services/db');
+const { getGlobalSettings, getEnrichedAdvertisers, isRealCode, slugify, extractCodeFromDescription, getGlobalCategories } = require('./services/db');
 const firebaseAdmin = require('firebase-admin');
 const fs = require('fs');
 require('dotenv').config({ override: true });
@@ -238,6 +240,28 @@ app.use(express.static(path.join(__dirname, '../public'), {
     lastModified: false
 }));
 
+// Love Letters Admin
+app.get('/mission-control/loveletters', loveLettersController.getAdminDashboard);
+app.get('/mission-control/loveletters/edit/:id', loveLettersController.getEditor);
+app.post('/api/loveletters/upsert', express.json({ limit: '10mb' }), loveLettersController.apiUpsertArticle);
+app.post('/api/loveletters/upload', loveLettersController.uploadMiddleware, loveLettersController.apiUploadImage);
+app.post('/api/loveletters/set-hero', express.json(), loveLettersController.apiSetHeroLetter);
+app.delete('/api/loveletters/:id', loveLettersController.apiDeleteArticle);
+
+// Mission Control Dashboard Routes (Restoring accidentally deleted ones)
+app.get('/mission-control', dashboardController.getDashboardData);
+app.get('/api/proxy-image', dashboardController.proxyImage);
+app.get('/api/products/search', dashboardController.globalProductSearch);
+app.post('/mission-control/style', dashboardController.uploadStyleMiddleware, dashboardController.updateStyle);
+app.post('/refresh', dashboardController.refreshData);
+app.get('/api/advertiser/:id/products', dashboardController.getAdvertiserProducts);
+app.get('/api/advertiser/:id/offers', dashboardController.getAdvertiserOffers);
+app.post('/api/advertiser/:id/logo/upload', dashboardController.uploadLogoMiddleware, dashboardController.uploadLogo);
+app.post('/api/advertiser/:id/logo/reset', dashboardController.resetLogo);
+app.post('/api/advertiser/:id/homelink', express.json(), dashboardController.updateHomeLink);
+app.post('/api/advertiser/:id/description', express.json(), dashboardController.updateDescription);
+app.post('/api/advertiser/:id/generate-description', express.json(), dashboardController.generateDescription);
+
 // Explicit manual sync route for debugging/triggering
 app.get('/update/full-sync', async (req, res) => {
     try {
@@ -304,27 +328,13 @@ app.get('/api/sync-history/:network', async (req, res) => {
     }
 });
 
+
 // Routes
 // Routes
 // Routes
 app.get('/mission-control/docs', dashboardController.getDocs);
 app.get('/mission-control/style', dashboardController.getStyle);
-app.post('/mission-control/style', (req, res, next) => {
 
-    next();
-}, dashboardController.uploadStyleMiddleware, dashboardController.updateStyle);
-app.post('/refresh', dashboardController.refreshData);
-app.get('/api/advertiser/:id/products', dashboardController.getAdvertiserProducts);
-app.get('/api/advertiser/:id/offers', dashboardController.getAdvertiserOffers);
-// Logo Upload & Reset Routes
-app.post('/api/advertiser/:id/logo/upload', dashboardController.uploadLogoMiddleware, dashboardController.uploadLogo);
-app.post('/api/advertiser/:id/logo/reset', dashboardController.resetLogo);
-app.post('/api/advertiser/:id/homelink', express.json(), dashboardController.updateHomeLink);
-app.post('/api/advertiser/:id/description', express.json(), dashboardController.updateDescription);
-app.post('/api/advertiser/:id/generate-description', express.json(), dashboardController.generateDescription);
-app.get('/api/products/search', dashboardController.globalProductSearch);
-app.get('/api/proxy-image', dashboardController.proxyImage);
-app.get('/mission-control', dashboardController.getDashboardData);
 
 
 // Export the new controller function if it's not already exported
@@ -387,31 +397,7 @@ const mapOfferDoc = (doc, overrides = {}) => {
 };
 
 // Helper to fetch and format global dynamic categories
-const getGlobalCategories = async (prefetchedBrands = null) => {
-    const enrichedBrands = prefetchedBrands || await getEnrichedAdvertisers();
-
-    const categoryMap = new Map();
-    enrichedBrands.forEach(b => {
-        const cats = b.categories || (b.raw_data && b.raw_data.categories) || [];
-        cats.forEach(c => {
-            if (c && !categoryMap.has(c)) {
-                categoryMap.set(c, slugify(c));
-            }
-        });
-    });
-    const categoriesRaw = Array.from(categoryMap.entries())
-        .map(([name, slug]) => ({ name: name.trim(), slug }));
-
-    const otherItems = categoriesRaw.filter(c => c.name.toLowerCase().includes('other'));
-    const mainCategories = categoriesRaw.filter(c => !c.name.toLowerCase().includes('other'))
-        .sort((a, b) => a.name.localeCompare(b.name));
-
-    return [
-        { name: 'All Categories', slug: '' },
-        ...mainCategories,
-        ...otherItems
-    ];
-};
+// MOVED TO db.js
 
 // --- Sidebar Global Caching Middleware ---
 let sidebarCache = null;
@@ -514,6 +500,11 @@ const populateSidebar = async (req, res, next) => {
     }
     next();
 };
+
+// Love Letters Public (Requires populateSidebar)
+app.get('/loveletters', populateSidebar, loveLettersController.getLoveLettersIndex);
+app.get('/loveletters/:slug-:id', populateSidebar, loveLettersController.getLoveLetterDetail);
+app.get('/loveletters/:slug', populateSidebar, loveLettersController.getLoveLetterDetail);
 
 app.get('/', populateSidebar, async (req, res) => {
     try {
@@ -630,6 +621,21 @@ app.get('/', populateSidebar, async (req, res) => {
         }
 
         const finalCategories = await getGlobalCategories(enrichedBrands);
+        const heroLetter = await loveLettersService.getHeroLetter();
+        const latestArticles = await loveLettersService.getLatestArticles(3); // Show latest 3 on homepage
+
+        let heroProducts = [];
+        if (heroLetter && heroLetter.relatedBrandId) {
+            const relatedBrand = enrichedBrands.find(b => b.id === heroLetter.relatedBrandId);
+            if (relatedBrand) {
+                heroProducts = topSaleProducts.filter(p => p.advertiserName === relatedBrand.name || String(p.advertiserId) === String(relatedBrand.id)).slice(0, 2);
+            }
+        }
+        if (heroProducts.length < 2) {
+            const fallbackProducts = topSaleProducts.filter(p => !heroProducts.some(hp => hp.id === p.id));
+            heroProducts = [...heroProducts, ...fallbackProducts].slice(0, 2);
+        }
+
 
         const schema = {
             "@context": "https://schema.org",
@@ -647,6 +653,14 @@ app.get('/', populateSidebar, async (req, res) => {
             products: topSaleProducts,
             offers: topOffers,
             categories: finalCategories,
+            articles: latestArticles,
+            heroLetter: heroLetter,
+            heroProducts: heroProducts,
+            showHero: !!heroLetter,
+            showLoveLetters: true,
+            loveLettersH2: "Letters of Love",
+            loveLettersDescription: "Our latest editorial picks and brand stories.",
+            showLoveLettersLink: true,
             showBrands: true,
             showProducts: true,
             showOffers: true,
