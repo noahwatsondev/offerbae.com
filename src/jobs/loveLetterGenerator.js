@@ -2,6 +2,7 @@ const { GoogleGenAI } = require('@google/genai');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 const firebaseAdmin = require('firebase-admin');
 const { getEnrichedAdvertisers, slugify } = require('../services/db');
+const { uploadImageBuffer } = require('../services/imageStore');
 
 const secretClient = new SecretManagerServiceClient();
 
@@ -51,7 +52,8 @@ Your output MUST be a valid JSON object with the following structure:
     "slug": "a-url-friendly-slug-for-the-title",
     "content": "A raw stringified JSON representing an Editor.js OutputData object. The 'blocks' array should contain 'paragraph' or 'header' types. Example: '{\"time\":123,\"blocks\":[{\"type\":\"paragraph\",\"data\":{\"text\":\"My dearest Bae...\"}}],\"version\":\"2.28.0\"}'",
     "excerpt": "A short 1-2 sentence teaser summary of the letter.",
-    "relatedBrandId": "If a specific brand is heavily featured, put its ID here. Otherwise null."
+    "relatedBrandId": "If a specific brand is heavily featured, put its ID here. Otherwise null.",
+    "imagePrompt": "A highly descriptive, self-contained prompt to generate an image to accompany this article. ALWAYS include humans in the composition. Depending on the article content and playfulness/seriousness of it, make the style either cartoony or realistic/real-life."
 }`;
 };
 
@@ -176,11 +178,36 @@ ${contextDataString}`
                 ? JSON.stringify(letterData.content)
                 : letterData.content || '';
 
+            let featuredImageUrl = '';
+            if (letterData.imagePrompt) {
+                try {
+                    console.log(`[LOVE LETTERS JOB] Generating image for prompt: "${letterData.imagePrompt}"`);
+                    const imageResp = await ai.models.generateImages({
+                        model: "imagen-4.0-generate-001",
+                        prompt: letterData.imagePrompt,
+                        config: {
+                            numberOfImages: 1,
+                            aspectRatio: "16:9",
+                            personGeneration: "allow_adult"
+                        }
+                    });
+
+                    const base64Image = imageResp.generatedImages[0].image.imageBytes;
+                    const imageBuffer = Buffer.from(base64Image, 'base64');
+                    // Upload to our store
+                    featuredImageUrl = await uploadImageBuffer(imageBuffer, 'image/jpeg', 'loveletters');
+                    console.log(`[LOVE LETTERS JOB] Image successfully generated and saved to: ${featuredImageUrl}`);
+                } catch (imgErr) {
+                    console.error('[LOVE LETTERS JOB] Failed to generate featured image:', imgErr.message);
+                }
+            }
+
             const docData = {
                 title: letterData.title || `Love Letter Draft ${index + 1}`,
                 slug: letterData.slug || slugify(letterData.title || `doc-${Date.now()}`),
                 content: finalContent,
                 excerpt: letterData.excerpt || '',
+                featuredImage: featuredImageUrl || '',
                 published: false,
                 authorId: 'system_ai',
                 createdAt: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
