@@ -188,9 +188,13 @@
                                                                     Last updated: <%= article.updatedAt ?
                                                                         (article.updatedAt._seconds ? new
                                                                         Date(article.updatedAt._seconds *
-                                                                        1000).toLocaleDateString() : new
-                                                                        Date(article.updatedAt).toLocaleDateString())
-                                                                        : 'Never' %>
+                                                                        1000).toLocaleString('en-US', { month: 'numeric'
+                                                                        , day: 'numeric' , year: 'numeric' ,
+                                                                        hour: 'numeric' , minute: '2-digit' }) : new
+                                                                        Date(article.updatedAt).toLocaleString('en-US',
+                                                                        { month: 'numeric' , day: 'numeric' ,
+                                                                        year: 'numeric' , hour: 'numeric' ,
+                                                                        minute: '2-digit' })) : 'Never' %>
                                                                         • Slug: <%= article.slug %>
                                                                 </div>
                                                             </div>
