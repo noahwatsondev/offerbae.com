@@ -161,25 +161,39 @@
                                             <div style="width: 2rem;"></div>
                                             <% } %>
 
-                                                <div class="article-info">
-                                                    <div style="display: flex; align-items: center;">
-                                                        <h3>
-                                                            <%= article.title %>
-                                                        </h3>
-                                                        <span
-                                                            class="badge <%= article.published ? 'badge-published' : 'badge-draft' %>">
-                                                            <%= article.published ? 'Published' : 'Draft' %>
-                                                        </span>
+                                                <% if (article.featuredImage) { %>
+                                                    <div
+                                                        style="width: 60px; height: 60px; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+                                                        <img src="<%= article.featuredImage %>" alt="Featured Image"
+                                                            style="width: 100%; height: 100%; object-fit: cover;">
                                                     </div>
-                                                    <div class="article-meta">
-                                                        Last updated: <%= article.updatedAt ?
-                                                            (article.updatedAt._seconds ? new
-                                                            Date(article.updatedAt._seconds * 1000).toLocaleDateString()
-                                                            : new Date(article.updatedAt).toLocaleDateString())
-                                                            : 'Never' %>
-                                                            • Slug: <%= article.slug %>
-                                                    </div>
-                                                </div>
+                                                    <% } else { %>
+                                                        <div
+                                                            style="width: 60px; height: 60px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #94a3b8; font-weight: 700; flex-shrink: 0; border: 1px dashed #cbd5e1;">
+                                                            NO IMG
+                                                        </div>
+                                                        <% } %>
+
+                                                            <div class="article-info">
+                                                                <div style="display: flex; align-items: center;">
+                                                                    <h3>
+                                                                        <%= article.title %>
+                                                                    </h3>
+                                                                    <span
+                                                                        class="badge <%= article.published ? 'badge-published' : 'badge-draft' %>">
+                                                                        <%= article.published ? 'Published' : 'Draft' %>
+                                                                    </span>
+                                                                </div>
+                                                                <div class="article-meta">
+                                                                    Last updated: <%= article.updatedAt ?
+                                                                        (article.updatedAt._seconds ? new
+                                                                        Date(article.updatedAt._seconds *
+                                                                        1000).toLocaleDateString() : new
+                                                                        Date(article.updatedAt).toLocaleDateString())
+                                                                        : 'Never' %>
+                                                                        • Slug: <%= article.slug %>
+                                                                </div>
+                                                            </div>
                                 </div>
                                 <div class="actions">
                                     <a href="/mission-control/loveletters/edit/<%= article.id %>"
