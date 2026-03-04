@@ -53,8 +53,12 @@ Your output MUST be a valid JSON object with the following structure:
     "content": "A raw stringified JSON representing an Editor.js OutputData object. The 'blocks' array should contain 'paragraph' or 'header' types. Example: '{\"time\":123,\"blocks\":[{\"type\":\"paragraph\",\"data\":{\"text\":\"My dearest Bae...\"}}],\"version\":\"2.28.0\"}'",
     "excerpt": "A short 1-2 sentence teaser summary of the letter.",
     "relatedBrandId": "If a specific brand is heavily featured, put its ID here. Otherwise null.",
-    "imagePrompt": "A highly descriptive, self-contained prompt to generate an image to accompany this article. ALWAYS include humans in the composition. Depending on the article content and playfulness/seriousness of it, make the style either cartoony or realistic/real-life."
-}`;
+    "imagePrompt": "A highly descriptive, self-contained prompt to generate an image to accompany this article. Make the image vibrant, colorful, and whimsical! ALWAYS include humans in the composition. Depending on the article content, make the style either cartoony or realistic/real-life (but still colorful/whimsical)."
+}
+
+CRITIAL REQUIREMENT FOR THE CONTENT BLOCKS:
+Whenever you mention the brand name, product name, or offer name in the 'paragraph' blocks, you MUST wrap them in an HTML anchor tag (<a href="...">...</a>) using the provided URL for that specific entity in the data contexts. For example: {"type": "paragraph", "data": {"text": "My dearest Bae, you have to check out <a href='https://offerbae.com/brands/nike'>Nike</a> right now!"}}
+`;
 };
 
 /**
@@ -111,10 +115,10 @@ const generateDailyLoveLetters = async () => {
 
         const contextDataString = `
 AVAILABLE BRANDS (Pick from these if you need inspiration):
-${topBrands.map(b => `- ${b.name} (Categories: ${b.categories?.join(', ') || 'Various'}) (ID: ${b.id})`).join('\n')}
+${topBrands.map(b => `- ${b.name} (Categories: ${b.categories?.join(', ') || 'Various'}) (URL: https://offerbae.com/brands/${b.slug || slugify(b.name)}) (ID: ${b.id})`).join('\n')}
 
 RECENT DEALS & OFFERS (Featured options):
-${recentOffers.slice(0, 10).map(o => `- Brand: ${o.advertiser || 'Unknown'}, Offer: ${o.description || o.name}, Code: ${o.code || 'None'}`).join('\n')}
+${recentOffers.slice(0, 10).map(o => `- Brand: ${o.advertiser || 'Unknown'}, Offer: ${o.description || o.name}, Code: ${o.code || 'None'} (URL: https://offerbae.com/brands/${o.advertiserSlug || slugify(o.advertiser || 'Unknown')})`).join('\n')}
 `;
 
         // 3. Define the 3 distinct letter prompts
