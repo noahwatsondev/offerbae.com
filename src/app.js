@@ -160,10 +160,15 @@ app.get('/sitemap.xml', async (req, res) => {
         // Base static URLs
         const urls = [
             { loc: 'https://offerbae.com/', priority: '1.0', changefreq: 'daily' },
+            { loc: 'https://offerbae.com/fresh', priority: '1.0', changefreq: 'daily' },
             { loc: 'https://offerbae.com/brands', priority: '0.9', changefreq: 'daily' },
             { loc: 'https://offerbae.com/offers', priority: '0.9', changefreq: 'hourly' },
             { loc: 'https://offerbae.com/products', priority: '0.8', changefreq: 'hourly' },
-            { loc: 'https://offerbae.com/categories', priority: '0.8', changefreq: 'daily' }
+            { loc: 'https://offerbae.com/categories', priority: '0.8', changefreq: 'daily' },
+            { loc: 'https://offerbae.com/how-we-review-deals', priority: '0.5', changefreq: 'monthly' },
+            { loc: 'https://offerbae.com/legal', priority: '0.5', changefreq: 'monthly' },
+            { loc: 'https://offerbae.com/privacy', priority: '0.5', changefreq: 'monthly' },
+            { loc: 'https://offerbae.com/terms', priority: '0.5', changefreq: 'monthly' }
         ];
 
         // Fetch valid Advertisers (Brands)
