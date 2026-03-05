@@ -75,10 +75,30 @@
             <%- include('categories') %>
 
                 <!-- Hidden Google Custom Search Element -->
-                <div style="visibility: hidden; position: absolute; top: -9999px; left: -9999px;">
+                <div id="hidden-gcse">
                     <script async src="https://cse.google.com/cse.js?cx=e0d779e52bc874737"></script>
                     <div class="gcse-search"></div>
                 </div>
+                <style>
+                    /* Hide only the Google search box, keep results visible */
+                    #hidden-gcse .gsc-search-box,
+                    #hidden-gcse .gsc-search-box-tools {
+                        position: absolute !important;
+                        left: -10000px !important;
+                        top: -10000px !important;
+                        width: 0 !important;
+                        height: 0 !important;
+                        opacity: 0 !important;
+                    }
+
+                    /* Ensure the parent doesn't take up space when results are empty */
+                    #hidden-gcse .gsc-control-cse {
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        border: none !important;
+                        background: transparent !important;
+                    }
+                </style>
 
         </header>
 
