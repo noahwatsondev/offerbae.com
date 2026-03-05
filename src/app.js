@@ -136,7 +136,7 @@ app.use((req, res, next) => {
     res.set('X-Build-ID', 'debug-' + Date.now());
     // Enhanced CSP for local development stability and devtools compatibility
     // Add Google Analytics domains to script-src and connect-src
-    res.set('Content-Security-Policy', "default-src 'self' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: http:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:* https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net;");
+    res.set('Content-Security-Policy', "default-src 'self' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://cse.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.google.com; img-src 'self' data: https: http:; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://cse.google.com https://www.google.com; connect-src 'self' https: http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:* https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net;");
     next();
 });
 
