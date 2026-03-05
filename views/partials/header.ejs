@@ -98,6 +98,30 @@
                         border: none !important;
                         background: transparent !important;
                     }
+
+                    /* Reposition Google CSE Overlay directly under search box */
+                    html .gsc-results-wrapper-overlay {
+                        position: fixed !important;
+                        top: calc(var(--google-search-top, 95px) + 0.5rem) !important;
+                        left: var(--google-search-left, 5%) !important;
+                        width: var(--google-search-width, 90%) !important;
+                        height: calc(100vh - var(--google-search-top, 95px) - 0.5rem) !important;
+                        max-width: none !important;
+                        margin: 0 !important;
+                        border-radius: 16px 16px 0 0 !important;
+                        border: 1px solid #e2e8f0 !important;
+                        border-bottom: none !important;
+                        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+                        transform: none !important;
+                        z-index: 999999 !important;
+                    }
+
+                    /* Hide the dark overlay background completely */
+                    html .gsc-modal-background-image {
+                        background-color: transparent !important;
+                        opacity: 0 !important;
+                        pointer-events: none !important;
+                    }
                 </style>
 
         </header>
@@ -116,6 +140,21 @@
                 const searchToggle = document.getElementById('use-google-search');
                 const searchBtn = document.getElementById('global-search-btn');
 
+                function updateGoogleSearchPosition() {
+                    if (searchInput) {
+                        const rect = searchInput.getBoundingClientRect();
+                        document.documentElement.style.setProperty('--google-search-top', rect.bottom + 'px');
+                        document.documentElement.style.setProperty('--google-search-left', rect.left + 'px');
+                        document.documentElement.style.setProperty('--google-search-width', rect.width + 'px');
+                    }
+                }
+
+                window.addEventListener('resize', () => {
+                    if (searchToggle && searchToggle.checked) {
+                        updateGoogleSearchPosition();
+                    }
+                });
+
                 function triggerSearch() {
                     const query = searchInput.value.trim();
                     if (!query) return;
@@ -125,6 +164,7 @@
                         if (window.google && window.google.search && window.google.search.cse) {
                             const cseElement = window.google.search.cse.element.getElement('storesearch');
                             if (cseElement) {
+                                updateGoogleSearchPosition();
                                 cseElement.execute(query);
                                 return;
                             }
