@@ -7,6 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     searchInput.addEventListener('input', (e) => {
         clearTimeout(debounceTimer);
+
+        const searchToggle = document.getElementById('use-google-search');
+        if (searchToggle && searchToggle.checked) {
+            resultsContainer.innerHTML = '';
+            resultsContainer.classList.remove('active');
+            return;
+        }
+
         const query = e.target.value.trim();
         if (query.length < 2) {
             resultsContainer.innerHTML = '';

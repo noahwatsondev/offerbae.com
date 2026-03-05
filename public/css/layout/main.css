@@ -496,7 +496,8 @@ h2 {
 .header .header-search-container .global-search .search-input {
   box-sizing: border-box;
   width: 100%;
-  padding: 0.75rem 2.5rem 0.75rem 2.75rem;
+  padding: 0.75rem 4.5rem 0.75rem 2.75rem;
+  /* Increased right padding for toggle */
   background: linear-gradient(white, white) padding-box, linear-gradient(to right, var(--primary-color), var(--color-red)) border-box;
   border-radius: 9999px;
   border: 1px solid transparent;
@@ -527,6 +528,34 @@ h2 {
   display: flex;
   align-items: center;
   transition: color 0.2s ease;
+}
+.header .header-search-container .global-search .search-engine-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #f1f5f9;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+.header .header-search-container .global-search .search-engine-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+.header .header-search-container .global-search .search-engine-toggle input[type=checkbox] {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  accent-color: #4285F4;
+  margin: 0;
+}
+.header .header-search-container .global-search .search-engine-toggle:hover {
+  background: #e2e8f0;
 }
 @media (max-width: 768px) {
   .header .header-nav {
