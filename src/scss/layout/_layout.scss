@@ -49,13 +49,13 @@ body {
             width: 100% !important;
             max-width: 100% !important;
             display: block !important;
+            box-sizing: border-box !important;
         }
 
         // Force centering on the internal areas
         .header-main,
         .breadcrumbs-inner,
         .context-inner,
-        .footer__container,
         .container,
         .global-search,
         .categories-scroll,
@@ -80,7 +80,15 @@ body {
         .content {
             // main tag stays 100% wide row, but its standard children sections
             // will rely on the .container class to center.
-            padding: 0 !important;
+            padding: 0 1.5rem !important;
+
+            @media (max-width: 768px) {
+                padding: 0 1rem !important;
+            }
+
+            @media (max-width: 380px) {
+                padding: 0 0.75rem !important;
+            }
         }
     }
 }
@@ -413,7 +421,7 @@ h2 {
     z-index: -1;
     background-size: cover;
     background-position: center top;
-    background-attachment: fixed;
+    // background-attachment: fixed is removed to prevent Chromium grid compositor bugs 
     pointer-events: none;
 }
 

@@ -49,11 +49,11 @@ body {
   width: 100% !important;
   max-width: 100% !important;
   display: block !important;
+  box-sizing: border-box !important;
 }
 .layout.no-sidebar .header-main,
 .layout.no-sidebar .breadcrumbs-inner,
 .layout.no-sidebar .context-inner,
-.layout.no-sidebar .footer__container,
 .layout.no-sidebar .container,
 .layout.no-sidebar .global-search,
 .layout.no-sidebar .categories-scroll,
@@ -74,7 +74,17 @@ body {
   display: flex !important;
 }
 .layout.no-sidebar .content {
-  padding: 0 !important;
+  padding: 0 1.5rem !important;
+}
+@media (max-width: 768px) {
+  .layout.no-sidebar .content {
+    padding: 0 1rem !important;
+  }
+}
+@media (max-width: 380px) {
+  .layout.no-sidebar .content {
+    padding: 0 0.75rem !important;
+  }
 }
 
 .categories-wrapper {
@@ -365,7 +375,6 @@ h2 {
   z-index: -1;
   background-size: cover;
   background-position: center top;
-  background-attachment: fixed;
   pointer-events: none;
 }
 
@@ -1320,15 +1329,13 @@ h2 {
 .content .content-section .brand-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  grid-auto-rows: min-content;
   gap: 1.5rem;
 }
 .content .content-section .brand-grid .brand-card-wrapper {
   text-decoration: none !important;
   color: inherit;
-  display: grid;
-  grid-row: span 3;
-  grid-template-rows: subgrid;
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 .content .content-section .brand-grid .brand-card-wrapper:hover, .content .content-section .brand-grid .brand-card-wrapper:focus, .content .content-section .brand-grid .brand-card-wrapper:active {
@@ -1344,8 +1351,8 @@ h2 {
   border-radius: 12px;
   display: grid;
   grid-template-columns: 80px 1fr;
-  grid-row: span 3;
-  grid-template-rows: subgrid;
+  grid-template-rows: min-content auto;
+  flex: 1;
   padding: 0 1.25rem 1.25rem 0;
   gap: 1.25rem;
   box-sizing: border-box;
@@ -1364,7 +1371,7 @@ h2 {
   mask-image: radial-gradient(ellipse at 112% -12%, transparent 28%, rgba(0, 0, 0, 0.85) 40%, transparent 62%);
   -webkit-mask-image: radial-gradient(ellipse at 112% -12%, transparent 28%, rgba(0, 0, 0, 0.85) 40%, transparent 62%);
   pointer-events: none;
-  top: -56px;
+  background-position: 0 -56px;
 }
 .content .content-section .brand-grid .brand-card:hover {
   transform: translateY(-2px);
@@ -1394,7 +1401,7 @@ h2 {
   align-self: center;
 }
 .content .content-section .brand-grid .brand-card .brand-meta {
-  grid-row: 2/span 2;
+  grid-row: 2;
   grid-column: 1/span 2;
   display: flex;
   flex-direction: column;

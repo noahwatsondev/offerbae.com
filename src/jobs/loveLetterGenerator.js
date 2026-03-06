@@ -53,11 +53,13 @@ Your output MUST be a valid JSON object with the following structure:
     "content": "A raw stringified JSON representing an Editor.js OutputData object. The 'blocks' array should contain 'paragraph' or 'header' types. Example: '{\"time\":123,\"blocks\":[{\"type\":\"paragraph\",\"data\":{\"text\":\"My dearest Bae...\"}}],\"version\":\"2.28.0\"}'",
     "excerpt": "A short 1-2 sentence teaser summary of the letter.",
     "relatedBrandId": "If a specific brand is heavily featured, put its ID here. Otherwise null.",
-    "imagePrompt": "A highly descriptive, self-contained prompt to generate an image to accompany this article. Make the image vibrant, colorful, and whimsical! ALWAYS include humans in the composition. Depending on the article content, make the style either cartoony or realistic/real-life (but still colorful/whimsical)."
+    "imagePrompt": "A highly descriptive, self-contained prompt to generate an image to accompany this article. ALWAYS include humans in the composition. Specifically feature the brands and products mentioned in the letter. Vary the image style heavily across letters (e.g. realistic, black and white photography, Disney animation style, Studio Ghibli, 3D render, whimsical cartoon, etc). It MUST be very friendly and pleasing to the eye."
 }
 
 CRITIAL REQUIREMENT FOR THE CONTENT BLOCKS:
-Whenever you mention the brand name, product name, or offer name in the 'paragraph' blocks, you MUST wrap them in an HTML anchor tag (<a href="...">...</a>) using the provided URL for that specific entity in the data contexts. For example: {"type": "paragraph", "data": {"text": "My dearest Bae, you have to check out <a href='https://offerbae.com/brands/nike'>Nike</a> right now!"}}
+1. Whenever you mention the brand name, product name, or offer name in the 'paragraph' blocks, you MUST wrap them in an HTML anchor tag (<a href="...">...</a>) using the provided URL for that specific entity in the data contexts. For example: {"type": "paragraph", "data": {"text": "My dearest Bae, you have to check out <a href='https://offerbae.com/brands/nike'>Nike</a> right now!"}}
+2. IMPORTANT: Do NOT hyperlink the same brand name, product name, or offer name more than once. Only hyperlink the FIRST mention of each entity to avoid looking spammy.
+3. LENGTH: Please add about 100 more words to the main portion of the letter. Make the letter pleasantly detailed, telling a nice little story about the brands or products.
 `;
 };
 
