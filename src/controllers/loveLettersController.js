@@ -16,7 +16,7 @@ const getLoveLettersIndex = async (req, res) => {
             settings,
             articles,
             categories,
-            metaTitle: 'Love Letters from Bae to You - OfferBae.com',
+            metaTitle: 'Love Letters: Lifestyle Editorials & Brand Stories | OfferBae',
             canonicalUrl: 'https://offerbae.com/loveletters',
             breadcrumbPath: [{ name: 'Love Letters', url: '/loveletters' }],
             hideContext: true
@@ -51,7 +51,7 @@ const getLoveLetterDetail = async (req, res) => {
             settings,
             article,
             categories,
-            metaTitle: `${article.title} - Love Letters - OfferBae.com`,
+            metaTitle: `${article.title} | Love Letters by OfferBae`,
             canonicalUrl: `https://offerbae.com/loveletters/${article.slug}-${article.id}`,
             breadcrumbPath: [
                 { name: 'Love Letters', url: '/loveletters' },
