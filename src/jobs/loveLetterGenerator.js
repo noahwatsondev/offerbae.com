@@ -53,7 +53,7 @@ Your output MUST be a valid JSON object with the following structure:
     "content": "A raw stringified JSON representing an Editor.js OutputData object. The 'blocks' array should contain 'paragraph' or 'header' types. Example: '{\"time\":123,\"blocks\":[{\"type\":\"paragraph\",\"data\":{\"text\":\"My dearest Bae...\"}}],\"version\":\"2.28.0\"}'",
     "excerpt": "A short 1-2 sentence teaser summary of the letter.",
     "relatedBrandId": "If a specific brand is heavily featured, put its ID here. Otherwise null.",
-    "imagePrompt": "A highly descriptive, self-contained prompt to generate an image to accompany this article. ALWAYS include humans in the composition. Specifically feature the brands and products mentioned in the letter. Vary the image style heavily across letters (e.g. realistic, black and white photography, Disney animation style, Studio Ghibli, 3D render, whimsical cartoon, etc). It MUST be very friendly and pleasing to the eye."
+    "imagePrompt": "A highly descriptive, self-contained prompt to generate an image to accompany this article. ALWAYS include humans in the composition. Specifically feature the brands and products mentioned in the letter. Vary the image style heavily across letters, but ALWAYS lean towards a 'Sunday comic' style featuring sassy humor and wit. CRITICAL: If including speech bubbles or text, explicitly specify the exact text to be used and ensure it is a short, grammatically perfect English sentence that makes complete sense. It MUST be very friendly and pleasing to the eye."
 }
 
 CRITIAL REQUIREMENT FOR THE CONTENT BLOCKS:

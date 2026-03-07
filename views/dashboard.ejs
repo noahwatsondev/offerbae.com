@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>OfferBae Admin Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -838,7 +839,8 @@
             };
 
             // Table Sorting Logic
-            let sortDirection = {}; // Store sort direction for each column
+            let sortDirection = {}; // Store sort direction for each
+            column
 
             window.sortTable = (n, type = 'string') => {
                 const table = document.querySelector('table tbody');
@@ -877,7 +879,8 @@
                 rows.forEach(row => {
                     table.appendChild(row); // Moves the brand row
 
-                    // Move potential lazy load rows if they exist and are associated
+                    // Move potential lazy load rows if they exist and are
+                    associated
                     const advId =
                         row.querySelector('.logo-cell').dataset.advId;
                     const offersRow =
@@ -929,19 +932,24 @@
 
             // Handle Reset
             window.resetLogo = async (advId) => {
-                if (!confirm('Are you sure you want to reset the logo?')) return;
-                try {
-                    const res = await fetch(`/api/advertiser/${advId}/logo/reset`, { method: 'POST' });
-                    const data = await res.json();
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Reset failed: ' + data.error);
+                if (!confirm('Are you sure you want to reset the
+                                                                logo ? ')) return;
+                                                                try {
+                        const res = await
+                            fetch(`/api/advertiser/${advId}/logo/reset`, {
+                                method:
+                                    'POST'
+                            });
+                        const data = await res.json();
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Reset failed: ' + data.error);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Error resetting logo');
                     }
-                } catch (err) {
-                    console.error(err);
-                    alert('Error resetting logo');
-                }
             };
 
 

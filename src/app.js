@@ -719,6 +719,7 @@ app.get('/', populateSidebar, async (req, res) => {
 
         res.render('page', {
             schema,
+            metaTitle: 'OfferBae | Premium Brand Deals, Promo Codes & Trending Products',
             canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brands: uniquePerformanceBrands,
@@ -844,6 +845,7 @@ app.get('/brands', populateSidebar, async (req, res) => {
             brandsH2: "Partner Brands",
             brandsDescription: "Explore our curated directory of premium brand partners.",
             showBrandsLink: false,
+            metaTitle: 'Shop Hot Online Brands - OfferBae.com',
             pageH1: "Curated Partner Brands & Stores",
             breadcrumbPath: [{ name: 'Brands', url: '/brands' }]
         });
@@ -896,6 +898,7 @@ app.get('/products', populateSidebar, async (req, res) => {
             productsH2: "Products",
             showProductsFilters: true,
             showProductsPagination: true,
+            metaTitle: 'Shop Products from Hot Online Brands - OfferBae.com',
             pageH1: "Discounted Products & Deals",
             currentPage: page,
             limit,
@@ -978,6 +981,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
             offersH2: "Offers",
             showOffersFilters: true,
             showOffersPagination: true,
+            metaTitle: 'Shop Active Coupon Codes & Promotional Offers - OfferBae.com',
             pageH1: "Latest Promo Codes & Coupon Offers",
             currentPage: page,
             limit,
@@ -1121,6 +1125,107 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             ? "Verified Offers & Deals"
             : "Explore Products & Offers";
 
+        // Setup similar brands sidebar
+        try {
+            const { getEnrichedAdvertisers } = require('./services/db');
+            const enrichedBrands = await getEnrichedAdvertisers();
+            const brandCatSet = new Set((brandData.categories || []).map(c => c.toLowerCase()));
+
+            const relatedBrands = enrichedBrands
+                .filter(b => b.id !== brandId && b.name !== brandData.name && (b.productCount > 0 || b.offerCount > 0))
+                .map(b => {
+                    const bCats = b.categories || [];
+                    const matchCount = bCats.filter(c => brandCatSet.has(c.toLowerCase())).length;
+                    return { ...b, matchCount };
+                })
+                .filter(b => b.matchCount > 0)
+                .sort((a, b) => {
+                    if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount;
+                    return ((b.productCount || 0) + (b.offerCount || 0)) - ((a.productCount || 0) + (a.offerCount || 0));
+                });
+
+            const topSimilarBrands = relatedBrands.slice(0, 5);
+
+            if (topSimilarBrands.length > 0) {
+                const similarBrandIds = topSimilarBrands.map(b => (b.id || b.advertiserId || b.data_id)?.toString()).filter(Boolean);
+
+                const similarBrandsFormatted = topSimilarBrands.map(b => ({
+                    name: b.name,
+                    slug: b.slug,
+                    logoUrl: b.logoUrl,
+                    count: (b.productCount || 0) + (b.offerCount || 0)
+                }));
+
+                // Fetch similar products
+                let similarProducts = [];
+                if (similarBrandIds.length > 0) {
+                    const simProdSnap = await db.collection('products')
+                        .where('advertiserId', 'in', similarBrandIds.slice(0, 10))
+                        .limit(5)
+                        .get();
+                    similarProducts = simProdSnap.docs.map(doc => {
+                        const data = doc.data();
+                        return {
+                            id: doc.id,
+                            name: data.name,
+                            slug: data.slug,
+                            brandSlug: slugify(data.advertiserName || data.advertiser || ''),
+                            link: data.link || '',
+                            imageUrl: data.storageImageUrl || data.imageUrl,
+                            brandName: data.advertiserName || data.advertiser || '',
+                            price: data.price,
+                            salePrice: data.salePrice
+                        };
+                    });
+                }
+
+                // Fetch similar offers
+                let similarOffers = [];
+                if (similarBrandIds.length > 0) {
+                    const brandLogoMap = new Map(topSimilarBrands.map(b => [(b.id || b.advertiserId || b.data_id)?.toString(), b.logoUrl]));
+                    const simOfferSnap = await db.collection('offers')
+                        .where('advertiserId', 'in', similarBrandIds.slice(0, 10))
+                        .limit(5)
+                        .get();
+                    similarOffers = simOfferSnap.docs.map(doc => {
+                        const data = doc.data();
+                        const offId = (data.advertiserId || data.id || data.data_id)?.toString();
+                        let expiresAt = 'Ongoing';
+                        if (data.endDate) {
+                            try {
+                                const date = new Date(data.endDate);
+                                if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
+                            } catch (e) { }
+                        }
+                        return {
+                            id: doc.id,
+                            description: data.description || data.name,
+                            brandName: data.advertiser || 'Brand',
+                            isPromoCode: isRealCode(data.code),
+                            code: data.code,
+                            brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null,
+                            brandSlug: data.advertiserSlug || slugify(data.advertiser || data.advertiserName || ''),
+                            expiresAt,
+                            clickUrl: data.clickUrl || data.link
+                        };
+                    });
+                }
+
+                // Override sidebar
+                res.locals.sidebarData = {
+                    newestBrands: similarBrandsFormatted,
+                    newestProducts: similarProducts,
+                    newestOffers: similarOffers,
+                    brandsTitle: 'Similar Brands',
+                    productsTitle: 'Similar Products',
+                    offersTitle: 'Similar Offers'
+                };
+            }
+
+        } catch (sidebarErr) {
+            console.error('Error fetching similar sidebar data:', sidebarErr);
+        }
+
         const schema = {
             "@context": "https://schema.org",
             "@type": "Organization",
@@ -1149,6 +1254,7 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             offersH2: "Partner Perks",
             offersDescription: `Active promo codes and top deals from ${brand.name}.`,
             pageLogo: brand.logoUrl,
+            metaTitle: `Shop ${brand.name} Products & Offers - OfferBae.com`,
             pageH1: `${brand.name}`,
             pageH1Sub: "Explore Products & Offers",
             pageCategories: brand.categories,
@@ -1234,6 +1340,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
             offersH2: "Offers",
             showOffersFilters: true,
             showOffersPagination: true,
+            metaTitle: 'Shop Active Coupon Codes & Promotional Offers - OfferBae.com',
             pageH1: "Latest Promo Codes & Coupon Offers",
             currentPage: page,
             limit,
@@ -1336,6 +1443,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
             offersH2: "Offers",
             showOffersFilters: true,
             showOffersPagination: true,
+            metaTitle: 'Shop Active Coupon Codes & Promotional Offers - OfferBae.com',
             pageH1: "Latest Promo Codes & Coupon Offers",
             currentPage: page,
             limit,
@@ -1462,6 +1570,7 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
             totalPages,
             productsH2: `${brand.name} Products`,
             pageLogo: brand.logoUrl,
+            metaTitle: `Shop ${brand.name} Products - OfferBae.com`,
             pageH1: `${brand.name} Products`,
             pageCategories,
             brandDescription: brandData.manualDescription || brandData.description || brandData.savingsGuide || null,
@@ -1584,6 +1693,7 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
             offersH2: `${brand.name} Promo Codes & Offers`,
             offersDescription: `Verified promo codes and deals from ${brand.name}. Updated ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`,
             pageLogo: brand.logoUrl,
+            metaTitle: `Shop Active ${brand.name} Coupon Codes & Promotional Offers - OfferBae.com`,
             pageH1: `${brand.name} Promo Codes and Discounts`,
             metaTitle,
             pageCategories,
@@ -1633,11 +1743,13 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
             .get();
         let pageLogo = null;
         let finalBrandName = data.advertiser || data.advertiserName || 'Brand';
+        let brandId = data.advertiserId;
 
         if (!advSnapshot.empty) {
             const advData = advSnapshot.docs[0].data();
             pageLogo = advData.storageLogoUrl || advData.logoUrl || (advData.raw_data && advData.raw_data.logoUrl);
             finalBrandName = advData.name || finalBrandName;
+            brandId = (advData.id || advData.advertiserId || advData.data_id || (advData.raw_data && advData.raw_data.id))?.toString();
         }
 
         const productDetails = {
@@ -1648,6 +1760,88 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
         };
 
         const finalCategories = await getGlobalCategories();
+
+        // SETUP DYNAMIC SIDEBAR
+        try {
+            let offers = [];
+            let similarBrandProducts = [];
+
+            if (brandId) {
+                // 1. Fetch Offers
+                const offersSnapshot = await db.collection('offers')
+                    .where('advertiserId', '==', brandId)
+                    .limit(10)
+                    .get();
+
+                if (!offersSnapshot.empty) {
+                    const brandLogoMap = new Map([[String(brandId), pageLogo]]);
+                    offers = offersSnapshot.docs.map(doc => {
+                        const oData = doc.data();
+                        const offId = (oData.advertiserId || oData.id || oData.data_id)?.toString();
+                        let expiresAt = 'Ongoing';
+                        if (oData.endDate) {
+                            try {
+                                const date = new Date(oData.endDate);
+                                if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
+                            } catch (e) { }
+                        }
+                        return {
+                            id: doc.id,
+                            description: oData.description || oData.name,
+                            brandName: finalBrandName,
+                            isPromoCode: isRealCode(oData.code),
+                            code: oData.code,
+                            brandLogo: brandLogoMap.get(offId || '') || oData.logoUrl || null,
+                            brandSlug: brandSlug,
+                            expiresAt,
+                            clickUrl: oData.clickUrl || oData.link
+                        };
+                    });
+                }
+
+                // 2. Fetch Similar Products
+                const productsSnap = await db.collection('products')
+                    .where('advertiserId', '==', brandId)
+                    .limit(50)
+                    .get();
+
+                const currentWords = new Set(productDetails.name.toLowerCase().split(/\W+/).filter(w => w.length > 3));
+
+                similarBrandProducts = productsSnap.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(p => p.id !== productDetails.id)
+                    .map(p => {
+                        const words = p.name.toLowerCase().split(/\W+/);
+                        const matchCount = words.filter(w => currentWords.has(w)).length;
+                        return { ...p, matchCount };
+                    })
+                    .sort((a, b) => b.matchCount - a.matchCount || Math.random() - 0.5)
+                    .slice(0, 5)
+                    .map(pData => ({
+                        id: pData.id,
+                        name: pData.name,
+                        slug: pData.slug,
+                        brandSlug: brandSlug,
+                        link: pData.link || '',
+                        imageUrl: pData.storageImageUrl || pData.imageUrl,
+                        brandName: finalBrandName,
+                        price: pData.price,
+                        salePrice: pData.salePrice
+                    }));
+            }
+
+            res.locals.sidebarData = {
+                newestBrands: [],
+                newestProducts: similarBrandProducts,
+                newestOffers: offers,
+                mainTitle: `More from ${finalBrandName}`,
+                productsTitle: `More ${finalBrandName} Products`,
+                offersTitle: `${finalBrandName} Offers`,
+                offersFirst: true
+            };
+        } catch (sidebarErr) {
+            console.error('Error fetching sidebar data for product:', sidebarErr);
+        }
 
         const schema = {
             "@context": "https://schema.org",
@@ -1686,6 +1880,7 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
             showOffers: false,
             showProductDetails: true,
             pageLogo,
+            metaTitle: `${productDetails.name} by ${productDetails.brandName} - OfferBae.com`,
             pageH1: productDetails.brandName,
             pageH1Sub: productDetails.name,
             breadcrumbPath: [
@@ -1800,6 +1995,7 @@ app.get('/offers/:brandSlug/:offerId', populateSidebar, async (req, res) => {
             offersDescription: `Verified promo codes and deals from ${brand.name}. Updated ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`,
             brandWebsiteUrl: brandData.manualHomeUrl || brandData.advertiserUrl || brandData.url || (brandData.raw_data && brandData.raw_data.advertiserUrl) || null,
             pageLogo: brand.logoUrl,
+            metaTitle: `${modalOffer.name || `${brand.name} Offer`} - OfferBae.com`,
             pageH1,
             breadcrumbPath: [
                 { name: 'Offers', url: '/offers' },
@@ -1827,6 +2023,7 @@ app.get('/categories', populateSidebar, async (req, res) => {
             showProducts: false,
             showOffers: false,
             showCategories: true,
+            metaTitle: 'Browse Brands by Category - OfferBae.com',
             pageH1: "Browse by Category",
             breadcrumbPath: [
                 { name: 'Categories', url: '/categories' }
@@ -1866,6 +2063,7 @@ app.get('/categories/:categorySlug', populateSidebar, async (req, res) => {
             showOffers: false,
             brandsH2: `Brands in ${categoryDetails.name}`,
             offersDescription: `Active promo codes and deals in ${categoryDetails.name}.`,
+            metaTitle: `Shop ${categoryDetails.name} Brands, Promo Codes & Deals - OfferBae.com`,
             pageH1: `Best ${categoryDetails.name} Promo Codes & Deals`,
             breadcrumbPath: [
                 { name: 'Categories', url: '/categories' },

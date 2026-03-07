@@ -1,12 +1,13 @@
 <% var finalOgTitle='OfferBae' ; if (typeof ogTitle !='undefined' && ogTitle) { finalOgTitle=ogTitle; } else if (typeof
-    pageH1 !='undefined' && pageH1) { finalOgTitle=pageH1; } var
-    finalOgDesc='Find the best promo codes, coupons, and product deals.' ; if (typeof ogDescription !='undefined' &&
-    ogDescription) { finalOgDesc=ogDescription; } else if (typeof offersDescription !='undefined' && offersDescription)
-    { finalOgDesc=offersDescription; } else if (typeof productsDescription !='undefined' && productsDescription) {
-    finalOgDesc=productsDescription; } else if (typeof brandsDescription !='undefined' && brandsDescription) {
-    finalOgDesc=brandsDescription; } else if (typeof pageH1Sub !='undefined' && pageH1Sub) { finalOgDesc=pageH1Sub; }
-    var finalOgImage='https://offerbae.com/favicon.png' ; if (typeof ogImage !='undefined' && ogImage) {
-    finalOgImage=ogImage; } else if (typeof pageLogo !='undefined' && pageLogo) { finalOgImage=pageLogo; } %>
+    metaTitle !=='undefined' && metaTitle) { finalOgTitle=metaTitle; } else if (typeof pageH1 !='undefined' && pageH1) {
+    finalOgTitle=pageH1; } var finalOgDesc='Find the best promo codes, coupons, and product deals.' ; if (typeof
+    metaDescription !=='undefined' && metaDescription) { finalOgDesc=metaDescription; } else if (typeof ogDescription
+    !='undefined' && ogDescription) { finalOgDesc=ogDescription; } else if (typeof offersDescription !='undefined' &&
+    offersDescription) { finalOgDesc=offersDescription; } else if (typeof productsDescription !='undefined' &&
+    productsDescription) { finalOgDesc=productsDescription; } else if (typeof brandsDescription !='undefined' &&
+    brandsDescription) { finalOgDesc=brandsDescription; } else if (typeof pageH1Sub !='undefined' && pageH1Sub) {
+    finalOgDesc=pageH1Sub; } var finalOgImage='https://offerbae.com/favicon.png' ; if (typeof ogImage !='undefined' &&
+    ogImage) { finalOgImage=ogImage; } else if (typeof pageLogo !='undefined' && pageLogo) { finalOgImage=pageLogo; } %>
 
     <% if (typeof canonicalUrl !='undefined' && canonicalUrl) { %>
         <link rel="canonical" href="<%= canonicalUrl %>" />

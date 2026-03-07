@@ -14,6 +14,24 @@ if (!fs.existsSync(UPLOADS_DIR)) {
     fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
+const getOptimizationOptions = (folder = '') => {
+    let width = 1200;
+    let quality = 85;
+
+    const f = folder.toLowerCase();
+
+    if (f.startsWith('advertisers') || f.startsWith('brand_logos')) {
+        width = 400; // Logos do not need to be huge
+    } else if (f.startsWith('products')) {
+        width = 800; // Product images
+    } else if (f.startsWith('brand_backgrounds') || f.startsWith('loveletters') || f.startsWith('love_letters')) {
+        width = 1200; // Hero/banner images
+        quality = 85; // Keep good quality for large images
+    }
+
+    return { width, quality };
+};
+
 /**
  * Download image from URL, optimize (resize/compress), and upload to Firebase Storage
  * @param {string} imageUrl - The original image URL
@@ -84,17 +102,18 @@ const cacheImage = async (imageUrl, folder = 'misc') => {
         });
 
         if (isSvg) {
-            // Passthrough for SVG
+            // Passthrough for SVG (we can't optimize SVG buffers easily with sharp like this without altering structure, so passthrough is safe)
             await streamPipeline(response.data, uploadStream);
         } else {
             // Optimization pipeline
+            const opts = getOptimizationOptions(folder);
             const transform = sharp()
                 .resize({
-                    width: 1200,
+                    width: opts.width,
                     withoutEnlargement: true,
                     fit: 'inside'
                 })
-                .webp({ quality: 80 });
+                .webp({ quality: opts.quality, effort: 6 });
 
             try {
                 await streamPipeline(response.data, transform, uploadStream);
@@ -126,21 +145,40 @@ const cacheImage = async (imageUrl, folder = 'misc') => {
  * @returns {Promise<string>} - The public URL
  */
 const uploadImageBuffer = async (buffer, mimeType, folder = 'manual_uploads') => {
+    let finalBuffer = buffer;
+    let finalMimeType = mimeType;
     let ext = '.jpg';
+
     if (mimeType === 'image/png') ext = '.png';
     if (mimeType === 'image/gif') ext = '.gif';
     if (mimeType === 'image/webp') ext = '.webp';
     if (mimeType === 'image/svg+xml') ext = '.svg';
 
-    const hash = crypto.createHash('md5').update(buffer).digest('hex');
-    const filename = `${hash}${ext}`;
-
     try {
+        if (!mimeType.includes('svg')) {
+            const opts = getOptimizationOptions(folder);
+            finalBuffer = await sharp(buffer)
+                .resize({
+                    width: opts.width,
+                    withoutEnlargement: true,
+                    fit: 'inside'
+                })
+                .webp({ quality: opts.quality, effort: 6 })
+                .toBuffer();
+            finalMimeType = 'image/webp';
+            ext = '.webp';
+        }
+
+        const hash = crypto.createHash('md5').update(finalBuffer).digest('hex');
+        const filename = `${hash}${ext}`;
         const destination = `${folder}/${filename}`;
         const file = firebase.bucket.file(destination);
 
-        await file.save(buffer, {
-            metadata: { contentType: mimeType },
+        await file.save(finalBuffer, {
+            metadata: {
+                contentType: finalMimeType,
+                cacheControl: 'public, max-age=31536000'
+            },
             public: true,
             resumable: false
         });
@@ -149,9 +187,11 @@ const uploadImageBuffer = async (buffer, mimeType, folder = 'manual_uploads') =>
     } catch (error) {
         console.error('Error uploading image buffer to Firebase, falling back to local storage:', error.message);
 
+        const hash = crypto.createHash('md5').update(finalBuffer).digest('hex');
+        const filename = `${hash}${ext}`;
         // Local Fallback
         const localPath = path.join(UPLOADS_DIR, filename);
-        fs.writeFileSync(localPath, buffer);
+        fs.writeFileSync(localPath, finalBuffer);
 
         return `/uploads/${filename}`;
     }

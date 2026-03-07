@@ -43,7 +43,7 @@
                                 <% if (typeof pageCategories !='undefined' && pageCategories && pageCategories.length>
                                     0) {
                                     %>
-                                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem;">
+                                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                                         <% pageCategories.forEach(category=> { %>
                                             <a href="<%= category.slug === '' ? '/brands' : '/categories/' + category.slug %>"
                                                 class="category-pill">
@@ -55,13 +55,13 @@
 
                                         <% if (typeof brandDescription !='undefined' && brandDescription) { %>
                                             <div class="brand-description-guide"
-                                                style="max-width: 800px; margin-bottom: 2rem; color: #4b5563; font-size: 1.05rem; line-height: 1.7;">
+                                                style="max-width: 800px; color: #4b5563; font-weight: bold;font-size: 1.05rem; line-height: 1.7;">
                                                 <%- brandDescription %>
                                             </div>
                                             <% } %>
 
                                                 <% if (typeof brandWebsiteUrl !='undefined' && brandWebsiteUrl) { %>
-                                                    <div style="margin-bottom: 2rem;">
+                                                    <div>
                                                         <a href="<%= brandWebsiteUrl %>" target="_blank"
                                                             class="context-link-cta">
                                                             Visit the <%= typeof brand !='undefined' ? brand.name
@@ -71,7 +71,7 @@
                                                     <% } %>
 
                                                         <% if (typeof contextLink !='undefined' && contextLink) { %>
-                                                            <div style="margin-bottom: 2rem;">
+                                                            <div>
                                                                 <a href="<%= contextLink.url %>"
                                                                     class="context-link-cta">
                                                                     <%= contextLink.text %>
