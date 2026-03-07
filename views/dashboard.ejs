@@ -839,8 +839,7 @@
             };
 
             // Table Sorting Logic
-            let sortDirection = {}; // Store sort direction for each
-            column
+            let sortDirection = {}; // Store sort direction for each column
 
             window.sortTable = (n, type = 'string') => {
                 const table = document.querySelector('table tbody');
@@ -907,8 +906,7 @@
                         input.previousElementSibling.querySelector('a[onclick*="triggerUpload"]');
                     if (uploadBtn) uploadBtn.textContent = 'Uploading...';
 
-                    const res = await
-                        fetch(`/api/advertiser/${advId}/logo/upload`, {
+                    const res = await fetch(`/api/advertiser/${advId}/logo/upload`, {
                             method: 'POST',
                             body: formData
                         });
@@ -932,13 +930,10 @@
 
             // Handle Reset
             window.resetLogo = async (advId) => {
-                if (!confirm('Are you sure you want to reset the
-                                                                logo ? ')) return;
+                if (!confirm('Are you sure you want to reset the logo?')) return;
                                                                 try {
-                        const res = await
-                            fetch(`/api/advertiser/${advId}/logo/reset`, {
-                                method:
-                                    'POST'
+                        const res = await fetch(`/api/advertiser/${advId}/logo/reset`, {
+                                method: 'POST'
                             });
                         const data = await res.json();
                         if (data.success) {
@@ -989,8 +984,7 @@
                     btn.textContent = 'Saving...';
                     btn.disabled = true;
 
-                    const res = await
-                        fetch(`/api/advertiser/${currentAdvId}/homelink`,
+                    const res = await fetch(`/api/advertiser/${currentAdvId}/homelink`,
                             {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -1542,8 +1536,7 @@
                             }
 
                             try {
-                                const res = await
-                                    fetch(`/api/advertiser/${advId}/offers`);
+                                const res = await fetch(`/api/advertiser/${advId}/offers`);
                                 const data = await res.json();
 
                                 if (data.success && data.offers) {
@@ -1601,8 +1594,7 @@
                             }
 
                             try {
-                                const res = await
-                                    fetch(`/api/advertiser/${advId}/products`);
+                                const res = await fetch(`/api/advertiser/${advId}/products`);
                                 const data = await res.json();
 
                                 if (data.success && data.products) {
