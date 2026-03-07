@@ -2061,10 +2061,9 @@ app.get('/categories/:categorySlug', populateSidebar, async (req, res) => {
             showBrands: true,
             showProducts: false,
             showOffers: false,
-            brandsH2: `Brands in ${categoryDetails.name}`,
             offersDescription: `Active promo codes and deals in ${categoryDetails.name}.`,
-            metaTitle: `Shop ${categoryDetails.name} Brands, Promo Codes & Deals - OfferBae.com`,
-            pageH1: `Best ${categoryDetails.name} Promo Codes & Deals`,
+            metaTitle: `Shop ${categoryDetails.name} Brands - OfferBae.com`,
+            pageH1: `${categoryDetails.name} Brands with Products & Offers`,
             breadcrumbPath: [
                 { name: 'Categories', url: '/categories' },
                 { name: categoryDetails.name, url: `/categories/${categorySlug}` }
