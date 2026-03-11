@@ -110,112 +110,80 @@ const fetchOffers = async () => {
     }
 };
 
-const readline = require('readline');
-const stream = require('stream');
 const zlib = require('zlib');
+const csv = require('csv-parser');
 
 const fetchProducts = async (advertiserId, regionStr) => {
-    // console.log(`DEBUG: fetchProducts called for ${advertiserId} with region ${regionStr}`);
-    if (!config.awin.accessToken || !config.awin.publisherId) {
+    const apikey = process.env.AWIN_DATAFEED_API_KEY;
+    if (!apikey) {
+        console.error('AWIN_DATAFEED_API_KEY is missing from environment variables.');
         return [];
     }
 
-    // Determine locale - defaulting to en_US if uncertain, or try to map from region string if needed.
-    // For now, hardcode en_US as primary, could be improved later.
-    // Map region to locale
-    let locale = 'en_US';
-    if (regionStr === 'GB') locale = 'en_GB';
-    else if (regionStr === 'US') locale = 'en_US';
-    // Add more if needed
-    const vertical = 'retail';
-
-    // url: https://api.awin.com/publishers/{publisherId}/awinfeeds/download/{advertiserId}-{vertical}-{locale}
-    // Curl example shows .jsonl extension, trying that.
-    const url = `https://api.awin.com/publishers/${config.awin.publisherId}/awinfeeds/download/${advertiserId}-${vertical}-${locale}.jsonl`;
-
     try {
-        console.log(`AWIN: Fetching feed for ${advertiserId} from ${url}`);
-        const response = await axios({
-            method: 'get',
-            url: url,
-            responseType: 'stream',
-            headers: {
-                'Authorization': `Bearer ${config.awin.accessToken}`
-            },
-            timeout: 60000 // 60s timeout for stream
+        // Step 1: Fetch the feed catalog to find the exact download URL for this advertiser
+        const listUrl = `https://productdata.awin.com/datafeed/list/apikey/${apikey}`;
+        const listRes = await axios.get(listUrl, { responseType: 'stream', timeout: 30000 });
+
+        let feedUrl = null;
+        await new Promise((resolve, reject) => {
+            listRes.data.pipe(csv())
+                .on('data', (row) => {
+                    if (row['Advertiser ID'] === String(advertiserId)) {
+                        feedUrl = row['URL'];
+                    }
+                })
+                .on('end', resolve)
+                .on('error', reject);
         });
 
-        console.log(`AWIN: Response status for ${advertiserId}: ${response.status}`);
-        // console.log(`AWIN: Headers:`, response.headers);
+        if (!feedUrl) {
+            console.log(`AWIN: No product feed found for advertiser ${advertiserId}`);
+            return [];
+        }
 
-        let input = response.data;
-        if (response.headers['content-encoding'] === 'gzip') {
+        console.log(`AWIN: Fetching feed for ${advertiserId} from catalog URL...`);
+        const feedRes = await axios({
+            method: 'get',
+            url: feedUrl,
+            responseType: 'stream',
+            timeout: 60000
+        });
+
+        let input = feedRes.data;
+        if (feedRes.headers['content-encoding'] === 'gzip' || feedUrl.includes('gzip')) {
             console.log(`AWIN: Decompressing gzip stream for ${advertiserId}`);
             input = input.pipe(zlib.createGunzip());
         }
 
         const products = [];
-        const lines = readline.createInterface({
-            input: input,
-            crlfDelay: Infinity
+        await new Promise((resolve, reject) => {
+            input.pipe(csv())
+                .on('data', (row) => {
+                    if (row.aw_product_id && row.product_name) {
+                        products.push({
+                            network: 'AWIN',
+                            advertiserId: String(advertiserId),
+                            name: row.product_name,
+                            price: row.search_price,
+                            salePrice: row.store_price !== row.search_price ? row.store_price : null,
+                            currency: row.currency || 'USD',
+                            sku: row.aw_product_id || row.merchant_product_id,
+                            link: row.aw_deep_link,
+                            imageUrl: row.merchant_image_url || row.aw_image_url,
+                            description: row.description || row.product_short_description || ''
+                        });
+                    }
+                })
+                .on('end', resolve)
+                .on('error', reject);
         });
-
-        let count = 0;
-        const maxProducts = 200;
-
-        for await (const line of lines) {
-            if (!line.trim()) continue;
-            // console.log(`DEBUG: Line from ${advertiserId}: ${line.substring(0, 100)}...`);
-            try {
-                const json = JSON.parse(line);
-                // Check for error
-                if (json.error) continue;
-
-                if (json.id && json.title) {
-                    products.push({
-                        network: 'AWIN',
-                        advertiserId: advertiserId,
-                        name: json.title,
-                        price: json.price,
-                        salePrice: json.sale_price,
-                        currency: json.currency || (json.price && json.price.split(' ')[1]) || 'USD',
-                        sku: json.id,
-                        link: json.link,
-                        imageUrl: json.image_link,
-                        description: json.description
-                    });
-                    count++;
-                }
-
-                // Removed limit cap to fetch all products as requested
-                // if (count >= maxProducts) { ... }
-            } catch (e) {
-                // Ignore parse errors for partial lines
-                console.log(`AWIN: Parse error line: ${line.substring(0, 50)}...`);
-            }
-        }
 
         console.log(`AWIN: Fetched ${products.length} products for ${advertiserId}`);
-
-        // Clean up price string "15.00 GBP" to just "15.00" and extract currency
-        return products.map(p => {
-            if (p.price && typeof p.price === 'string' && p.price.includes(' ')) {
-                const part = p.price.split(' ');
-                p.price = part[0];
-                p.currency = part[1];
-            }
-            if (p.salePrice && typeof p.salePrice === 'string' && p.salePrice.includes(' ')) {
-                const part = p.salePrice.split(' ');
-                p.salePrice = part[0];
-            }
-            return p;
-        });
+        return products;
 
     } catch (error) {
-        if (error.response && error.response.status === 404) {
-        } else {
-            console.error(`Error fetching AWIN products for ${advertiserId}:`, error.message);
-        }
+        console.error(`Error fetching AWIN products for ${advertiserId}:`, error.message);
         return [];
     }
 };
