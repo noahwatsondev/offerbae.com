@@ -383,6 +383,8 @@ const getEnrichedAdvertisers = async () => {
             const created = doc.createTime ? doc.createTime.toDate() : null;
             advertisers.push({
                 ...data,
+                id: data.id || doc.id, // Ensure we have the ID for matching
+                docId: doc.id,
                 productCount: data.productCount || 0,
                 saleProductCount: data.saleProductCount || 0,
                 offerCount: data.offerCount || 0,

@@ -197,14 +197,21 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Related Brand ID (Optional)</label>
+                    <label>Related Brand (Optional)</label>
                     <select id="article-related-brand" class="form-input">
                         <option value="">None</option>
                         <% brands.forEach(brand=> { %>
-                            <option value="<%= brand.id %>" <%=article && article.relatedBrandId===brand.id ? 'selected'
-                                : '' %>><%= brand.name %>
-                            </option>
-                            <% }); %>
+                            <%
+                                // Always use docId as the canonical stored value (e.g. "Pepperjam-7107")
+                                const brandOptionVal = brand.docId || String(brand.id);
+                                // Support legacy relatedBrandId stored as numeric string (e.g. "7107")
+                                const isSelected = article && (
+                                    String(article.relatedBrandId) === String(brandOptionVal) ||
+                                    String(article.relatedBrandId) === String(brand.id)
+                                );
+                            %>
+                            <option value="<%= brandOptionVal %>" <%= isSelected ? 'selected' : '' %>><%= brand.name %></option>
+                        <% }); %>
                     </select>
                 </div>
 

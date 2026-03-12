@@ -691,12 +691,105 @@ app.get('/', populateSidebar, async (req, res) => {
 
         let heroProducts = [];
         if (heroLetter && heroLetter.relatedBrandId) {
-            const relatedBrand = enrichedBrands.find(b => b.id === heroLetter.relatedBrandId);
+            const savedBrandId = heroLetter.relatedBrandId;
+            console.log(`[DEBUG] Hero Selection -> article: "${heroLetter.title}", relatedBrandId: "${savedBrandId}"`);
+
+            // Match by Firestore doc ID first (e.g. 'Pepperjam-7107')
+            let relatedBrand = enrichedBrands.find(b => b.docId === savedBrandId);
+            // Match by numeric/string id (stored id field)
+            if (!relatedBrand) relatedBrand = enrichedBrands.find(b => String(b.id) === String(savedBrandId));
+            // Match by name
+            if (!relatedBrand) relatedBrand = enrichedBrands.find(b => b.name === savedBrandId);
+            // Match: savedBrandId might be 'Pepperjam-7107' but b.id is 7107 — extract numeric part
+            if (!relatedBrand && savedBrandId && savedBrandId.includes('-')) {
+                const numericPart = savedBrandId.split('-').pop();
+                relatedBrand = enrichedBrands.find(b => String(b.id) === numericPart);
+            }
+            // Match: savedBrandId might be just '7107' but docId is 'Pepperjam-7107'
+            if (!relatedBrand) {
+                relatedBrand = enrichedBrands.find(b => b.docId && b.docId.endsWith('-' + savedBrandId));
+            }
+
             if (relatedBrand) {
-                heroProducts = topSaleProducts.filter(p => p.advertiserName === relatedBrand.name || String(p.advertiserId) === String(relatedBrand.id)).slice(0, 2);
+                console.log(`[DEBUG] Found relatedBrand: "${relatedBrand.name}" (docId: ${relatedBrand.docId}, id: ${relatedBrand.id})`);
+
+                // Build id options: use numeric id from raw_data if available
+                const numericId = relatedBrand.id || (relatedBrand.raw_data && relatedBrand.raw_data.id);
+                const idOptions = [];
+                if (numericId !== undefined && numericId !== null) {
+                    idOptions.push(numericId);
+                    idOptions.push(String(numericId));
+                    const asNum = Number(numericId);
+                    if (!isNaN(asNum)) idOptions.push(asNum);
+                }
+                // Remove duplicates
+                const uniqueIdOptions = [...new Set(idOptions)];
+
+                try {
+                    const db = firebaseAdmin.firestore();
+                    let brandProductsSnapshot = { empty: true, docs: [], size: 0 };
+
+                    // Query by advertiserId
+                    if (uniqueIdOptions.length > 0) {
+                        console.log(`[DEBUG] Querying products by advertiserId in:`, uniqueIdOptions);
+                        const snap = await db.collection('products')
+                            .where('advertiserId', 'in', uniqueIdOptions)
+                            .get();
+                        if (!snap.empty) brandProductsSnapshot = snap;
+                    }
+
+                    // Fallback: exact advertiser name
+                    if (brandProductsSnapshot.empty && relatedBrand.name) {
+                        console.log(`[DEBUG] Trying by exact advertiserName: "${relatedBrand.name}"`);
+                        const snap = await db.collection('products')
+                            .where('advertiserName', '==', relatedBrand.name)
+                            .get();
+                        if (!snap.empty) brandProductsSnapshot = snap;
+                    }
+
+                    // Fallback: name prefix (strips .com, .net etc.)
+                    if (brandProductsSnapshot.empty && relatedBrand.name && relatedBrand.name.includes('.')) {
+                        const cleanName = relatedBrand.name.split('.')[0];
+                        console.log(`[DEBUG] Trying by name prefix: "${cleanName}"`);
+                        const snap = await db.collection('products')
+                            .where('advertiserName', '>=', cleanName)
+                            .where('advertiserName', '<=', cleanName + '\uf8ff')
+                            .get();
+                        if (!snap.empty) brandProductsSnapshot = snap;
+                    }
+
+                    if (!brandProductsSnapshot.empty) {
+                        console.log(`[DEBUG] Found ${brandProductsSnapshot.size} products for hero brand.`);
+                        let dbProducts = brandProductsSnapshot.docs.map(doc => mapProductDoc(doc));
+
+                        // Sort: on-sale products by biggest discount % first, then newest
+                        // Note: mapProductDoc gives us `discountPercent` and `savings` (not originalPrice)
+                        dbProducts.sort((a, b) => {
+                            // Primary: highest discount % (pre-calculated by mapProductDoc)
+                            if (b.discountPercent !== a.discountPercent) return b.discountPercent - a.discountPercent;
+                            // Secondary: biggest absolute savings
+                            if (b.savings !== a.savings) return b.savings - a.savings;
+                            // Tertiary: most recently updated
+                            const timeA = a.updatedAt ? (a.updatedAt._seconds || new Date(a.updatedAt).getTime() / 1000 || 0) : 0;
+                            const timeB = b.updatedAt ? (b.updatedAt._seconds || new Date(b.updatedAt).getTime() / 1000 || 0) : 0;
+                            return timeB - timeA;
+                        });
+
+                        heroProducts = dbProducts.slice(0, 2);
+                    } else {
+                        console.log(`[DEBUG] No products found in DB for hero brand using any criteria.`);
+                    }
+                } catch (err) {
+                    console.error('[DEBUG] Error fetching brand hero products:', err);
+                }
+            } else {
+                console.log(`[DEBUG] Could not find relatedBrand for ID "${savedBrandId}" in ${enrichedBrands.length} enriched brands.`);
             }
         }
-        if (heroProducts.length < 2) {
+
+        // Only fall back to global top-sale products if the hero letter has NO brand selected.
+        // If a brand IS selected, we show only that brand's products (even if fewer than 2).
+        if (!heroLetter?.relatedBrandId && heroProducts.length < 2) {
             const fallbackProducts = topSaleProducts.filter(p => !heroProducts.some(hp => hp.id === p.id));
             heroProducts = [...heroProducts, ...fallbackProducts].slice(0, 2);
         }

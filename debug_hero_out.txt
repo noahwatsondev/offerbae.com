@@ -1,0 +1,20 @@
+=== Step 1: Hero Letter ===
+✅ Hero Letter: "Bae, You're A Gem! Let's Find Yours! ✨" (doc ID: EHNzWUhiGmf7T7O6rqXQ)
+   relatedBrandId: "7107"
+
+=== Step 2: Advertiser Matching ===
+Total advertisers: 156
+✅ Found brand: "FineJewelers.com" via [data.id string match]
+   docId: Pepperjam-7107 | data.id: 7107 | network: Pepperjam
+
+=== Step 3: Product Queries ===
+advertiserId options to query: ["7107",7107]
+Query by advertiserId in [7107, 7107]: 1 results
+✅ Products found!
+  - "Tommaso Design Oval 8x6mm Genuine Ruby and Diamond Ring" | price: 799 | salePrice: null | savingsAmount: 0 | advertiserId: 7107
+
+=== Step 4: Sort field check ===
+The sort in app.js uses: savingsAmount / originalPrice
+But mapProductDoc maps: savings (from price-salePrice), discountPercent
+The raw Firestore doc has: savingsAmount (set by upsertProduct)
+⚠️  "originalPrice" doesn't exist — app.js sort should use "price" instead!
