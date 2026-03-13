@@ -361,10 +361,92 @@ app.get('/api/sync-history/:network', async (req, res) => {
 
 
 // Routes
-// Routes
-// Routes
 app.get('/mission-control/docs', dashboardController.getDocs);
 app.get('/mission-control/style', dashboardController.getStyle);
+
+// ── Search Query Logging ──────────────────────────────────────────────────────
+
+// POST /api/search-log  — called client-side, fire-and-forget, never blocks the user
+app.post('/api/search-log', express.json(), async (req, res) => {
+    // Respond immediately so the client is never blocked
+    res.json({ ok: true });
+
+    try {
+        const { query, resultCount, page } = req.body || {};
+        if (!query || typeof query !== 'string' || query.trim().length < 2) return;
+
+        // Gather user context from request headers
+        const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+        const userAgent = req.headers['user-agent'] || '';
+        const country = req.headers['cf-ipcountry'] || req.headers['x-country'] || '';
+        const referer = req.headers['referer'] || '';
+
+        const db = require('./config/firebase').db;
+        await db.collection('searchLogs').add({
+            query: query.trim().toLowerCase(),
+            resultCount: typeof resultCount === 'number' ? resultCount : 0,
+            page: page || '/',
+            ip,
+            userAgent,
+            country,
+            referer,
+            createdAt: new Date()
+        });
+    } catch (e) {
+        console.error('[SearchLog] Failed to log query:', e.message);
+    }
+});
+
+// GET /mission-control/search — Search analytics dashboard
+app.get('/mission-control/search', async (req, res) => {
+    try {
+        const db = require('./config/firebase').db;
+        const snap = await db.collection('searchLogs')
+            .orderBy('createdAt', 'desc')
+            .limit(5000)
+            .get();
+
+        const queries = [];
+        snap.forEach(doc => queries.push({ id: doc.id, ...doc.data() }));
+
+        // Compute stats
+        const uniqueQueries = new Set(queries.map(q => q.query)).size;
+        const noResultsCount = queries.filter(q => q.resultCount === 0).length;
+        const uniqueIPs = new Set(queries.map(q => q.ip).filter(Boolean)).size;
+
+        // Top query
+        const freq = {};
+        queries.forEach(q => { freq[q.query] = (freq[q.query] || 0) + 1; });
+        const topQuery = Object.entries(freq).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+
+        res.render('mission-control/search', {
+            queries,
+            uniqueQueries,
+            noResultsCount,
+            uniqueIPs,
+            topQuery,
+            pageH1: 'Mission Control'
+        });
+    } catch (e) {
+        console.error('[SearchLog] Error loading search analytics:', e);
+        res.status(500).send('Error loading search analytics: ' + e.message);
+    }
+});
+
+// POST /api/search-logs/clear — Delete all search logs
+app.post('/api/search-logs/clear', express.json(), async (req, res) => {
+    try {
+        const db = require('./config/firebase').db;
+        const snap = await db.collection('searchLogs').limit(500).get();
+        const batch = db.batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+        res.json({ success: true, deleted: snap.size });
+    } catch (e) {
+        console.error('[SearchLog] Error clearing logs:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
 
 
 

@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Analytics – Mission Control</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --primary: #4f46e5;
+            --bg: #f9fafb;
+            --surface: #ffffff;
+            --border: #e5e7eb;
+            --text-main: #111827;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --radius: 12px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            font-size: 0.875rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin: 0;
+            color: var(--text-main);
+            background: none;
+            -webkit-text-fill-color: unset;
+            filter: none;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .stat-card .stat-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.35rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: var(--surface);
+            color: var(--text-main);
+            flex: 1;
+            min-width: 200px;
+            max-width: 360px;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79,70,229,0.12);
+        }
+
+        .filter-select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: var(--surface);
+            color: var(--text-main);
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .clear-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.5rem 0.85rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            color: #dc2626;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .clear-btn:hover {
+            background: #fee2e2;
+        }
+
+        .table-wrapper {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.825rem;
+        }
+
+        thead tr {
+            background: #f9fafb;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            color: var(--text-main);
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+            color: var(--text-main);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #fafafa;
+        }
+
+        .query-cell {
+            font-weight: 600;
+            color: var(--primary);
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .result-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .badge-has-results {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-no-results {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .ip-cell {
+            font-family: monospace;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        .ua-cell {
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
+
+        .time-cell {
+            white-space: nowrap;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
+
+        .page-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
+
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+
+        .count-chip {
+            display: inline-block;
+            background: #ede9fe;
+            color: #6d28d9;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            margin-left: 0.5rem;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--border);
+            background: #f9fafb;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .pagination-btns {
+            display: flex;
+            gap: 0.35rem;
+        }
+
+        .pager-btn {
+            padding: 0.35rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+
+        .pager-btn:hover:not(:disabled) {
+            background: var(--bg);
+        }
+
+        .pager-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .sort-arrow {
+            font-size: 0.65rem;
+            margin-left: 2px;
+            opacity: 0.5;
+        }
+        .sort-arrow.active {
+            opacity: 1;
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            th:nth-child(n+5), td:nth-child(n+5) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <%- include('../partials/mission-control-header', { active: 'search' }) %>
+
+        <div class="page-header">
+            <div>
+                <h2>Search Analytics <span class="count-chip" id="total-badge"><%= queries.length %></span></h2>
+                <p style="color: var(--text-secondary); margin: 0.25rem 0 0; font-size: 0.85rem;">Queries captured from the search bar across all pages.</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button id="export-btn" onclick="exportCSV()" style="
+                    display: inline-flex; align-items: center; gap: 0.35rem;
+                    padding: 0.5rem 0.85rem; background: var(--surface);
+                    border: 1px solid var(--border); border-radius: 8px;
+                    font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-main);">
+                    ↓ Export CSV
+                </button>
+                <button onclick="if(confirm('Clear all search logs? This cannot be undone.')) clearAll()" class="clear-btn">
+                    ✕ Clear All
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Total Searches</div>
+                <div class="stat-value" id="stat-total"><%= queries.length.toLocaleString() %></div>
+                <div class="stat-sub">all time captures</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Unique Queries</div>
+                <div class="stat-value" id="stat-unique"><%= uniqueQueries %></div>
+                <div class="stat-sub">distinct terms</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">No Results</div>
+                <div class="stat-value" id="stat-noresults" style="color: #dc2626;"><%= noResultsCount %></div>
+                <div class="stat-sub">missed opportunities</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Unique IPs</div>
+                <div class="stat-value"><%= uniqueIPs %></div>
+                <div class="stat-sub">distinct visitors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Most Common</div>
+                <div style="font-size: 1.1rem; font-weight: 800; margin-top: 0.25rem; color: var(--primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<%= topQuery %>">
+                    <%= topQuery || '—' %>
+                </div>
+                <div class="stat-sub">top search term</div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <input type="text" id="filter-input" class="filter-input" placeholder="Filter by query, IP, page...">
+            <select id="filter-results" class="filter-select">
+                <option value="all">All Results</option>
+                <option value="has">Had Results</option>
+                <option value="none">No Results</option>
+            </select>
+            <select id="filter-page" class="filter-select">
+                <option value="all">All Pages</option>
+                <% const pages = [...new Set(queries.map(q => q.page || '/'))].sort(); %>
+                <% pages.forEach(p => { %>
+                    <option value="<%= p %>"><%= p %></option>
+                <% }); %>
+            </select>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <table id="search-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Query <span class="sort-arrow" id="sort-0">↕</span></th>
+                        <th onclick="sortTable(1)">Results <span class="sort-arrow" id="sort-1">↕</span></th>
+                        <th onclick="sortTable(2)">Page <span class="sort-arrow" id="sort-2">↕</span></th>
+                        <th onclick="sortTable(3)">IP <span class="sort-arrow" id="sort-3">↕</span></th>
+                        <th onclick="sortTable(4)">User Agent <span class="sort-arrow" id="sort-4">↕</span></th>
+                        <th onclick="sortTable(5)">Country <span class="sort-arrow" id="sort-5">↕</span></th>
+                        <th onclick="sortTable(6)">Time <span class="sort-arrow" id="sort-6">↕</span></th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <% if (queries.length === 0) { %>
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                                    <p>No search queries captured yet.</p>
+                                    <p style="font-size: 0.8rem;">Queries will appear here when users search on the site.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    <% } else { %>
+                        <% queries.forEach(q => { %>
+                            <% const ts = q.createdAt ? new Date(q.createdAt._seconds ? q.createdAt._seconds * 1000 : q.createdAt) : null; %>
+                            <tr data-query="<%= (q.query || '').toLowerCase() %>"
+                                data-page="<%= q.page || '/' %>"
+                                data-has-results="<%= q.resultCount > 0 ? 'has' : 'none' %>">
+                                <td class="query-cell" title="<%= q.query %>"><%= q.query %></td>
+                                <td>
+                                    <% if (q.resultCount > 0) { %>
+                                        <span class="result-count-badge badge-has-results">✓ <%= q.resultCount %></span>
+                                    <% } else { %>
+                                        <span class="result-count-badge badge-no-results">✕ 0</span>
+                                    <% } %>
+                                </td>
+                                <td class="page-cell" title="<%= q.page %>"><%= q.page || '/' %></td>
+                                <td class="ip-cell"><%= q.ip || '—' %></td>
+                                <td class="ua-cell" title="<%= q.userAgent %>"><%= q.userAgent || '—' %></td>
+                                <td><%= q.country || '—' %></td>
+                                <td class="time-cell">
+                                    <% if (ts) { %>
+                                        <%= ts.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
+                                        <br><span style="color: var(--text-muted);"><%= ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></span>
+                                    <% } else { %>
+                                        <span class="text-muted">—</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } %>
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination-bar">
+                <span id="pagination-info" style="color: var(--text-secondary);"></span>
+                <div class="pagination-btns">
+                    <button class="pager-btn" id="prev-btn" onclick="changePage(-1)">← Prev</button>
+                    <button class="pager-btn" id="next-btn" onclick="changePage(1)">Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Pagination & Filtering ---
+        const ROWS_PER_PAGE = 50;
+        let currentPage = 1;
+        let filteredRows = [];
+        let sortCol = 6; // default: sort by time
+        let sortAsc = false;
+
+        const tbody = document.getElementById('table-body');
+        const filterInput = document.getElementById('filter-input');
+        const filterResults = document.getElementById('filter-results');
+        const filterPage = document.getElementById('filter-page');
+
+        function getAllRows() {
+            return Array.from(tbody.querySelectorAll('tr[data-query]'));
+        }
+
+        function applyFilters() {
+            const term = filterInput.value.toLowerCase();
+            const resultFilter = filterResults.value;
+            const pageFilter = filterPage.value;
+            const allRows = getAllRows();
+
+            filteredRows = allRows.filter(row => {
+                const query = row.dataset.query || '';
+                const page = row.dataset.page || '';
+                const hasResults = row.dataset.hasResults;
+                const ipCell = row.cells[3] ? row.cells[3].textContent.toLowerCase() : '';
+
+                const matchesTerm = !term || query.includes(term) || page.includes(term) || ipCell.includes(term);
+                const matchesResult = resultFilter === 'all' || hasResults === resultFilter;
+                const matchesPage = pageFilter === 'all' || page === pageFilter;
+
+                return matchesTerm && matchesResult && matchesPage;
+            });
+
+            // Update badge
+            document.getElementById('total-badge').textContent = filteredRows.length;
+            currentPage = 1;
+            renderPage();
+        }
+
+        function renderPage() {
+            const allRows = getAllRows();
+            const start = (currentPage - 1) * ROWS_PER_PAGE;
+            const end = start + ROWS_PER_PAGE;
+            const pageRows = filteredRows.slice(start, end);
+
+            // Hide all, show filtered page
+            allRows.forEach(r => r.style.display = 'none');
+            pageRows.forEach(r => r.style.display = '');
+
+            // Pagination info
+            const total = filteredRows.length;
+            document.getElementById('pagination-info').textContent =
+                total === 0 ? 'No results' : `Showing ${start + 1}–${Math.min(end, total)} of ${total}`;
+            document.getElementById('prev-btn').disabled = currentPage === 1;
+            document.getElementById('next-btn').disabled = end >= total;
+        }
+
+        function changePage(dir) {
+            currentPage += dir;
+            renderPage();
+        }
+
+        // --- Sorting ---
+        const sortDir = {};
+        function sortTable(col) {
+            sortDir[col] = !sortDir[col];
+            const asc = sortDir[col];
+
+            // Update arrows
+            document.querySelectorAll('.sort-arrow').forEach((el, i) => {
+                el.textContent = '↕';
+                el.classList.remove('active');
+            });
+            const arrow = document.getElementById(`sort-${col}`);
+            if (arrow) { arrow.textContent = asc ? '↑' : '↓'; arrow.classList.add('active'); }
+
+            filteredRows.sort((a, b) => {
+                const av = a.cells[col] ? a.cells[col].textContent.trim() : '';
+                const bv = b.cells[col] ? b.cells[col].textContent.trim() : '';
+                return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+            });
+
+            renderPage();
+        }
+
+        // --- Event Listeners ---
+        filterInput.addEventListener('input', applyFilters);
+        filterResults.addEventListener('change', applyFilters);
+        filterPage.addEventListener('change', applyFilters);
+
+        // Initialize
+        filteredRows = getAllRows();
+        // Default sort: newest first (col 6)
+        filteredRows.reverse();
+        renderPage();
+
+        // --- Export CSV ---
+        function exportCSV() {
+            const headers = ['Query', 'Result Count', 'Page', 'IP', 'User Agent', 'Country', 'Time'];
+            const rows = filteredRows.map(row => {
+                return [
+                    row.cells[0]?.textContent.trim(),
+                    row.cells[1]?.textContent.trim(),
+                    row.cells[2]?.textContent.trim(),
+                    row.cells[3]?.textContent.trim(),
+                    row.cells[4]?.title || row.cells[4]?.textContent.trim(),
+                    row.cells[5]?.textContent.trim(),
+                    row.cells[6]?.textContent.replace(/\s+/g, ' ').trim(),
+                ].map(v => `"${(v || '').replace(/"/g, '""')}"`).join(',');
+            });
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'search-queries.csv'; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // --- Clear All ---
+        async function clearAll() {
+            try {
+                const res = await fetch('/api/search-logs/clear', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) location.reload();
+                else alert('Failed to clear: ' + (data.error || 'Unknown error'));
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

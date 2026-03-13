@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
             const data = await response.json();
-            renderResults(data);
+            renderResults(data, query);
         } catch (err) {
             console.error('Search error:', err);
         }
@@ -89,13 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/"/g, '&quot;');
     }
 
-    function renderResults(data) {
+    function renderResults(data, query) {
         const { brands = [], products = [], offers = [], categoryBrands = [] } = data || {};
         const hasResults = brands.length || products.length || offers.length || categoryBrands.length;
 
         if (!hasResults) {
             resultsContainer.innerHTML = '<div class="no-results">No matches found.</div>';
             resultsContainer.classList.add('active');
+            logSearchQuery(query, 0); // log zero-result searches too
             return;
         }
 
@@ -171,5 +172,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         resultsContainer.innerHTML = html;
         resultsContainer.classList.add('active');
+
+        // Fire-and-forget: log query to analytics (never blocks the user)
+        logSearchQuery(query, brands.length + products.length + offers.length + categoryBrands.length);
+    }
+
+    function logSearchQuery(query, resultCount) {
+        try {
+            fetch('/api/search-log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query,
+                    resultCount,
+                    page: window.location.pathname
+                }),
+                keepalive: true  // ensures log completes even if user navigates away
+            }).catch(() => {}); // swallow any network errors silently
+        } catch (e) {
+            // Never let logging crash the search experience
+        }
     }
 });
