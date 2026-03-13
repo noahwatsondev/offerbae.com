@@ -307,9 +307,9 @@
 </head>
 
 <body>
-    <% var networks=[...new Set(advertisers.map(a=> a.network))].sort();
-        var allCategories = advertisers.flatMap(a => a.categories);
-        var categories = [...new Set(allCategories)].sort();
+    <% var networks=[...new Set(advertisers.map(a=> a.network || 'Unknown'))].sort();
+        var allCategories = advertisers.flatMap(a => a.categories || []);
+        var categories = [...new Set(allCategories.filter(c => c))].sort();
 
         // Create a map of coupons by advertiser ID for easy lookup
         var couponsByAdvertiser = {};
@@ -501,9 +501,11 @@
 
                             <tbody>
                                 <% advertisers.forEach(adv=> { %>
-                                    <tr class="brand-row" data-network="<%= adv.network %>"
+                                    <% const advName = adv.name || 'Unknown'; %>
+                                    <% const advNetwork = adv.network || 'Unknown'; %>
+                                    <tr class="brand-row" data-network="<%= advNetwork %>"
                                         data-categories='<%= JSON.stringify(adv.categories || []).toLowerCase() %>'
-                                        data-name="<%= adv.name.toLowerCase() %>">
+                                        data-name="<%= advName.toLowerCase() %>">
                                         <td>
                                             <div class="dropdown" style="position: relative;">
                                                 <button class="action-btn" onclick="toggleDropdown(this)" style="
@@ -568,15 +570,15 @@
                                                     accept="image/*" onchange="handleFileUpload(this, '<%= adv.id %>')">
                                             </div>
                                         </td>
-                                        <td data-sort="<%= adv.network.toLowerCase() %>">
-                                            <span class="network-badge network-<%= adv.network.toLowerCase() %>">
-                                                <%= adv.network %>
+                                        <td data-sort="<%= advNetwork.toLowerCase() %>">
+                                            <span class="network-badge network-<%= advNetwork.toLowerCase() %>">
+                                                <%= advNetwork %>
                                             </span>
                                         </td>
                                         <td>
                                             <div class="logo-cell" data-adv-id="<%= adv.id %>">
                                                 <% if (adv.logoUrl) { %>
-                                                    <img src="<%= adv.logoUrl %>" alt="<%= adv.name %>"
+                                                    <img src="<%= adv.logoUrl %>" alt="<%= advName %>"
                                                         style="width: 100%; height: 100%; object-fit: contain;">
                                                     <% } else { %>
                                                         <span>?</span>
@@ -584,10 +586,10 @@
                                             </div>
                                         </td>
 
-                                        <td data-sort="<%= adv.name.toLowerCase() %>">
+                                        <td data-sort="<%= advName.toLowerCase() %>">
                                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                                 <strong>
-                                                    <%= adv.name %>
+                                                    <%= advName %>
                                                 </strong>
 
                                                 <% if (adv.manualHomeUrl) { %>
@@ -738,11 +740,11 @@
                             description</span>
                         <% } %>
                             </td>
-                            <td data-sort="<%= adv.status %>">
+                            <td data-sort="<%= adv.status || 'inactive' %>">
                                 <span
                                     class="status-badge <%= adv.status === ' active' ||
                                                         adv.status==='joined' ? 'status-active' : 'status-inactive' %>">
-                                    <%= adv.status %>
+                                    <%= adv.status || 'inactive' %>
                                 </span>
                             </td>
                             <% const createdAt=adv.createdAt ? new Date(adv.createdAt) : null; const timeSort=createdAt
