@@ -16,15 +16,7 @@ const app = express();
 app.enable('trust proxy'); // Required for Render/Cloudflare HTTPS detection
 
 
-// --- Helper function to get a secret (Env Var Only) ---
-// We have removed Google Secret Manager to strictly rely on Environment Variables
-// which provides better stability on platforms like Render.
-const getSecret = (name) => {
-    if (process.env[name]) {
-        return process.env[name];
-    }
-    return undefined;
-};
+
 
 // --- App Initialization ---
 const initializeApp = async () => {
@@ -75,28 +67,7 @@ const initializeApp = async () => {
             console.log("Firebase Admin SDK initialized successfully.");
         }
 
-        // --- STEP 2: Load API credentials ---
-        const secretsMap = {
-            'RAKUTEN_CLIENT_ID': 'RAKUTEN_CLIENT_ID',
-            'RAKUTEN_CLIENT_SECRET': 'RAKUTEN_CLIENT_SECRET',
-            'RAKUTEN_SITE_ID': 'RAKUTEN_SITE_ID',
-            'CJ_PERSONAL_ACCESS_TOKEN': 'CJ_PERSONAL_ACCESS_TOKEN',
-            'CJ_COMPANY_ID': 'CJ_COMPANY_ID',
-            'CJ_WEBSITE_ID': 'CJ_WEBSITE_ID',
-            'AWIN_ACCESS_TOKEN': 'AWIN_ACCESS_TOKEN',
-            'AWIN_PUBLISHER_ID': 'AWIN_PUBLISHER_ID',
-            'BRANDFETCH_API_KEY': 'BRANDFETCH_API_KEY',
-            'PEPPERJAM_API_KEY': 'PEPPERJAM_API_KEY'
-        };
-
-        for (const [secretName, envName] of Object.entries(secretsMap)) {
-            const val = await getSecret(secretName);
-            if (val) {
-                process.env[envName] = val;
-            }
-        }
-
-        console.log('API credentials loaded and environment configured.');
+        console.log('API credentials loaded.');
 
     } catch (error) {
         console.error("Error initializing app:", error.message);
@@ -107,7 +78,9 @@ const initializeApp = async () => {
 // View Engine Setup
 app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'ejs');
-app.set('view cache', false); // Disable view caching
+if (process.env.NODE_ENV === 'production') {
+    app.set('view cache', true);
+}
 
 // Domain Canonicalization Middleware
 app.use((req, res, next) => {
@@ -133,9 +106,7 @@ app.use((req, res, next) => {
         res.set('Pragma', 'no-cache');
         res.set('Expires', '0');
     }
-    res.set('X-Build-ID', 'debug-' + Date.now());
-    // Enhanced CSP for local development stability and devtools compatibility
-    // Add Google Analytics domains to script-src and connect-src
+    // CSP — scoped to allow Google Analytics, CSE, and Ads
     res.set('Content-Security-Policy', "default-src 'self' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://cse.google.com http://cse.google.com https://www.google.com http://clients1.google.com https://clients1.google.com https://ep2.adtrafficquality.google https://*.adtrafficquality.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://partner.googleadservices.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.google.com; img-src 'self' data: https: http:; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://cse.google.com https://www.google.com https://ep2.adtrafficquality.google https://*.adtrafficquality.google https://pagead2.googlesyndication.com https://*.googlesyndication.com https://syndicatedsearch.goog https://*.syndicatedsearch.goog; connect-src 'self' https: http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:* https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net;");
     next();
 });
@@ -279,7 +250,7 @@ app.get('/api/jobs/generate-love-letters', async (req, res) => {
     }
 });
 
-// Mission Control Dashboard Routes (Restoring accidentally deleted ones)
+// Mission Control Routes
 app.get('/mission-control', dashboardController.getDashboardData);
 app.get('/api/proxy-image', dashboardController.proxyImage);
 app.get('/api/products/search', dashboardController.globalProductSearch);
@@ -450,9 +421,6 @@ app.post('/api/search-logs/clear', express.json(), async (req, res) => {
 
 
 
-// Export the new controller function if it's not already exported
-// Note: We need to make sure globalProductSearch is in the exports of dashboardController.js
-
 // Helper to extract numeric percentage discount from description
 const extractDiscountValue = (desc) => {
     if (!desc) return 0;
@@ -509,10 +477,36 @@ const mapOfferDoc = (doc, overrides = {}) => {
     };
 };
 
-// Helper to fetch and format global dynamic categories
-// MOVED TO db.js
+// ── Shared Route Helpers ──────────────────────────────────────────────────────
 
-// --- Sidebar Global Caching Middleware ---
+// Build a Map of brandId -> logoUrl from an enrichedBrands array.
+// Used consistently across homepage, offers, products, sidebar, and search routes.
+const buildBrandLogoMap = (enrichedBrands) => {
+    const map = new Map();
+    enrichedBrands.forEach(b => {
+        const id = (b.id || b.advertiserId || b.data_id || b.raw_data?.id)?.toString();
+        if (id && b.logoUrl) map.set(id, b.logoUrl);
+    });
+    return map;
+};
+
+// Fetch an advertiser document from Firestore by slug.
+// Returns { data, id, logoUrl } or null if not found.
+const getBrandBySlug = async (slug) => {
+    const db = require('./config/firebase').db;
+    const snap = await db.collection('advertisers').where('slug', '==', slug).limit(1).get();
+    if (snap.empty) return null;
+    const doc = snap.docs[0];
+    const data = doc.data();
+    return {
+        docRef: doc,
+        data,
+        id: (data.id || data.advertiserId || data.data_id || data.raw_data?.id)?.toString(),
+        logoUrl: data.storageLogoUrl || data.logoUrl || data.raw_data?.logoUrl,
+    };
+};
+
+
 let sidebarCache = null;
 let sidebarCacheTime = 0;
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
@@ -960,7 +954,6 @@ Object.keys(staticPages).forEach(slug => {
     app.get('/' + slug, populateSidebar, async (req, res) => {
         try {
             const settings = await getGlobalSettings();
-            const { getGlobalCategories } = require('./services/db');
             const categories = await getGlobalCategories();
 
             res.render('info', {
@@ -1447,211 +1440,6 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
 });
 
 
-// Redirect legacy /coupons URLs to /offers
-app.get('/coupons', (req, res) => {
-    res.redirect(301, '/offers');
-});
-
-// Primary Offers route
-app.get('/offers', populateSidebar, async (req, res) => {
-    try {
-        const settings = await getGlobalSettings();
-        const db = firebaseAdmin.firestore();
-        const enrichedBrands = await getEnrichedAdvertisers();
-
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 100;
-        const offset = (page - 1) * limit;
-
-        // Map logoUrls
-        const brandLogoMap = new Map();
-        enrichedBrands.forEach(b => {
-            const brandId = (b.id || b.advertiserId || b.data_id || (b.raw_data && b.raw_data.id))?.toString();
-            if (brandId && b.logoUrl) brandLogoMap.set(brandId, b.logoUrl);
-        });
-
-        // We fetch all code-bearing offers for sorting/paging on server
-        // Note: For very large datasets, we'd want to index discountValue and updatedAtTime in Firestore
-        const offersSnapshot = await db.collection('offers')
-            .get();
-
-        const allOffers = offersSnapshot.docs
-            .map(doc => {
-                const data = doc.data();
-                let expiresAt = 'Ongoing';
-                if (data.endDate) {
-                    try {
-                        const date = new Date(data.endDate);
-                        if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
-                    } catch (e) { }
-                }
-
-                const offId = (data.advertiserId || data.id || data.data_id)?.toString();
-                return mapOfferDoc(doc, {
-                    updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
-                    discountValue: extractDiscountValue(data.description || data.name),
-                    brandSlug: data.advertiserSlug || slugify(data.advertiser || data.advertiserName || ''),
-                    brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
-                });
-            })
-            .filter(o => o.code && o.code !== 'N/A' && o.code !== '')
-            .sort((a, b) => {
-                if (b.discountValue !== a.discountValue) return b.discountValue - a.discountValue;
-                return b.updatedAtTime - a.updatedAtTime;
-            });
-
-        const paginatedOffers = allOffers.slice(offset, offset + limit);
-        const finalCategories = await getGlobalCategories(enrichedBrands);
-        const hasMore = allOffers.length > offset + limit;
-
-        res.render('page', {
-            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
-            settings,
-            offers: paginatedOffers,
-            categories: finalCategories,
-            showBrands: false,
-            showProducts: false,
-            showOffers: true,
-            offersH2: "Offers",
-            showOffersFilters: true,
-            showOffersPagination: true,
-            metaTitle: 'Latest Verified Promo Codes & Coupon Offers | OfferBae',
-            pageH1: "Latest Promo Codes & Coupon Offers",
-            currentPage: page,
-            limit,
-            hasMore,
-            breadcrumbPath: [{ name: 'Offers', url: '/offers' }]
-        });
-    } catch (err) {
-        console.error('Error loading fresh offers:', err);
-        res.status(500).send("Error loading Offers");
-    }
-});
-
-// Redirect legacy /coupons/:slug URLs to /offers/:slug
-app.get('/coupons/:slug', (req, res) => {
-    res.redirect(301, `/offers/${req.params.slug}`);
-});
-
-// Redirect legacy /brand/:legacySlug to /brands/:newSlug
-// Handles paths like /brand/53708-maytag converting them to /brands/maytag
-app.get('/brand/:legacySlug', (req, res) => {
-    const { legacySlug } = req.params;
-    // Regex matches 1 or more digits, a hyphen, then the rest of the slug
-    const match = legacySlug.match(/^\d+-(.+)$/);
-    if (match) {
-        res.redirect(301, `/brands/${match[1]}`);
-    } else {
-        // Fallback for /brand/something-without-id
-        res.redirect(301, `/brands/${legacySlug}`);
-    }
-});
-
-
-// Fresh Offers Page
-// Redirect legacy /coupons URLs to /offers
-app.get('/coupons', (req, res) => {
-    res.redirect(301, '/offers');
-});
-
-// Primary Offers route
-app.get('/offers', populateSidebar, async (req, res) => {
-    try {
-        const settings = await getGlobalSettings();
-        const db = firebaseAdmin.firestore();
-        const enrichedBrands = await getEnrichedAdvertisers();
-
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 100;
-        const offset = (page - 1) * limit;
-
-        // Map logoUrls
-        const brandLogoMap = new Map();
-        enrichedBrands.forEach(b => {
-            const brandId = (b.id || b.advertiserId || b.data_id || (b.raw_data && b.raw_data.id))?.toString();
-            if (brandId && b.logoUrl) brandLogoMap.set(brandId, b.logoUrl);
-        });
-
-        // We fetch all code-bearing offers for sorting/paging on server
-        // Note: For very large datasets, we'd want to index discountValue and updatedAtTime in Firestore
-        const offersSnapshot = await db.collection('offers')
-            .get();
-
-        const allOffers = offersSnapshot.docs
-            .map(doc => {
-                const data = doc.data();
-                let expiresAt = 'Ongoing';
-                if (data.endDate) {
-                    try {
-                        const date = new Date(data.endDate);
-                        if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
-                    } catch (e) { }
-                }
-
-                const offId = (data.advertiserId || data.id || data.data_id)?.toString();
-                return mapOfferDoc(doc, {
-                    updatedAtTime: data.updatedAt ? (data.updatedAt._seconds || new Date(data.updatedAt).getTime()) : 0,
-                    discountValue: extractDiscountValue(data.description || data.name),
-                    brandSlug: data.advertiserSlug || slugify(data.advertiser || data.advertiserName || ''),
-                    brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null
-                });
-            })
-            .filter(o => o.code && o.code !== 'N/A' && o.code !== '')
-            .sort((a, b) => {
-                if (b.discountValue !== a.discountValue) return b.discountValue - a.discountValue;
-                return b.updatedAtTime - a.updatedAtTime;
-            });
-
-        const paginatedOffers = allOffers.slice(offset, offset + limit);
-        const finalCategories = await getGlobalCategories(enrichedBrands);
-        const hasMore = allOffers.length > offset + limit;
-        const totalPages = Math.ceil(allOffers.length / limit);
-
-        res.render('page', {
-            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
-            settings,
-            offers: paginatedOffers,
-            categories: finalCategories,
-            showBrands: false,
-            showProducts: false,
-            showOffers: true,
-            offersH2: "Offers",
-            showOffersFilters: true,
-            showOffersPagination: true,
-            metaTitle: 'Latest Verified Promo Codes & Coupon Offers | OfferBae',
-            pageH1: "Latest Promo Codes & Coupon Offers",
-            currentPage: page,
-            limit,
-            hasMore,
-            totalPages,
-            breadcrumbPath: [{ name: 'Offers', url: '/offers' }]
-        });
-    } catch (err) {
-        console.error('Error loading fresh offers:', err);
-        res.status(500).send("Error loading Offers");
-    }
-});
-
-// Redirect legacy /coupons/:slug URLs to /offers/:slug
-app.get('/coupons/:slug', (req, res) => {
-    res.redirect(301, `/offers/${req.params.slug}`);
-});
-
-// Redirect legacy /brand/:legacySlug to /brands/:newSlug
-// Handles paths like /brand/53708-maytag converting them to /brands/maytag
-app.get('/brand/:legacySlug', (req, res) => {
-    const { legacySlug } = req.params;
-    // Regex matches 1 or more digits, a hyphen, then the rest of the slug
-    const match = legacySlug.match(/^\d+-(.+)$/);
-    if (match) {
-        res.redirect(301, `/brands/${match[1]}`);
-    } else {
-        // Fallback for /brand/something-without-id
-        res.redirect(301, `/brands/${legacySlug}`);
-    }
-});
-
-
 // Products page for a brand — /products/:brandSlug
 // Shows only products for that brand; links to /offers/:brandSlug for coupons
 app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
@@ -1745,7 +1533,6 @@ app.get('/products/:brandSlug', populateSidebar, async (req, res) => {
             totalPages,
             productsH2: `${brand.name} Products`,
             pageLogo: brand.logoUrl,
-            metaTitle: `Shop ${brand.name} Products - OfferBae.com`,
             pageH1: `${brand.name} Products`,
             pageCategories,
             brandDescription: brandData.manualDescription || brandData.description || brandData.savingsGuide || null,
@@ -1868,7 +1655,6 @@ app.get('/offers/:brandSlug', populateSidebar, async (req, res) => {
             offersH2: `${brand.name} Promo Codes & Offers`,
             offersDescription: `Verified promo codes and deals from ${brand.name}. Updated ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`,
             pageLogo: brand.logoUrl,
-            metaTitle: `Shop Active ${brand.name} Coupon Codes & Promotional Offers - OfferBae.com`,
             pageH1: `${brand.name} Promo Codes and Discounts`,
             metaTitle,
             pageCategories,
