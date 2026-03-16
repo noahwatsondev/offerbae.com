@@ -835,6 +835,7 @@ h2 {
 }
 .is-compact .offer-card .offer-content .offer-brand {
   font-size: 0.65rem;
+  margin-bottom: 1rem;
 }
 .is-compact .offer-card .offer-content .offer-promo-display {
   margin-top: 0.5rem;

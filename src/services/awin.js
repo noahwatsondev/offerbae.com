@@ -113,8 +113,8 @@ const fetchOffers = async () => {
 const zlib = require('zlib');
 const csv = require('csv-parser');
 
-const fetchProducts = async (advertiserId, regionStr) => {
-    const apikey = process.env.AWIN_DATAFEED_API_KEY;
+const fetchProducts = async (advertiserId) => {
+    const apikey = config.awin.datafeedApiKey;
     if (!apikey) {
         console.error('AWIN_DATAFEED_API_KEY is missing from environment variables.');
         return [];
@@ -198,7 +198,7 @@ const fetchProductsForAll = async (advertisers) => {
         const adv = advertisers[i];
         if (adv.network === 'AWIN') {
             console.log(`Fetching AWIN products for ${adv.name} (${i + 1}/${advertisers.length})...`);
-            const prods = await fetchProducts(adv.id, adv.country);
+            const prods = await fetchProducts(adv.id);
             if (prods.length > 0) {
                 productsByAdvertiser[adv.id] = prods;
             }

@@ -170,16 +170,11 @@ const fetchOffers = async (advertisers = []) => {
                 const imgMatch = link['link-code-html'].match(/<img[^>]+src="([^">]+)"/);
                 if (imgMatch) {
                     const src = imgMatch[1];
-                    // Filter out common tracking pixels (1x1)
-                    if (!src.includes('width="1"') && !src.includes('height="1"') && !src.includes('/image-')) {
-                        // This is a heuristic; 'image-' often denotes the tracking pixel in CJ
-                        // But sometimes banner images also have it. 
-                        // Better check: if it's a banner link, it should have a real image.
+                    // Reject 1×1 tracking pixels — check both attribute and URL patterns
+                    const isTracker = src.includes('width="1"') || src.includes('height="1"') || /\/image-\d+x\d+/i.test(src);
+                    if (!isTracker) {
+                        imageUrl = src;
                     }
-                    // For now, let's try to use it if it doesn't look like a pure tracker
-                    // Actually, CJ text links usually only have a 1x1 tracker.
-                    // Banner links will have a visible image.
-                    imageUrl = src;
                 }
             }
 

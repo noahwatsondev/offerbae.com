@@ -42,48 +42,59 @@
                     </div>
                 </div>
                 <% } %>
-                    <div class="offer-content">
-                        <div class="offer-brand">
-                            <%= offer.advertiser || offer.brandName || 'Brand Deal' %>
-                        </div>
-                        <h3 class="offer-title">
-                            <%= offer.description %>
-                        </h3>
-                        <div class="offer-meta"
-                            style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                            <span class="offer-expiry" style="margin-right: 0;">Expires: <%= offer.expiresAt %></span>
-                            <div class="offer-trust-signal"
-                                style="font-size: 0.85rem; color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                Verified Today
-                            </div>
-                        </div>
-                        <% if (offer.isPromoCode && offer.code && offer.code !='N/A' ) { %>
-                            <div class="offer-promo-display is-code">
-                                <span class="promo-code-box">
-                                    <%= offer.code %>
-                                </span>
-                                <span class="promo-copy-hint">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="lucide lucide-copy">
-                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                    </svg>
-                                    Copy/Redeem
-                                </span>
-                            </div>
-                            <% } else { %>
-                                <div class="offer-promo-display is-deal">
-                                    <span class="promo-redeem-btn">
-                                        Redeem
-                                    </span>
+
+                    <div class="offer-content" style="display: flex; flex-direction: column; margin-top: 0; height: 100%;">
+                        <% if (offer.tagline) { %>
+                            <span class="offer-tagline-badge"
+                                style="display: inline-block; font-size: 1.5rem; font-weight: 800; color: #ef4444; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; margin-top: .5rem;margin-bottom: 1rem;">
+                                <%= offer.tagline %>
+                            </span>
+                            <% } %>
+                                <div class="offer-brand">
+                                    <%= offer.advertiser || offer.brandName || 'Brand Deal' %>
                                 </div>
-                                <% } %>
+                                <h3 class="offer-title">
+                                    <%= offer.description %>
+                                </h3>
+
+                                <% if (offer.isPromoCode && offer.code && offer.code !='N/A' ) { %>
+                                    <div class="offer-promo-display is-code">
+                                        <span class="promo-code-box">
+                                            <%= offer.code %>
+                                        </span>
+                                        <span class="promo-copy-hint">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                class="lucide lucide-copy">
+                                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                            </svg>
+                                            Copy/Redeem
+                                        </span>
+                                    </div>
+                                    <% } else { %>
+                                        <div class="offer-promo-display is-deal">
+                                            <span class="promo-redeem-btn">
+                                                Redeem
+                                            </span>
+                                        </div>
+                                        <% } %>
+                                            <div class="offer-meta"
+                                                style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: auto; padding-top: 1rem;">
+                                                <span class="offer-expiry" style="margin-right: 0;">Expires: <%=
+                                                        offer.expiresAt %>
+                                                </span>
+                                                <div class="offer-trust-signal"
+                                                    style="font-size: 0.85rem; color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="20 6 9 17 4 12" />
+                                                    </svg>
+                                                    Verified Today
+                                                </div>
+                                            </div>
                     </div>
         </article>
     </a>

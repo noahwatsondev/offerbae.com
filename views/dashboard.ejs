@@ -321,6 +321,15 @@
         couponsByAdvertiser[c.advertiserId].push(c);
         });
         }
+        // Helper to proxy images that might be blocked by ad-blockers (like Pepperjam)
+        const getProxiedUrl = (url) => {
+            if (!url) return '';
+            // Proxy everything that is not a relative path or local host to avoid ad-blockers
+            if (url.startsWith('http') && !url.includes('localhost') && !url.includes('127.0.0.1')) {
+                return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+            }
+            return url;
+        };
         %>
 
         <div class="container">
@@ -487,15 +496,15 @@
                                                 d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                                         </svg>
                                     </th>
+                                    <th onclick="sortTable(1)" style="cursor: pointer;">Network ↕</th>
                                     <th>Logo</th>
-                                    <th onclick="sortTable(2)" style="cursor: pointer;">Name ↕</th>
-                                    <th onclick="sortTable(4)" style="cursor: pointer;">Network ↕</th>
-                                    <th onclick="sortTable(7, 'number')" style="cursor: pointer;">Offers ↕</th>
-                                    <th onclick="sortTable(8, 'number')" style="cursor: pointer;">Products ↕</th>
-                                    <th onclick="sortTable(9)" style="cursor: pointer;">Categories ↕</th>
-                                    <th onclick="sortTable(3)" style="cursor: pointer;">Description ↕</th>
-                                    <th onclick="sortTable(5)" style="cursor: pointer;">Status ↕</th>
-                                    <th onclick="sortTable(6, 'number')" style="cursor: pointer;">Partnered ↕</th>
+                                    <th onclick="sortTable(3)" style="cursor: pointer;">Name ↕</th>
+                                    <th onclick="sortTable(4, 'number')" style="cursor: pointer;">Offers ↕</th>
+                                    <th onclick="sortTable(5, 'number')" style="cursor: pointer;">Products ↕</th>
+                                    <th onclick="sortTable(6)" style="cursor: pointer;">Categories ↕</th>
+                                    <th onclick="sortTable(7)" style="cursor: pointer;">Description ↕</th>
+                                    <th onclick="sortTable(8)" style="cursor: pointer;">Status ↕</th>
+                                    <th onclick="sortTable(9, 'number')" style="cursor: pointer;">Partnered ↕</th>
                                 </tr>
                             </thead>
 
@@ -578,7 +587,7 @@
                                         <td>
                                             <div class="logo-cell" data-adv-id="<%= adv.id %>">
                                                 <% if (adv.logoUrl) { %>
-                                                    <img src="<%= adv.logoUrl %>" alt="<%= advName %>"
+                                                    <img src="<%= getProxiedUrl(adv.logoUrl) %>" alt="<%= advName %>"
                                                         style="width: 100%; height: 100%; object-fit: contain;">
                                                     <% } else { %>
                                                         <span>?</span>
@@ -795,7 +804,10 @@
 
             window.getProxiedUrl = (url) => {
                 if (!url) return '';
-                if (url.startsWith(' http')) { return `/api/proxy-image?url=${encodeURIComponent(url)}`; } return url;
+                if (url.startsWith('http:') || url.includes('pepperjamnetwork.com')) { 
+                    return `/api/proxy-image?url=${encodeURIComponent(url)}`; 
+                } 
+                return url;
             }; window.toggleDropdown = (btn) => {
                 const content = btn.nextElementSibling;
                 const row = btn.closest('tr');
@@ -877,8 +889,7 @@
                 rows.forEach(row => {
                     table.appendChild(row); // Moves the brand row
 
-                    // Move potential lazy load rows if they exist and are
-                    associated
+                    // Move potential lazy load rows if they exist and are associated
                     const advId =
                         row.querySelector('.logo-cell').dataset.advId;
                     const offersRow =

@@ -38,11 +38,6 @@ const getRakutenToken = async () => {
         rakuTokenCache.value = response.data.access_token;
         rakuTokenCache.expires = Date.now() + (3300 * 1000); // Cache for 55 mins
 
-        // Add console.log to inspect raw data for token response
-        if (response.data) {
-            // console.log('Rakuten Token Raw Data Keys:', Object.keys(response.data));
-        }
-
         return response.data.access_token;
     } catch (error) {
         console.error('Error fetching Rakuten token:', error.message);
@@ -89,26 +84,32 @@ const fetchAdvertisers = async () => {
 
         // Step 2: Fetch detailed advertiser info for each partnership to get correct URLs
         console.log(`Fetching detailed info for ${allPartnerships.length} Rakuten advertisers...`);
-        const advertiserDetails = await Promise.all(
-            allPartnerships.map(async (p, index) => {
-                try {
-                    const advResponse = await axios.get(
-                        `https://api.linksynergy.com/v2/advertisers/${p.advertiser.id}`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/json'
-                        }
-                    });
-                    if (index === 0) {
-                        // console.log('Rakuten Advertiser Details Raw Data Keys:', Object.keys(advResponse.data));
+        const advertiserDetails = [];
+        const chunkSize = 10;
+        for (let i = 0; i < allPartnerships.length; i += chunkSize) {
+            const chunk = allPartnerships.slice(i, i + chunkSize);
+            const chunkResults = await Promise.all(
+                chunk.map(async (p) => {
+                    try {
+                        const advResponse = await axios.get(
+                            `https://api.linksynergy.com/v2/advertisers/${p.advertiser.id}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Accept': 'application/json'
+                            }
+                        });
+                        return advResponse.data;
+                    } catch (error) {
+                        console.error(`Failed to fetch details for advertiser ${p.advertiser.id}:`, error.message);
+                        return null;
                     }
-                    return advResponse.data;
-                } catch (error) {
-                    console.error(`Failed to fetch details for advertiser ${p.advertiser.id}:`, error.message);
-                    return null;
-                }
-            })
-        );
+                })
+            );
+            advertiserDetails.push(...chunkResults);
+            if (i + chunkSize < allPartnerships.length) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
 
         // Step 3: Combine partnership data with detailed advertiser info
         return allPartnerships.map((p, index) => {

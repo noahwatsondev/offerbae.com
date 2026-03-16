@@ -95,11 +95,13 @@ const handleAdvertiserLogo = async (network, adv, existingData) => {
     }
 
     // 3. Priority #3: Brandfetch (Only if native logo is completely missing)
-    // This block is skipped if we have any valid storageLogoUrl (manual, cached native, or previous BF).
-    if (!storageLogoUrl && adv.url && (logoChanged || brandfetchSessionCount < MAX_BRANDFETCH_PER_SESSION)) {
+    let brandFetchAttempted = existingData ? !!existingData.brandFetchAttempted : false;
+
+    if (!storageLogoUrl && adv.url && !brandFetchAttempted && (logoChanged || brandfetchSessionCount < MAX_BRANDFETCH_PER_SESSION)) {
         const domain = brandfetch.extractDomain(adv.url);
         if (domain) {
             if (!logoChanged) brandfetchSessionCount++;
+            brandFetchAttempted = true; // Mark as attempted regardless of success
 
             const bfLogoUrl = await brandfetch.fetchLogo(domain);
             if (bfLogoUrl) {
@@ -112,7 +114,8 @@ const handleAdvertiserLogo = async (network, adv, existingData) => {
     return {
         logoUrl: logoUrl || null,
         storageLogoUrl: storageLogoUrl || null,
-        isManualLogo: false
+        isManualLogo: false,
+        brandFetchAttempted
     };
 };
 
@@ -329,7 +332,7 @@ const syncRakutenAdvertisers = async () => {
         activeIds.add(result.id);
         await new Promise(resolve => setTimeout(resolve, 50));
     }
-    await pruneStaleRecords('Rakuten', 'advertisers', Array.from(activeIds));
+    // await pruneStaleRecords('Rakuten', 'advertisers', Array.from(activeIds));
 };
 
 const syncRakutenCoupons = async () => {
@@ -382,7 +385,7 @@ const syncRakutenCoupons = async () => {
                 hasPromoCodes: hasCodesMap[aid] || false
             });
         }
-        await pruneStaleRecords('Rakuten', 'offers', Array.from(activeIds));
+        // await pruneStaleRecords('Rakuten', 'offers', Array.from(activeIds));
     } catch (error) {
         console.error('SYNC: Error syncing Rakuten coupons:', error.message);
     }
@@ -455,7 +458,7 @@ const syncRakutenProducts = async (inputAdvs = null) => {
         }
         await new Promise(resolve => setTimeout(resolve, delayMs));
     }
-    await pruneStaleRecords('Rakuten', 'products', Array.from(activeIds));
+    // await pruneStaleRecords('Rakuten', 'products', Array.from(activeIds));
 };
 
 // --- CJ ---
@@ -504,7 +507,7 @@ const syncCJAdvertisers = async () => {
         }
         await new Promise(resolve => setTimeout(resolve, 50));
     }
-    await pruneStaleRecords('CJ', 'advertisers', Array.from(activeIds));
+    // await pruneStaleRecords('CJ', 'advertisers', Array.from(activeIds));
 };
 
 const syncCJLinks = async () => {
@@ -549,7 +552,7 @@ const syncCJLinks = async () => {
                 hasPromoCodes: hasCodesMap[aid] || false
             });
         }
-        await pruneStaleRecords('CJ', 'offers', Array.from(activeIds));
+        // await pruneStaleRecords('CJ', 'offers', Array.from(activeIds));
     } catch (error) {
         console.error('SYNC: Error syncing CJ links:', error.message);
     }
@@ -603,7 +606,7 @@ const syncCJProducts = async () => {
                 hasSaleItems: (salesStats[aid] || 0) > 0
             });
         }
-        await pruneStaleRecords('CJ', 'products', Array.from(activeIds));
+        // await pruneStaleRecords('CJ', 'products', Array.from(activeIds));
     } catch (error) {
         console.error('SYNC: CJ products err:', error.message);
     }
@@ -652,7 +655,7 @@ const syncAWINAdvertisers = async () => {
         else syncState.AWIN.advertisers.checked++;
         await new Promise(resolve => setTimeout(resolve, 50));
     }
-    await pruneStaleRecords('AWIN', 'advertisers', Array.from(activeIds));
+    // await pruneStaleRecords('AWIN', 'advertisers', Array.from(activeIds));
 };
 
 const syncAWINOffers = async () => {
@@ -692,7 +695,7 @@ const syncAWINOffers = async () => {
                 hasPromoCodes: hasCodesMap[aid] || false
             });
         }
-        await pruneStaleRecords('AWIN', 'offers', Array.from(activeIds));
+        // await pruneStaleRecords('AWIN', 'offers', Array.from(activeIds));
     } catch (e) {
         console.error('AWIN offers err:', e.message);
     }
@@ -745,7 +748,7 @@ const syncAWINProducts = async () => {
             });
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
-        await pruneStaleRecords('AWIN', 'products', Array.from(activeIds));
+        // await pruneStaleRecords('AWIN', 'products', Array.from(activeIds));
     } catch (e) {
         console.error('AWIN products err:', e.message);
     }
@@ -794,7 +797,7 @@ const syncPepperjamAdvertisers = async () => {
         else syncState.Pepperjam.advertisers.checked++;
         await new Promise(resolve => setTimeout(resolve, 100));
     }
-    await pruneStaleRecords('Pepperjam', 'advertisers', Array.from(activeIds));
+    // await pruneStaleRecords('Pepperjam', 'advertisers', Array.from(activeIds));
 };
 
 const syncPepperjamOffers = async () => {
@@ -855,7 +858,7 @@ const syncPepperjamProducts = async () => {
                     const s = parseFloat(String(p.salePrice).replace(/[^0-9.-]+/g, "")) || 0;
                     const pr = parseFloat(String(p.price).replace(/[^0-9.-]+/g, "")) || 0;
                     if (s > 0 && pr > s) salesStats[aid] = (salesStats[aid] || 0) + 1;
-                } catch (err) { }
+                } catch (err) { console.error('[Pepperjam] Product upsert failed:', err.message); }
             }
         });
         const advs = await pepperjamService.fetchAdvertisers();
@@ -864,12 +867,14 @@ const syncPepperjamProducts = async () => {
             await upsertAdvertiser({ id: adv.id, network: 'Pepperjam', productCount: productCounts[aid] || 0, saleProductCount: salesStats[aid] || 0, hasSaleItems: (salesStats[aid] || 0) > 0 });
         }
         await pruneStaleRecords('Pepperjam', 'products', Array.from(activeIds));
-    } catch (e) { }
+    } catch (e) { console.error('[Pepperjam] Product sync failed:', e.message); }
 };
 
 const syncAll = async () => {
     if (isGlobalSyncRunning) return;
     isGlobalSyncRunning = true;
+    brandfetchSessionCount = 0;
+    const startTime = Date.now();
     try {
         console.log('SYNC: Starting Global Full Sync...');
 
@@ -904,6 +909,11 @@ const syncAll = async () => {
 
         await reconcileAllProductCounts();
         console.log('SYNC: Global Full Sync Complete.');
+
+        await logSyncComplete('Global', {
+            duration: (Date.now() - startTime) / 1000,
+            status: 'success'
+        });
     } catch (e) {
         console.error('SYNC: Global Full Sync Failed:', e);
     } finally {

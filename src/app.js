@@ -250,6 +250,16 @@ app.get('/api/jobs/generate-love-letters', async (req, res) => {
     }
 });
 
+// Auth middleware for sync-trigger and destructive admin routes.
+// Reads a shared secret from X-Sync-Token header or ?token= query param.
+const requireSyncAuth = (req, res, next) => {
+    const token = req.headers['x-sync-token'] || req.query.token;
+    if (!process.env.SYNC_AUTH_TOKEN || token !== process.env.SYNC_AUTH_TOKEN) {
+        return res.status(401).json({ error: 'Unauthorized. Provide a valid X-Sync-Token header.' });
+    }
+    next();
+};
+
 // Mission Control Routes
 app.get('/mission-control', dashboardController.getDashboardData);
 app.get('/api/proxy-image', dashboardController.proxyImage);
@@ -265,9 +275,8 @@ app.post('/api/advertiser/:id/description', express.json(), dashboardController.
 app.post('/api/advertiser/:id/generate-description', express.json(), dashboardController.generateDescription);
 
 // Explicit manual sync route for debugging/triggering
-app.get('/update/full-sync', async (req, res) => {
+app.get('/update/full-sync', requireSyncAuth, async (req, res) => {
     try {
-        // Run in background, don't await
         dataSync.syncAll().catch(e => console.error(e));
         res.send('Global Sync Started');
     } catch (e) {
@@ -276,9 +285,8 @@ app.get('/update/full-sync', async (req, res) => {
 });
 
 // Explicit manual sync route for CJ only
-app.get('/update/cj-sync', async (req, res) => {
+app.get('/update/cj-sync', requireSyncAuth, async (req, res) => {
     try {
-        // Run in background, don't await
         dataSync.syncCJAll().catch(e => console.error(e));
         res.send('CJ Sync Started');
     } catch (e) {
@@ -287,7 +295,7 @@ app.get('/update/cj-sync', async (req, res) => {
 });
 
 // Explicit manual sync route for Rakuten only
-app.get('/update/rakuten-sync', async (req, res) => {
+app.get('/update/rakuten-sync', requireSyncAuth, async (req, res) => {
     try {
         dataSync.syncRakutenAll().catch(e => console.error(e));
         res.send('Rakuten Sync Started');
@@ -297,7 +305,7 @@ app.get('/update/rakuten-sync', async (req, res) => {
 });
 
 // Explicit manual sync route for AWIN only
-app.get('/update/awin-sync', async (req, res) => {
+app.get('/update/awin-sync', requireSyncAuth, async (req, res) => {
     try {
         dataSync.syncAWINAll().catch(e => console.error(e));
         res.send('AWIN Sync Started');
@@ -307,7 +315,7 @@ app.get('/update/awin-sync', async (req, res) => {
 });
 
 // Explicit manual sync route for Pepperjam only
-app.get('/update/pepperjam-sync', async (req, res) => {
+app.get('/update/pepperjam-sync', requireSyncAuth, async (req, res) => {
     try {
         dataSync.syncPepperjamAll().catch(e => console.error(e));
         res.send('Pepperjam Sync Started');
@@ -405,7 +413,7 @@ app.get('/mission-control/search', async (req, res) => {
 });
 
 // POST /api/search-logs/clear — Delete all search logs
-app.post('/api/search-logs/clear', express.json(), async (req, res) => {
+app.post('/api/search-logs/clear', requireSyncAuth, express.json(), async (req, res) => {
     try {
         const db = require('./config/firebase').db;
         const snap = await db.collection('searchLogs').limit(500).get();
@@ -421,12 +429,7 @@ app.post('/api/search-logs/clear', express.json(), async (req, res) => {
 
 
 
-// Helper to extract numeric percentage discount from description
-const extractDiscountValue = (desc) => {
-    if (!desc) return 0;
-    const match = desc.match(/(\d+)%/);
-    return match ? parseInt(match[1]) : 0;
-};
+
 
 // Helper to map a Firestore product doc into a view-ready object
 // with all the fields that product-card.ejs expects
@@ -470,7 +473,7 @@ const mapOfferDoc = (doc, overrides = {}) => {
         expiresAt,
         code: resolvedCode || data.code,
         isPromoCode: resolvedIsPromoCode,
-        discountBadge: resolvedIsPromoCode ? 'CODE' : (data.description?.match(/(\d+%)|(\$\d+)/)?.[0] || 'DEAL'),
+        tagline: data.tagline || (resolvedIsPromoCode ? 'CODE' : (data.description?.match(/(\d+%)|(\$\d+)/)?.[0] || 'DEAL')),
         discountValue: resolvedIsPromoCode ? extractDiscountValue(data.description) : (data.discountValue || 0),
         updatedAtTime: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : (data.updatedAtTime || 0),
         ...overrides
@@ -2045,6 +2048,7 @@ app.get('/api/offers', async (req, res) => {
         const db = firebaseAdmin.firestore();
 
         const offersSnapshot = await db.collection('offers')
+            .limit(500)
             .get();
 
         // Fetch brands to get logos for the API response as well

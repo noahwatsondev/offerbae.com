@@ -29,14 +29,18 @@ const hasChanged = (newData, existingData) => {
         }
     }
 
-    const newKeys = Object.keys(newData).filter(k => k !== 'updatedAt' && k !== 'networkUpdatedAt');
-    const existingKeys = Object.keys(existingData).filter(k => k !== 'updatedAt' && k !== 'networkUpdatedAt');
-
-    if (newKeys.length !== existingKeys.length) return true;
+    const keysToIgnore = ['updatedAt', 'networkUpdatedAt', 'raw_data', 'storageLogoUrl', 'storageImageUrl', 'isManualLogo', 'isManualDescription', 'isManualCategory', 'productCount', 'offerCount', 'saleProductCount'];
+    const newKeys = Object.keys(newData).filter(k => !keysToIgnore.includes(k));
 
     for (const key of newKeys) {
         const newVal = newData[key];
         const oldVal = existingData[key];
+
+        // Skip if key doesn't exist in existing data (unless it's null/undefined in new data)
+        if (!(key in existingData)) {
+            if (newVal !== undefined && newVal !== null) return true;
+            continue;
+        }
 
         if (typeof newVal === 'object' && newVal !== null && oldVal !== null) {
             // Special handling for Dates
@@ -44,9 +48,8 @@ const hasChanged = (newData, existingData) => {
                 if (newVal.getTime() !== oldVal.getTime()) return true;
                 continue;
             }
-            // Handle Firebase Timestamp objects if present
+            // Handle Firebase Timestamp objects
             if (oldVal.toDate && typeof oldVal.toDate === 'function') {
-                // Compare with new val (likely a JS Date or string)
                 const oldDate = oldVal.toDate();
                 const newDate = newVal instanceof Date ? newVal : new Date(newVal);
                 if (oldDate.getTime() !== newDate.getTime()) return true;
@@ -93,10 +96,17 @@ const upsertAdvertiser = async (advertiserData, existingData = null) => {
             advertiserData.slug = slugify(advertiserData.name);
         }
 
-        await ref.set({
+        const updateData = {
             ...advertiserData,
             updatedAt: new Date()
-        }, { merge: true });
+        };
+
+        // Ensure createdAt is only set once
+        if (!existingData || !existingData.createdAt) {
+            updateData.createdAt = advertiserData.createdAt || new Date();
+        }
+
+        await ref.set(updateData, { merge: true });
 
         return { id: docId, status: existingData ? 'updated' : 'created' };
     } catch (error) {
@@ -123,6 +133,12 @@ const upsertOffer = async (offerData, existingData = null) => {
         if (!existingData) {
             const doc = await ref.get();
             if (doc.exists) existingData = doc.data();
+        }
+
+        // Logic-based intelligent Tagline generation
+        // Only run if tagline doesn't exist or isn't manually set
+        if (!offerData.tagline && (!existingData || !existingData.isManualTagline)) {
+            offerData.tagline = generateOfferTagline(offerData);
         }
 
         if (!hasChanged(offerData, existingData)) {
@@ -264,7 +280,15 @@ const pruneStaleRecords = async (network, collectionName, activeIds) => {
             // However, sometimes we might want to check data.id? 
             // Better to rely on the Firestore Document ID which is stable and unique.
             if (!activeIdSet.has(doc.id)) {
-                batch.delete(doc.ref);
+                // SPECIAL CASE: For advertisers, don't delete if they have manual customizations
+                const data = doc.data();
+                if (collectionName === 'advertisers' && (data.isManualLogo || data.isManualDescription || data.isManualCategory)) {
+                    // Update to Inactive instead of deleting to preserve manual work
+                    batch.update(doc.ref, { status: 'Inactive', updatedAt: new Date() });
+                } else {
+                    batch.delete(doc.ref);
+                }
+                
                 deletedCount++;
                 batchCount++;
 
@@ -367,7 +391,7 @@ const updateGlobalSettings = async (settings) => {
 // In-memory TTL cache for advertisers (60s)
 let _advertiserCache = null;
 let _advertiserCacheAt = 0;
-const ADVERTISER_TTL = 1000; // Force refresh during debugging
+const ADVERTISER_TTL = 5 * 60 * 1000; // 5 minutes
 
 const getEnrichedAdvertisers = async () => {
     if (_advertiserCache && Date.now() - _advertiserCacheAt < ADVERTISER_TTL) {
@@ -377,7 +401,6 @@ const getEnrichedAdvertisers = async () => {
         const advSnapshot = await firebase.db.collection(COLLECTIONS.ADVERTISERS).get();
 
         const advertisers = [];
-        console.log(`[DEBUG] Fetched ${advSnapshot.size} advertisers from Firestore.`);
         advSnapshot.forEach(doc => {
             const data = doc.data();
             const created = doc.createTime ? doc.createTime.toDate() : null;
@@ -388,17 +411,12 @@ const getEnrichedAdvertisers = async () => {
                 productCount: data.productCount || 0,
                 saleProductCount: data.saleProductCount || 0,
                 offerCount: data.offerCount || 0,
-                logoUrl: data.storageLogoUrl || data.logoUrl || (data.raw_data && data.raw_data.logoUrl ? data.raw_data.logoUrl : null),
-                createdAt: created
+                createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt ? new Date(data.createdAt) : created),
+                logoUrl: data.storageLogoUrl || data.logoUrl || (data.raw_data && data.raw_data.logoUrl ? data.raw_data.logoUrl : null)
             });
         });
 
-        // Debug log Sample
-        if (advertisers.length > 0) {
-            console.log(`[DEBUG] Sample Advertiser: ${advertisers[0].name}, createdAt: ${advertisers[0].createdAt}`);
-        }
 
-        // Sort: Latest Added to Earliest (createdAt DESC), then Name (ASC)
         advertisers.sort((a, b) => {
             const timeA = a.createdAt ? a.createdAt.getTime() : 0;
             const timeB = b.createdAt ? b.createdAt.getTime() : 0;
@@ -511,6 +529,41 @@ const extractCodeFromDescription = (desc) => {
     return null;
 };
 
+const generateOfferTagline = (offer) => {
+    const text = (offer.description || offer.name || '').toLowerCase();
+    
+    // Priority 1: High-value patterns
+    const percentMatch = text.match(/(\d+)%\s*off/i) || text.match(/up to\s*(\d+)%\s*off/i) || text.match(/(\d+)%/);
+    if (percentMatch) return `${percentMatch[1]}% OFF`;
+    
+    const dollarMatch = text.match(/\$(\d+)\s*off/i) || text.match(/save\s*\$(\d+)/i) || text.match(/\$(\d+)/);
+    if (dollarMatch) return `$${dollarMatch[1]} OFF`;
+    
+    // Priority 2: Shipping
+    if (text.includes('free shipping') || text.includes('free delivery')) return 'FREE SHIPPING';
+    
+    // Priority 3: BOGO
+    if (text.includes('buy one get one') || text.includes('bogo')) return 'BOGO';
+    
+    // Priority 4: Specific Promo Types
+    if (text.includes('new customer') || text.includes('new user') || text.includes('first order')) return 'NEW CUSTOMER';
+    if (text.includes('student')) return 'STUDENT';
+    if (text.includes('military')) return 'MILITARY';
+    
+    // Priority 5: Clearance / Sale
+    if (text.includes('clearance')) return 'CLEARANCE';
+    if (text.includes('sitewide')) return 'SITEWIDE';
+    if (text.includes('sale')) return 'SALE';
+    
+    return 'DEAL';
+};
+
+const extractDiscountValue = (desc) => {
+    if (!desc) return 0;
+    const match = desc.match(/(\d+)%/);
+    return match ? parseInt(match[1]) : 0;
+};
+
 module.exports = {
     upsertAdvertiser,
     upsertOffer,
@@ -529,5 +582,7 @@ module.exports = {
 
     isRealCode,
     cleanOfferCode,
-    extractCodeFromDescription
+    extractCodeFromDescription,
+    generateOfferTagline,
+    extractDiscountValue
 };
