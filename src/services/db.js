@@ -531,31 +531,53 @@ const extractCodeFromDescription = (desc) => {
 
 const generateOfferTagline = (offer) => {
     const text = (offer.description || offer.name || '').toLowerCase();
-    
-    // Priority 1: High-value patterns
-    const percentMatch = text.match(/(\d+)%\s*off/i) || text.match(/up to\s*(\d+)%\s*off/i) || text.match(/(\d+)%/);
+    const code = offer.code && offer.code !== 'N/A' && offer.code !== 'null' ? offer.code : null;
+
+    // Priority 1: Percentage off — broadest set of patterns
+    const percentMatch =
+        text.match(/up\s*to\s*(\d+)%\s*off/i) ||
+        text.match(/extra\s*(\d+)%\s*off/i) ||
+        text.match(/additional\s*(\d+)%\s*off/i) ||
+        text.match(/(\d+)%\s*off/i) ||
+        text.match(/save\s*(\d+)%/i) ||
+        text.match(/(\d+)%\s*discount/i) ||
+        text.match(/(\d+)%/);
     if (percentMatch) return `${percentMatch[1]}% OFF`;
-    
-    const dollarMatch = text.match(/\$(\d+)\s*off/i) || text.match(/save\s*\$(\d+)/i) || text.match(/\$(\d+)/);
-    if (dollarMatch) return `$${dollarMatch[1]} OFF`;
-    
-    // Priority 2: Shipping
+
+    // Priority 2: Dollar off / save amount
+    const dollarMatch =
+        text.match(/\$([\d,]+(?:\.\d+)?)\s*off/i) ||
+        text.match(/save\s*\$([\d,]+)/i) ||
+        text.match(/([\d,]+(?:\.\d+)?)\s*off\s*with/i) ||
+        text.match(/\$([\d,]+(?:\.\d+)?)/i);
+    if (dollarMatch) {
+        const amt = parseFloat(dollarMatch[1].replace(/,/g, ''));
+        if (amt > 0) return `$${amt % 1 === 0 ? amt.toFixed(0) : amt.toFixed(2)} OFF`;
+    }
+
+    // Priority 3: Shipping
     if (text.includes('free shipping') || text.includes('free delivery')) return 'FREE SHIPPING';
-    
-    // Priority 3: BOGO
-    if (text.includes('buy one get one') || text.includes('bogo')) return 'BOGO';
-    
-    // Priority 4: Specific Promo Types
-    if (text.includes('new customer') || text.includes('new user') || text.includes('first order')) return 'NEW CUSTOMER';
+
+    // Priority 4: BOGO / bundle
+    if (text.includes('buy one get one') || text.includes('bogo') || text.includes('buy 1 get 1')) return 'BOGO';
+    if (text.includes('2 for 1') || text.includes('two for one')) return '2 FOR 1';
+    if (/buy\s*\d+\s*get\s*\d+/i.test(text)) return 'BUNDLE DEAL';
+
+    // Priority 5: Specific promo types
+    if (text.includes('new customer') || text.includes('new user') || text.includes('first order') || text.includes('first-time')) return 'NEW CUSTOMER';
     if (text.includes('student')) return 'STUDENT';
-    if (text.includes('military')) return 'MILITARY';
-    
-    // Priority 5: Clearance / Sale
+    if (text.includes('military') || text.includes('veteran')) return 'MILITARY';
+    if (text.includes('loyalty') || text.includes('member') || text.includes('exclusive')) return 'MEMBER DEAL';
+    if (text.includes('gift card')) return 'GIFT CARD';
+    if (text.includes('flash sale') || text.includes('limited time')) return 'LIMITED TIME';
+
+    // Priority 6: Clearance / sale keywords
     if (text.includes('clearance')) return 'CLEARANCE';
     if (text.includes('sitewide')) return 'SITEWIDE';
     if (text.includes('sale')) return 'SALE';
-    
-    return 'DEAL';
+
+    // Fallback: if there is a real promo code, say so; otherwise generic
+    return code ? 'USE CODE' : 'DEAL';
 };
 
 const extractDiscountValue = (desc) => {
