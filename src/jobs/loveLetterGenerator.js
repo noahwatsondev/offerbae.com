@@ -154,21 +154,30 @@ const generateDailyLoveLetters = async () => {
             contextualInstruction = `There are no immediate holidays approaching. Find inspiration in current events, seasonal changes, or pain points that the featured products/brands solve for Bae. Keep it spontaneous.`;
         }
 
+        // Split offers: those with real codes get priority and include tagline
+        const offersWithCodes = recentOffers.filter(o => o.code && o.code !== 'N/A' && o.code !== 'null');
+        const offersWithoutCodes = recentOffers.filter(o => !o.code || o.code === 'N/A' || o.code === 'null');
+        const prioritizedOffers = [...offersWithCodes, ...offersWithoutCodes].slice(0, 12);
+
         const contextDataString = `
 AVAILABLE BRANDS (Pick from these if you need inspiration):
 ${topBrands.map(b => `- ${b.name} (Categories: ${b.categories?.join(', ') || 'Various'}) (URL: https://offerbae.com/brands/${b.slug || slugify(b.name)}) (ID: ${b.id})`).join('\n')}
 
-RECENT DEALS & OFFERS (Featured options):
-${recentOffers.slice(0, 10).map(o => `- Brand: ${o.advertiser || 'Unknown'}, Offer: ${o.description || o.name}, Code: ${o.code || 'None'} (URL: https://offerbae.com/brands/${o.advertiserSlug || slugify(o.advertiser || 'Unknown')})`).join('\n')}
+RECENT DEALS & OFFERS (Featured options — offers with promo codes are marked with ✅ CODE):
+${prioritizedOffers.map(o => {
+    const hasCode = o.code && o.code !== 'N/A' && o.code !== 'null';
+    const taglinePart = o.tagline ? ` [TAGLINE: ${o.tagline}]` : '';
+    const codePart = hasCode ? ` ✅ CODE: ${o.code}` : ' (no code — link deal)';
+    return `- Brand: ${o.advertiser || 'Unknown'}${taglinePart}, Offer: ${o.description || o.name}${codePart} (URL: https://offerbae.com/brands/${o.advertiserSlug || slugify(o.advertiser || 'Unknown')})`;
+}).join('\n')}
 `;
 
-        // 3. Define the 3 distinct letter prompts
         const prompts = [
             {
                 type: "Brand Focused",
                 prompt: `Write Love Letter 1: Brand focused.
 Context: ${contextualInstruction}
-Instructions: The subject matter must revolve specifically around one single brand. Deeply express your love for this brand and mention several of its products or offers if they exist. Use the data provided.
+Instructions: The subject matter must revolve specifically around one single brand. Deeply express your love for this brand and mention several of its products or offers if they exist. Where offers with codes exist for this brand, call out the TAGLINE prominently (e.g. "60% OFF" or "CODE") when first mentioning the deal. Use the data provided.
 Data to draw from:
 ${contextDataString}`
             },
@@ -176,7 +185,7 @@ ${contextDataString}`
                 type: "Product/Category Focused",
                 prompt: `Write Love Letter 2: Product/Category focused.
 Context: ${contextualInstruction}
-Instructions: The subject matter must revolve around a general category of products (e.g., skincare routines, tech gadgets, cozy home vibes). Mention the general category and sprinkle in references to brands that fit this category from the provided list.
+Instructions: The subject matter must revolve around a general category of products (e.g., skincare routines, tech gadgets, cozy home vibes). Mention the general category and sprinkle in references to brands that fit this category from the provided list. Where offers with codes exist, weave the TAGLINE naturally into the prose as an exciting aside.
 Data to draw from:
 ${contextDataString}`
             },
@@ -184,7 +193,7 @@ ${contextDataString}`
                 type: "Offer Focused",
                 prompt: `Write Love Letter 3: Offer focused.
 Context: ${contextualInstruction}
-Instructions: The subject matter must revolve around several healthy string of offers and promo codes. You are incredibly excited to share these specific deals with Bae so they can save money. Mention the specific brands and the products they can apply them to.
+Instructions: The subject matter must revolve around a curated string of offers and promo codes — PRIORITIZE the offers marked ✅ CODE in the data. For each code offer, call out the TAGLINE as a bold headline moment in the letter (e.g. "<b>60% OFF</b>, Bae. Sixty. Percent."). Make Bae feel the excitement of each deal before revealing the code. For offers without codes, mention the deal but don't dwell on them — the codes are the stars.
 Data to draw from:
 ${contextDataString}`
             }
