@@ -46,22 +46,61 @@ Every Love Letter is addressed to "Bae" (your reader/lover) and is written in a 
 You are metaphorically writing a romantic love letter, but the romance is actually about the amazing shopping deals, lifestyle products, or brands.
 Use a conversational, endearing tone. Include emojis tastefully.
 
-Your output MUST be a valid JSON object with the following structure:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SEO CONTENT STRATEGY RULES (2026 — STRICT)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. NO AI FLUFF OPENINGS
+   The very first sentence of the letter body MUST directly answer the primary buying intent — what the reader gets from this article. Never start with "In today's digital age", "The importance of...", "Are you looking for...", or any hollow opener. Start mid-thought, with warmth and confidence. Example: "Bae, this week's obsession found me — I didn't find it."
+
+2. TARGET LENGTH ~1,200 WORDS
+   The main content body should be approximately 1,200 words — pleasantly detailed, telling a full story about the brands or products with enough depth to keep Bae engaged.
+
+3. SENTENCE VARIANCE IS MANDATORY
+   Mix very short, punchy sentences with longer, more complex ones. Never write three consecutive sentences of the same length or structure. Vary subject position — not every sentence should start with "I" or "Bae". Break patterns intentionally.
+
+4. E-E-A-T CREDIBILITY INSERTS
+   Insert exactly 3 editorial credibility moments. In the Editor.js paragraph block where the moment should appear, include the literal placeholder text [EDITORIAL CREDIBILITY INSERT] on its own line inside the paragraph text. These are spots where the OfferBae editorial team will inject a real-world curator note, deal verification moment, or product test result. Flag each placeholder with a brief parenthetical hint, e.g.: [EDITORIAL CREDIBILITY INSERT — e.g. "Our editors verified this code at checkout on March 18th and it stacked with the site-wide sale."]
+
+5. HEADER FORMATTING AS QUESTIONS
+   All H2 and H3 block headers must be phrased as natural questions that a real shopper would type into Google. Examples: "Why Is Everyone Obsessed With This Brand Right Now?", "What Makes This Deal Actually Worth It?", "Is This the Best Time to Buy?" — Never use declarative headers like "About the Brand" or "Our Picks".
+
+6. BULLET POINTS FOR LISTS OF 3 OR MORE
+   Any list of 3 or more items (products, features, reasons, tips) MUST be formatted as a bullet list block in Editor.js (type: "list", style: "unordered"), not embedded inline in a paragraph.
+
+7. BOLD THE KEY SENTENCE
+   In every third paragraph block, bold the single most important sentence using <b> HTML tags within the paragraph text. This is the sentence Bae should remember if they skim.
+
+8. INTERNAL LINKS — DESCRIPTIVE ANCHOR TEXT ONLY
+   When linking to brand pages or offer pages, use descriptive anchor text that describes what the reader will find (NO "click here", "this link", or "learn more"). The anchor text should be a natural part of the sentence. Links are provided in the data context — use them precisely.
+
+9. END WITH AN ACTION SUMMARY BLOCK
+   The final section of EVERY letter MUST be titled with a question header like "So What Should Bae Do Right Now?" and contain either:
+   - A "Quick Deal Checklist" (bullet list of 3–5 action steps), OR
+   - A "3-Step Plan" (numbered list)
+   This section provides immediate utility and is optimized for Google's AI Overviews / featured snippet targeting.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LINK RULES (unchanged)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Whenever you mention a brand, product, or offer name in paragraph blocks, wrap the FIRST mention only in an HTML anchor tag using the provided URL.
+- Do NOT hyperlink the same entity more than once. Only the first mention. Subsequent mentions are plain text.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT FORMAT (unchanged — MUST be valid JSON)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Your output MUST be a valid JSON object:
 {
-    "title": "A catchy, romantic, and relevant title for the letter",
+    "title": "A catchy, romantic, and relevant title for the letter — phrased as a question or bold statement",
     "slug": "a-url-friendly-slug-for-the-title",
-    "content": "A raw stringified JSON representing an Editor.js OutputData object. The 'blocks' array should contain 'paragraph' or 'header' types. Example: '{\"time\":123,\"blocks\":[{\"type\":\"paragraph\",\"data\":{\"text\":\"My dearest Bae...\"}}],\"version\":\"2.28.0\"}'",
-    "excerpt": "A short 1-2 sentence teaser summary of the letter.",
+    "content": "A raw stringified JSON representing an Editor.js OutputData object. The 'blocks' array should contain 'paragraph', 'header', and 'list' types as needed. Example: '{\"time\":123,\"blocks\":[{\"type\":\"paragraph\",\"data\":{\"text\":\"My dearest Bae...\"}},{\"type\":\"header\",\"data\":{\"text\":\"Why Is This Brand Taking Over?\",\"level\":2}}],\"version\":\"2.28.0\"}' Remember: header blocks must be phrased as questions per SEO rules above.",
+    "excerpt": "A short 1-2 sentence teaser that answers the primary search intent immediately — no fluff.",
     "relatedBrandId": "If a specific brand is heavily featured, put its ID here. Otherwise null.",
     "imagePrompt": "A highly descriptive, self-contained prompt to generate an image to accompany this article. ALWAYS include humans in the composition. Specifically feature the brands and products mentioned in the letter. Vary the image style heavily across letters, but ALWAYS lean towards a 'Sunday comic' style featuring sassy humor and wit. CRITICAL: If including speech bubbles or text, explicitly specify the exact text to be used and ensure it is a short, grammatically perfect English sentence that makes complete sense. It MUST be very friendly and pleasing to the eye."
 }
-
-CRITIAL REQUIREMENT FOR THE CONTENT BLOCKS:
-1. Whenever you mention the brand name, product name, or offer name in the 'paragraph' blocks, you MUST wrap them in an HTML anchor tag (<a href="...">...</a>) using the provided URL for that specific entity in the data contexts. For example: {"type": "paragraph", "data": {"text": "My dearest Bae, you have to check out <a href='https://offerbae.com/brands/nike'>Nike</a> right now!"}}
-2. IMPORTANT: Do NOT hyperlink the same brand name, product name, or offer name more than once. Only hyperlink the FIRST mention of each entity to avoid looking spammy.
-3. LENGTH: Please add about 100 more words to the main portion of the letter. Make the letter pleasantly detailed, telling a nice little story about the brands or products.
 `;
 };
+
 
 /**
  * Main function to generate and save 3 Love Letters
