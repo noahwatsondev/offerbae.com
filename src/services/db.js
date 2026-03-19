@@ -436,6 +436,11 @@ const getEnrichedAdvertisers = async () => {
     }
 };
 
+const clearAdvertiserCache = () => {
+    _advertiserCache = null;
+    _advertiserCacheAt = 0;
+};
+
 const getGlobalCategories = async (prefetchedBrands = null) => {
     const enrichedBrands = prefetchedBrands || await getEnrichedAdvertisers();
 
@@ -606,5 +611,6 @@ module.exports = {
     cleanOfferCode,
     extractCodeFromDescription,
     generateOfferTagline,
-    extractDiscountValue
+    extractDiscountValue,
+    clearAdvertiserCache
 };

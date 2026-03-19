@@ -6,7 +6,7 @@ const dataSync = require('../services/dataSync');
 const imageStore = require('../services/imageStore');
 const multer = require('multer');
 const axios = require('axios');
-const { getAdvertiser, upsertAdvertiser, getGlobalSettings, updateGlobalSettings, getEnrichedAdvertisers } = require('../services/db'); // Needed for updates
+const { getAdvertiser, upsertAdvertiser, getGlobalSettings, updateGlobalSettings, getEnrichedAdvertisers, clearAdvertiserCache } = require('../services/db'); // Needed for updates
 
 // Configure Multer for memory storage
 const upload = multer({
@@ -461,6 +461,7 @@ const uploadLogo = async (req, res) => {
         });
 
         console.log(`Logo updated for ${id}: ${publicUrl}`);
+        clearAdvertiserCache();
         res.json({ success: true, url: publicUrl });
 
     } catch (e) {
@@ -503,6 +504,7 @@ const resetLogo = async (req, res) => {
         });
 
         console.log(`Logo reset for ${id}`);
+        clearAdvertiserCache();
         res.json({ success: true });
 
     } catch (e) {
@@ -537,6 +539,7 @@ const updateHomeLink = async (req, res) => {
             manualHomeUrl: homeLink
         }, result.adv);
 
+        clearAdvertiserCache();
         res.json({ success: true });
     } catch (error) {
         console.error('Error updating home link:', error);
@@ -559,6 +562,7 @@ const updateDescription = async (req, res) => {
             manualDescription: description
         }, result.adv);
 
+        clearAdvertiserCache();
         res.json({ success: true });
     } catch (error) {
         console.error('Error updating description:', error);
@@ -613,6 +617,12 @@ const generateDescription = async (req, res) => {
 
         const generatedText = response.text || '';
 
+        await upsertAdvertiser({
+            ...result.adv,
+            description: generatedText.trim()
+        }, result.adv);
+
+        clearAdvertiserCache();
         res.json({ success: true, description: generatedText.trim() });
     } catch (error) {
         console.error('Error generating description:', error);
