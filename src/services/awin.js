@@ -164,6 +164,7 @@ const fetchProducts = async (advertiserId) => {
                         products.push({
                             network: 'AWIN',
                             advertiserId: String(advertiserId),
+                            advertiserName: row.merchant_name || row.advertiser_name || '',
                             name: row.product_name,
                             price: row.search_price,
                             salePrice: row.store_price !== row.search_price ? row.store_price : null,

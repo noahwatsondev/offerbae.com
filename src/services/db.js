@@ -42,7 +42,7 @@ const hasChanged = (newData, existingData) => {
             continue;
         }
 
-        if (typeof newVal === 'object' && newVal !== null && oldVal !== null) {
+        if (typeof newVal === 'object' && newVal !== null && oldVal !== null && oldVal !== undefined) {
             // Special handling for Dates
             if (newVal instanceof Date && oldVal instanceof Date) {
                 if (newVal.getTime() !== oldVal.getTime()) return true;

@@ -7,7 +7,7 @@ const loveLettersService = require('./services/loveLettersService');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
 const { generateDailyLoveLetters } = require('./jobs/loveLetterGenerator');
-const { getGlobalSettings, getEnrichedAdvertisers, isRealCode, slugify, extractCodeFromDescription, getGlobalCategories } = require('./services/db');
+const { getGlobalSettings, getEnrichedAdvertisers, isRealCode, slugify, extractCodeFromDescription, getGlobalCategories, extractDiscountValue } = require('./services/db');
 const firebaseAdmin = require('firebase-admin');
 const fs = require('fs');
 require('dotenv').config({ override: true });

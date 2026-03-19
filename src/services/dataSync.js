@@ -7,6 +7,27 @@ const pepperjamService = require('./pepperjam');
 const { upsertAdvertiser, upsertOffer, upsertProduct, getAdvertiser, getProduct, logSyncComplete, getSyncHistory, pruneStaleRecords, isRealCode, cleanOfferCode, extractCodeFromDescription } = require('./db');
 const imageStore = require('./imageStore');
 
+/**
+ * SafePrune: Only runs pruneStaleRecords if the API returned a meaningful number
+ * of active records. Prevents mass-deletes when an API silently returns empty/
+ * partial results (the bug that caused havoc in a previous session).
+ *
+ * Thresholds:
+ *   advertisers — must have fetched > 0 (any empty advertiser list is suspect)
+ *   offers/products — must have > 5 active IDs (guards against small partial pages)
+ */
+const MIN_PRUNE_THRESHOLD = { advertisers: 1, offers: 5, products: 5 };
+
+const safePrune = async (network, collection, activeIds) => {
+    const threshold = MIN_PRUNE_THRESHOLD[collection] ?? 5;
+    if (activeIds.size < threshold) {
+        console.warn(`[PRUNE SKIPPED] ${network}/${collection}: only ${activeIds.size} active IDs collected (threshold: ${threshold}). Skipping prune to prevent accidental mass-delete.`);
+        return;
+    }
+    console.log(`[PRUNE] ${network}/${collection}: pruning against ${activeIds.size} active IDs...`);
+    await pruneStaleRecords(network, collection, Array.from(activeIds));
+};
+
 // Global Sync State
 let isGlobalSyncRunning = false;
 let brandfetchSessionCount = 0;
@@ -332,7 +353,7 @@ const syncRakutenAdvertisers = async () => {
         activeIds.add(result.id);
         await new Promise(resolve => setTimeout(resolve, 50));
     }
-    // await pruneStaleRecords('Rakuten', 'advertisers', Array.from(activeIds));
+    await safePrune('Rakuten', 'advertisers', activeIds);
 };
 
 const syncRakutenCoupons = async () => {
@@ -385,7 +406,7 @@ const syncRakutenCoupons = async () => {
                 hasPromoCodes: hasCodesMap[aid] || false
             });
         }
-        // await pruneStaleRecords('Rakuten', 'offers', Array.from(activeIds));
+        await safePrune('Rakuten', 'offers', activeIds);
     } catch (error) {
         console.error('SYNC: Error syncing Rakuten coupons:', error.message);
     }
@@ -458,7 +479,7 @@ const syncRakutenProducts = async (inputAdvs = null) => {
         }
         await new Promise(resolve => setTimeout(resolve, delayMs));
     }
-    // await pruneStaleRecords('Rakuten', 'products', Array.from(activeIds));
+    await safePrune('Rakuten', 'products', activeIds);
 };
 
 // --- CJ ---
@@ -486,7 +507,7 @@ const syncCJAdvertisers = async () => {
             id: adv.id,
             network: network,
             name: adv.name,
-            status: adv.status || 'joined',
+            status: 'Active', // Normalize — CJ joined programmes are active
             url: adv.url || '',
             description: descResults.description,
             isManualDescription: descResults.isManualDescription,
@@ -507,7 +528,7 @@ const syncCJAdvertisers = async () => {
         }
         await new Promise(resolve => setTimeout(resolve, 50));
     }
-    // await pruneStaleRecords('CJ', 'advertisers', Array.from(activeIds));
+    await safePrune('CJ', 'advertisers', activeIds);
 };
 
 const syncCJLinks = async () => {
@@ -552,7 +573,7 @@ const syncCJLinks = async () => {
                 hasPromoCodes: hasCodesMap[aid] || false
             });
         }
-        // await pruneStaleRecords('CJ', 'offers', Array.from(activeIds));
+        await safePrune('CJ', 'offers', activeIds);
     } catch (error) {
         console.error('SYNC: Error syncing CJ links:', error.message);
     }
@@ -606,7 +627,7 @@ const syncCJProducts = async () => {
                 hasSaleItems: (salesStats[aid] || 0) > 0
             });
         }
-        // await pruneStaleRecords('CJ', 'products', Array.from(activeIds));
+        await safePrune('CJ', 'products', activeIds);
     } catch (error) {
         console.error('SYNC: CJ products err:', error.message);
     }
@@ -637,7 +658,7 @@ const syncAWINAdvertisers = async () => {
             id: adv.id,
             network: network,
             name: adv.name,
-            status: adv.status || 'joined',
+            status: 'Active', // Normalize — AWIN joined programmes are active
             url: adv.url || '',
             description: descResults.description,
             isManualDescription: descResults.isManualDescription,
@@ -655,7 +676,7 @@ const syncAWINAdvertisers = async () => {
         else syncState.AWIN.advertisers.checked++;
         await new Promise(resolve => setTimeout(resolve, 50));
     }
-    // await pruneStaleRecords('AWIN', 'advertisers', Array.from(activeIds));
+    await safePrune('AWIN', 'advertisers', activeIds);
 };
 
 const syncAWINOffers = async () => {
@@ -695,7 +716,7 @@ const syncAWINOffers = async () => {
                 hasPromoCodes: hasCodesMap[aid] || false
             });
         }
-        // await pruneStaleRecords('AWIN', 'offers', Array.from(activeIds));
+        await safePrune('AWIN', 'offers', activeIds);
     } catch (e) {
         console.error('AWIN offers err:', e.message);
     }
@@ -748,7 +769,7 @@ const syncAWINProducts = async () => {
             });
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
-        // await pruneStaleRecords('AWIN', 'products', Array.from(activeIds));
+        await safePrune('AWIN', 'products', activeIds);
     } catch (e) {
         console.error('AWIN products err:', e.message);
     }
@@ -779,7 +800,7 @@ const syncPepperjamAdvertisers = async () => {
             id: adv.id,
             network: network,
             name: adv.name,
-            status: adv.status,
+            status: 'Active', // Normalize — Pepperjam joined programmes are active
             url: adv.url || '',
             categories: catResults.categories,
             isManualCategory: catResults.isManualCategory,
@@ -797,7 +818,7 @@ const syncPepperjamAdvertisers = async () => {
         else syncState.Pepperjam.advertisers.checked++;
         await new Promise(resolve => setTimeout(resolve, 100));
     }
-    // await pruneStaleRecords('Pepperjam', 'advertisers', Array.from(activeIds));
+    await safePrune('Pepperjam', 'advertisers', activeIds);
 };
 
 const syncPepperjamOffers = async () => {
@@ -828,7 +849,7 @@ const syncPepperjamOffers = async () => {
         for (const [aid, count] of Object.entries(offerCountsMap)) {
             await upsertAdvertiser({ id: aid, network: 'Pepperjam', offerCount: count, hasPromoCodes: hasCodesMap[aid] || false });
         }
-        await pruneStaleRecords('Pepperjam', 'offers', Array.from(activeIds));
+        await safePrune('Pepperjam', 'offers', activeIds);
     } catch (e) {
         console.error('PJ offers err:', e.message);
     }
@@ -866,7 +887,7 @@ const syncPepperjamProducts = async () => {
             const aid = String(adv.id);
             await upsertAdvertiser({ id: adv.id, network: 'Pepperjam', productCount: productCounts[aid] || 0, saleProductCount: salesStats[aid] || 0, hasSaleItems: (salesStats[aid] || 0) > 0 });
         }
-        await pruneStaleRecords('Pepperjam', 'products', Array.from(activeIds));
+        await safePrune('Pepperjam', 'products', activeIds);
     } catch (e) { console.error('[Pepperjam] Product sync failed:', e.message); }
 };
 
