@@ -44,7 +44,7 @@
                 <% } %>
 
                     <div class="offer-content" style="display: flex; flex-direction: column; margin-top: 0; height: 100%;">
-                        <% if (offer.tagline) {
+                        <% if (offer.tagline && offer.tagline !== 'DEAL') {
                             const _displayTagline = offer.tagline === 'CODE' ? 'USE CODE' : offer.tagline;
                         %>
                             <span class="offer-tagline-badge"

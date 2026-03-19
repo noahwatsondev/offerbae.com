@@ -21,7 +21,22 @@ const MIN_PRUNE_THRESHOLD = { advertisers: 1, offers: 5, products: 5 };
 const safePrune = async (network, collection, activeIds) => {
     const threshold = MIN_PRUNE_THRESHOLD[collection] ?? 5;
     if (activeIds.size < threshold) {
-        console.warn(`[PRUNE SKIPPED] ${network}/${collection}: only ${activeIds.size} active IDs collected (threshold: ${threshold}). Skipping prune to prevent accidental mass-delete.`);
+        const msg = `[PRUNE SKIPPED] ${network}/${collection}: only ${activeIds.size} active IDs collected (threshold: ${threshold}). Skipping prune to prevent accidental mass-delete.`;
+        console.warn(msg);
+        try {
+            await firebaseConfig.db.collection('syncAlerts').add({
+                level: 'warning',
+                type: 'prune_skipped',
+                network,
+                collection,
+                activeIdCount: activeIds.size,
+                threshold,
+                message: msg,
+                createdAt: new Date()
+            });
+        } catch (e) {
+            console.error('Failed to save syncAlert to Firestore:', e);
+        }
         return;
     }
     console.log(`[PRUNE] ${network}/${collection}: pruning against ${activeIds.size} active IDs...`);

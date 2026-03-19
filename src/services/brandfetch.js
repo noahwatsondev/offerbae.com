@@ -59,7 +59,48 @@ const extractDomain = (url) => {
     }
 };
 
+const fetchBrandDetails = async (domain) => {
+    if (!domain) return { logoUrl: null, description: null };
+    let logoUrl = null;
+    let description = null;
+
+    if (config.brandfetch && config.brandfetch.apiKey) {
+        try {
+            const response = await axios.get(`https://api.brandfetch.io/v2/brands/${domain}`, {
+                headers: { 'Authorization': `Bearer ${config.brandfetch.apiKey}` },
+                timeout: 5000
+            });
+            if (response.data) {
+                if (response.data.logos && response.data.logos.length > 0) {
+                    const logo = response.data.logos.find(l => l.type === 'logo') || response.data.logos[0];
+                    const format = logo.formats && logo.formats[0];
+                    if (format) logoUrl = format.src;
+                }
+                if (response.data.description) {
+                    description = response.data.description;
+                }
+            }
+        } catch (error) { }
+    }
+
+    if (!logoUrl) {
+        try {
+            const cdnUrl = `https://cdn.brandfetch.io/${domain}`;
+            const response = await axios.head(cdnUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
+                timeout: 5000
+            });
+            if (response.status === 200 && response.headers['content-type']?.startsWith('image/')) {
+                logoUrl = cdnUrl;
+            }
+        } catch (error) {}
+    }
+
+    return { logoUrl, description };
+};
+
 module.exports = {
     fetchLogo,
+    fetchBrandDetails,
     extractDomain
 };

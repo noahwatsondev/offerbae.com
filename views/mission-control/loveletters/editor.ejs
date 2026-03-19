@@ -290,7 +290,16 @@
                     try {
                         const el = document.getElementById('article-content-data');
                         const val = el ? el.textContent.trim() : '{}';
-                        return (val && val !== '{}') ? JSON.parse(val) : {};
+                        let jsonData = (val && val !== '{}') ? JSON.parse(val) : {};
+                        if (jsonData.blocks) {
+                            jsonData.blocks.forEach(block => {
+                                if (block.type === 'paragraph' && typeof block.data?.text === 'string') {
+                                    // Highlight [EDITORIAL CREDIBILITY INSERT]
+                                    block.data.text = block.data.text.replace(/\[EDITORIAL CREDIBILITY INSERT[^\]]*\]/g, match => `<mark class="cdx-marker" style="background:#fef08a; padding:2px 4px; border-radius:4px; font-weight:800; color:#854d0e;">${match}</mark>`);
+                                }
+                            });
+                        }
+                        return jsonData;
                     } catch (e) {
                         console.error('Data parse error:', e);
                         return {};
