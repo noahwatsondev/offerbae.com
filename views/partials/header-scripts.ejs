@@ -14,6 +14,9 @@
         <meta property="og:url" content="<%= canonicalUrl %>" />
         <% } %>
 
+            <meta property="og:site_name" content="OfferBae" />
+            <meta property="og:type" content="<%= (typeof showProductDetails !== 'undefined' && showProductDetails) ? 'product' : 'website' %>" />
+
             <meta property="og:title" content="<%= finalOgTitle %>" />
             <meta name="twitter:title" content="<%= finalOgTitle %>" />
 

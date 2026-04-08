@@ -121,6 +121,10 @@ app.get('/robots.txt', (req, res) => {
     res.type('text/plain');
     res.send(`User-agent: *
 Allow: /
+Disallow: /mission-control
+Disallow: /mission-control/*
+Disallow: /api/
+Disallow: /update/
 Sitemap: https://offerbae.com/sitemap.xml`);
 });
 
@@ -1114,6 +1118,7 @@ app.get('/brands', populateSidebar, async (req, res) => {
             brandsDescription: "Explore our curated directory of premium brand partners.",
             showBrandsLink: false,
             metaTitle: 'Curated Partner Brands & Stores | OfferBae',
+            metaDescription: 'Browse our full directory of premium partner stores. Find promo codes, sale products, and exclusive deals from hundreds of top brands.',
             pageH1: "Curated Partner Brands & Stores",
             breadcrumbPath: [{ name: 'Brands', url: '/brands' }]
         });
@@ -1167,6 +1172,7 @@ app.get('/products', populateSidebar, async (req, res) => {
             showProductsFilters: true,
             showProductsPagination: true,
             metaTitle: 'Trending Products & Exclusive Discounts | OfferBae',
+            metaDescription: 'Shop trending products on sale from top brands. Discover the best deals, discount prices, and limited-time savings — updated daily.',
             pageH1: "Discounted Products & Deals",
             currentPage: page,
             limit,
@@ -1250,6 +1256,7 @@ app.get('/offers', populateSidebar, async (req, res) => {
             showOffersFilters: true,
             showOffersPagination: true,
             metaTitle: 'Latest Verified Promo Codes & Coupon Offers | OfferBae',
+            metaDescription: 'Find the latest verified promo codes and coupon offers from hundreds of top brands. Updated daily with active deals and exclusive discounts.',
             pageH1: "Latest Promo Codes & Coupon Offers",
             currentPage: page,
             limit,
@@ -1522,11 +1529,24 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
 
         const schema = {
             "@context": "https://schema.org",
-            "@type": "Organization",
+            "@type": "Store",
             "name": brand.name,
-            "url": `https://offerbae.com/brands/${brand.slug}`,
-            "logo": brand.logoUrl || "https://offerbae.com/favicon.png"
+            "url": brandData.manualHomeUrl || brandData.advertiserUrl || brandData.url || `https://offerbae.com/brands/${brand.slug}`,
+            "logo": brand.logoUrl || "https://offerbae.com/favicon.png",
+            "sameAs": `https://offerbae.com/brands/${brand.slug}`,
+            ...(brandData.manualDescription || brandData.description ? {
+                "description": (brandData.manualDescription || brandData.description).replace(/<[^>]+>/g, '').slice(0, 300)
+            } : {})
         };
+
+        const brandMetaDesc = (() => {
+            const desc = brandData.manualDescription || brandData.description;
+            if (desc) return desc.replace(/<[^>]+>/g, '').slice(0, 155);
+            const parts = [];
+            if (brand.productCount > 0) parts.push(`${brand.productCount} products`);
+            if (brand.offerCount > 0) parts.push(`${brand.offerCount} active deals`);
+            return `Shop ${brand.name} on OfferBae. ${parts.length ? 'Browse ' + parts.join(' and ') + '.' : 'Find promo codes and sale products.'} Updated ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`;
+        })();
 
         res.render('page', {
             schema,
@@ -1549,6 +1569,7 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             offersDescription: `Active promo codes and top deals from ${brand.name}.`,
             pageLogo: brand.logoUrl,
             metaTitle: `${brand.name} Promo Codes, Deals & Top Products | OfferBae`,
+            metaDescription: brandMetaDesc,
             pageH1: `${brand.name}`,
             pageH1Sub: "Explore Products & Offers",
             pageCategories: brand.categories,
@@ -2010,23 +2031,29 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
             console.error('Error fetching sidebar data for product:', sidebarErr);
         }
 
+        const productUrl = `https://offerbae.com/products/${brandSlug}/${productSlug}`;
         const schema = {
             "@context": "https://schema.org",
             "@type": "Product",
             "name": productDetails.name,
             "image": productDetails.imageUrl,
             "description": productDetails.description || `${productDetails.name} by ${productDetails.brandName}`,
+            "sku": productDetails.sku || productSlug,
+            "mpn": productDetails.sku || undefined,
+            "url": productUrl,
             "brand": {
                 "@type": "Brand",
                 "name": productDetails.brandName
             }
         };
         const price = parseFloat(productDetails.salePrice || productDetails.price) || 0;
+        const originalPrice = parseFloat(productDetails.price) || 0;
         if (price > 0) {
             schema.offers = {
                 "@type": "Offer",
-                "priceCurrency": "USD",
-                "price": price,
+                "url": productUrl,
+                "priceCurrency": productDetails.currency || "USD",
+                "price": price.toFixed(2),
                 "itemCondition": "https://schema.org/NewCondition",
                 "availability": "https://schema.org/InStock",
                 "seller": {
@@ -2034,11 +2061,33 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
                     "name": productDetails.brandName
                 }
             };
+            // Include original price as a high price if item is on sale
+            if (originalPrice > price) {
+                schema.offers["@type"] = "AggregateOffer";
+                schema.offers.lowPrice = price.toFixed(2);
+                schema.offers.highPrice = originalPrice.toFixed(2);
+                schema.offers.offerCount = 1;
+                delete schema.offers.price;
+            }
         }
+
+        const productMetaDesc = (() => {
+            const salePrice = parseFloat(productDetails.salePrice);
+            const origPrice = parseFloat(productDetails.price);
+            const hasSale = salePrice > 0 && salePrice < origPrice;
+            if (hasSale) {
+                const savings = (origPrice - salePrice).toFixed(2);
+                return `Buy ${productDetails.name} by ${productDetails.brandName} for $${salePrice.toFixed(2)} (save $${savings}). Shop now on OfferBae.`;
+            }
+            if (origPrice > 0) {
+                return `Buy ${productDetails.name} by ${productDetails.brandName} for $${origPrice.toFixed(2)}. Find the best deals and promo codes on OfferBae.`;
+            }
+            return `Discover ${productDetails.name} by ${productDetails.brandName}. Find deals, promo codes, and more on OfferBae.`;
+        })();
 
         res.render('page', {
             schema,
-            canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
+            canonicalUrl: productUrl,
             settings,
             productDetails,
             categories: finalCategories,
@@ -2048,6 +2097,7 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
             showProductDetails: true,
             pageLogo,
             metaTitle: `${productDetails.name} by ${productDetails.brandName} | Deals & Details | OfferBae`,
+            metaDescription: productMetaDesc,
             pageH1: productDetails.brandName,
             pageH1Sub: productDetails.name,
             breadcrumbPath: [
