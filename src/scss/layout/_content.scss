@@ -337,6 +337,39 @@
             margin-bottom: 0.15rem;
         }
 
+        .offer-tagline-pill {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0.18rem 0.55rem;
+            border-radius: 999px;
+            margin-bottom: 0.35rem;
+            line-height: 1.4;
+
+            &.offer-tag-savings {
+                background: #dcfce7;
+                color: #15803d;
+            }
+            &.offer-tag-shipping {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
+            &.offer-tag-bundle {
+                background: #fef9c3;
+                color: #a16207;
+            }
+            &.offer-tag-urgent {
+                background: #ffedd5;
+                color: #c2410c;
+            }
+            &.offer-tag-neutral {
+                background: #f3f4f6;
+                color: #6b7280;
+            }
+        }
+
         .offer-title {
             font-size: 0.95rem;
             font-weight: 700;

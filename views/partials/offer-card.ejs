@@ -48,6 +48,16 @@
                                 <div class="offer-brand">
                                     <%= offer.advertiser || offer.brandName || 'Brand Deal' %>
                                 </div>
+                                <% if (offer.tagline && offer.tagline !== 'DEAL') {
+                                    let _tagClass = 'offer-tag-neutral';
+                                    const _tl = offer.tagline;
+                                    if (/OFF$/.test(_tl)) _tagClass = 'offer-tag-savings';
+                                    else if (_tl === 'FREE SHIPPING') _tagClass = 'offer-tag-shipping';
+                                    else if (_tl === 'BOGO' || _tl === '2 FOR 1' || _tl === 'BUNDLE DEAL') _tagClass = 'offer-tag-bundle';
+                                    else if (_tl === 'LIMITED TIME' || _tl === 'CLEARANCE') _tagClass = 'offer-tag-urgent';
+                                %>
+                                    <span class="offer-tagline-pill <%= _tagClass %>"><%= offer.tagline %></span>
+                                <% } %>
                                 <h3 class="offer-title">
                                     <%= offer.description %>
                                 </h3>
