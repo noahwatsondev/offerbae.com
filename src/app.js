@@ -698,7 +698,8 @@ const populateSidebar = async (req, res, next) => {
                 brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null,
                 brandSlug: data.advertiserSlug || slugify(data.advertiser || data.advertiserName || ''),
                 expiresAt,
-                clickUrl: data.clickUrl || data.link
+                clickUrl: data.clickUrl || data.link,
+                tagline: data.tagline || generateOfferTagline({ ...data })
             };
         });
 
@@ -1507,7 +1508,8 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
                             brandLogo: brandLogoMap.get(offId || '') || data.logoUrl || null,
                             brandSlug: data.advertiserSlug || slugify(data.advertiser || data.advertiserName || ''),
                             expiresAt,
-                            clickUrl: data.clickUrl || data.link
+                            clickUrl: data.clickUrl || data.link,
+                            tagline: data.tagline || generateOfferTagline({ ...data })
                         };
                     });
                 }
@@ -1982,7 +1984,8 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
                             brandLogo: brandLogoMap.get(offId || '') || oData.logoUrl || null,
                             brandSlug: brandSlug,
                             expiresAt,
-                            clickUrl: oData.clickUrl || oData.link
+                            clickUrl: oData.clickUrl || oData.link,
+                            tagline: oData.tagline || generateOfferTagline({ ...oData })
                         };
                     });
                 }
