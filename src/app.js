@@ -6,10 +6,10 @@ const loveLettersController = require('./controllers/loveLettersController');
 const loveLettersService = require('./services/loveLettersService');
 const cron = require('node-cron');
 const dataSync = require('./services/dataSync');
-const { generateDailyLoveLetters } = require('./jobs/loveLetterGenerator');
+// Love letter auto-generation disabled — import removed
 const { upsertAdvertiser, upsertOffer, upsertProduct, getAdvertiser, getProduct, logSyncComplete, getSyncHistory,
-        getEnrichedAdvertisers, getGlobalSettings, getGlobalCategories, isRealCode, extractCodeFromDescription,
-        extractDiscountValue, slugify, generateOfferTagline } = require('./services/db');
+    getEnrichedAdvertisers, getGlobalSettings, getGlobalCategories, isRealCode, extractCodeFromDescription,
+    extractDiscountValue, slugify, generateOfferTagline } = require('./services/db');
 const firebaseAdmin = require('firebase-admin');
 const fs = require('fs');
 require('dotenv').config({ override: true });
@@ -130,53 +130,86 @@ app.get('/sitemap.xml', async (req, res) => {
         const firebase = require('./config/firebase');
         const db = firebase.db;
 
-        // Base static URLs
+        // --- Static / top-level pages ---
         const urls = [
             { loc: 'https://offerbae.com/', priority: '1.0', changefreq: 'daily' },
-            { loc: 'https://offerbae.com/fresh', priority: '1.0', changefreq: 'daily' },
             { loc: 'https://offerbae.com/brands', priority: '0.9', changefreq: 'daily' },
+            { loc: 'https://offerbae.com/products', priority: '0.9', changefreq: 'hourly' },
             { loc: 'https://offerbae.com/offers', priority: '0.9', changefreq: 'hourly' },
-            { loc: 'https://offerbae.com/products', priority: '0.8', changefreq: 'hourly' },
-            { loc: 'https://offerbae.com/categories', priority: '0.8', changefreq: 'daily' },
-            { loc: 'https://offerbae.com/how-we-review-deals', priority: '0.5', changefreq: 'monthly' },
-            { loc: 'https://offerbae.com/legal', priority: '0.5', changefreq: 'monthly' },
-            { loc: 'https://offerbae.com/privacy', priority: '0.5', changefreq: 'monthly' },
-            { loc: 'https://offerbae.com/terms', priority: '0.5', changefreq: 'monthly' }
+            { loc: 'https://offerbae.com/categories', priority: '0.8', changefreq: 'weekly' },
+            { loc: 'https://offerbae.com/loveletters', priority: '0.7', changefreq: 'weekly' },
+            { loc: 'https://offerbae.com/how-we-review-deals', priority: '0.4', changefreq: 'monthly' },
+            { loc: 'https://offerbae.com/legal', priority: '0.3', changefreq: 'monthly' },
+            { loc: 'https://offerbae.com/privacy', priority: '0.3', changefreq: 'monthly' },
+            { loc: 'https://offerbae.com/terms', priority: '0.3', changefreq: 'monthly' }
         ];
 
-        // Fetch valid Advertisers (Brands)
-        // We only want to list brands that have a slug and some offers/products
+        // --- Brands + per-brand product & offer pages ---
         const advSnapshot = await db.collection('advertisers').get();
-        const brandSlugs = new Set();
+
+        const categorySet = new Set();
+        const brandSlugs = [];
 
         advSnapshot.forEach(doc => {
             const data = doc.data();
-            if (data.slug && data.slug.length > 1 && (data.offerCount > 0 || data.productCount > 0)) {
-                brandSlugs.add(data.slug);
+            if (!data.slug || data.slug.length < 2) return;
+            const hasContent = (data.offerCount || 0) > 0 || (data.productCount || 0) > 0;
+            if (!hasContent) return;
+
+            const lastmod = data.updatedAt && data.updatedAt.toDate
+                ? data.updatedAt.toDate().toISOString()
+                : new Date().toISOString();
+
+            // /brands/:slug — hub page
+            urls.push({
+                loc: `https://offerbae.com/brands/${data.slug}`,
+                priority: '0.8',
+                changefreq: 'daily',
+                lastmod
+            });
+
+            // /products/:slug — brand product listing (HIGH SEO VALUE)
+            if ((data.productCount || 0) > 0) {
                 urls.push({
-                    loc: `https://offerbae.com/brands/${data.slug}`,
+                    loc: `https://offerbae.com/products/${data.slug}`,
                     priority: '0.8',
                     changefreq: 'daily',
-                    // Use updatedAt if available, otherwise default to current time
-                    lastmod: data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate().toISOString() : new Date().toISOString()
+                    lastmod
                 });
             }
-        });
 
-        // Add Categories (based on standard categories used in the DB)
-        // Since categories are dynamically extracted from brand data in the app,
-        // we can derive them from the fetched advertisers.
-        const categorySet = new Set();
-        advSnapshot.forEach(doc => {
-            const data = doc.data();
+            // /offers/:slug — brand deals page (HIGHEST SEO VALUE — "[brand] coupon code" queries)
+            if ((data.offerCount || 0) > 0) {
+                urls.push({
+                    loc: `https://offerbae.com/offers/${data.slug}`,
+                    priority: '0.9',
+                    changefreq: 'daily',
+                    lastmod
+                });
+            }
+
+            // Collect slugs for product-level queries
+            if ((data.productCount || 0) > 0) {
+                brandSlugs.push(data.slug);
+            }
+
+            // Collect categories
             if (data.primaryCategory && typeof data.primaryCategory === 'string') {
-                const parts = data.primaryCategory.split(/[\/>]/).map(p => p.trim());
+                const parts = data.primaryCategory.split(/[\/\>]/).map(p => p.trim());
                 if (parts[0] && parts[0].toLowerCase() !== 'uncategorized') {
                     categorySet.add(slugify(parts[0]));
                 }
             }
+            if (Array.isArray(data.categories)) {
+                data.categories.forEach(cat => {
+                    if (cat && cat.toLowerCase() !== 'uncategorized') {
+                        categorySet.add(slugify(cat));
+                    }
+                });
+            }
         });
 
+        // --- /categories/:slug ---
         for (const catSlug of categorySet) {
             urls.push({
                 loc: `https://offerbae.com/categories/${catSlug}`,
@@ -185,21 +218,60 @@ app.get('/sitemap.xml', async (req, res) => {
             });
         }
 
-        // Fetch Published Love Letters
-        const lettersSnapshot = await db.collection('love_letters').where('published', '==', true).get();
-        urls.push({ loc: 'https://offerbae.com/loveletters', priority: '0.9', changefreq: 'daily' });
+        // --- Individual product detail pages: /products/:brandSlug/:productSlug ---
+        // Only fetch products that have a slug (required for the route to work)
+        try {
+            const productsSnapshot = await db.collection('products')
+                .where('slug', '>=', '')
+                .select('slug', 'advertiserSlug', 'brandSlug', 'updatedAt')
+                .get();
 
-        lettersSnapshot.forEach(doc => {
-            const data = doc.data();
-            urls.push({
-                loc: `https://offerbae.com/loveletters/${data.slug}-${doc.id}`,
-                priority: '0.8',
-                changefreq: 'weekly',
-                lastmod: data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate().toISOString() : new Date().toISOString()
+            productsSnapshot.forEach(doc => {
+                const data = doc.data();
+                const prodSlug = data.slug;
+                const bSlug = data.brandSlug || data.advertiserSlug;
+                if (!prodSlug || !bSlug) return;
+
+                const lastmod = data.updatedAt && data.updatedAt.toDate
+                    ? data.updatedAt.toDate().toISOString()
+                    : new Date().toISOString();
+
+                urls.push({
+                    loc: `https://offerbae.com/products/${bSlug}/${prodSlug}`,
+                    priority: '0.7',
+                    changefreq: 'weekly',
+                    lastmod
+                });
             });
-        });
+        } catch (productErr) {
+            // Non-fatal: product pages omitted if query fails
+            console.warn('[SITEMAP] Could not fetch product slugs:', productErr.message);
+        }
 
-        // Build XML
+        // --- Published Love Letters ---
+        try {
+            const lettersSnapshot = await db.collection('love_letters')
+                .where('published', '==', true)
+                .get();
+
+            lettersSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (!data.slug) return;
+                const lastmod = data.updatedAt && data.updatedAt.toDate
+                    ? data.updatedAt.toDate().toISOString()
+                    : new Date().toISOString();
+                urls.push({
+                    loc: `https://offerbae.com/loveletters/${data.slug}-${doc.id}`,
+                    priority: '0.6',
+                    changefreq: 'monthly',
+                    lastmod
+                });
+            });
+        } catch (lettersErr) {
+            console.warn('[SITEMAP] Could not fetch love letters:', lettersErr.message);
+        }
+
+        // --- Build XML ---
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
         xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
@@ -215,6 +287,7 @@ app.get('/sitemap.xml', async (req, res) => {
         xml += '</urlset>';
 
         res.header('Content-Type', 'application/xml');
+        res.header('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
         res.send(xml);
     } catch (error) {
         console.error('Error generating sitemap:', error);
@@ -241,16 +314,16 @@ app.post('/api/loveletters/upload', loveLettersController.uploadMiddleware, love
 app.post('/api/loveletters/set-hero', express.json(), loveLettersController.apiSetHeroLetter);
 app.delete('/api/loveletters/:id', loveLettersController.apiDeleteArticle);
 
-// Automated Jobs
-app.get('/api/jobs/generate-love-letters', async (req, res) => {
-    try {
-        await generateDailyLoveLetters();
-        res.status(200).json({ success: true, message: "Love Letters generation process completed successfully. Check drafts." });
-    } catch (error) {
-        console.error('Trigger Error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+// Love letter generation endpoint disabled
+// app.get('/api/jobs/generate-love-letters', async (req, res) => {
+//     try {
+//         await generateDailyLoveLetters();
+//         res.status(200).json({ success: true, message: 'Love Letters generation completed. Check drafts.' });
+//     } catch (error) {
+//         console.error('Trigger Error:', error);
+//         res.status(500).json({ success: false, error: error.message });
+//     }
+// });
 
 // Auth middleware for sync-trigger and destructive admin routes.
 // Reads a shared secret from X-Sync-Token header or ?token= query param.
@@ -512,9 +585,31 @@ const getBrandBySlug = async (slug) => {
 };
 
 
+
 let sidebarCache = null;
 let sidebarCacheTime = 0;
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+// Per-brand in-memory cache for products + offers
+// Key: brandSlug, Value: { products, offers, brandData, cachedAt }
+const brandDataCache = new Map();
+const BRAND_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+function getBrandCache(slug) {
+    const entry = brandDataCache.get(slug);
+    if (entry && Date.now() - entry.cachedAt < BRAND_CACHE_TTL) return entry;
+    return null;
+}
+
+function setBrandCache(slug, data) {
+    brandDataCache.set(slug, { ...data, cachedAt: Date.now() });
+    // Prevent unbounded growth — evict oldest entry if over 200 brands cached
+    if (brandDataCache.size > 200) {
+        const oldestKey = brandDataCache.keys().next().value;
+        brandDataCache.delete(oldestKey);
+    }
+}
+
 
 const populateSidebar = async (req, res, next) => {
     try {
@@ -1194,99 +1289,125 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
         const firebase = require('./config/firebase');
         const db = firebase.db;
 
-        // 1. Fetch Advertiser by Slug
-        const advSnapshot = await db.collection('advertisers')
-            .where('slug', '==', slug)
-            .limit(1)
-            .get();
+        // Search / filter params from the search bar form
+        const searchQuery = (req.query.bq || '').toLowerCase().trim();
+        const searchType = req.query.type || 'all'; // 'all' | 'products' | 'offers'
+        const searchOnSale = false;
+        const searchHasCode = false;
 
-        if (advSnapshot.empty) {
-            return res.status(404).render('404', { message: 'Brand not found' });
+        // Brand data — check cache first, fall back to Firestore
+        let brand, brandData, offers, allProducts;
+        const cached = getBrandCache(slug);
+
+        if (cached) {
+            ({ brand, brandData, offers, allProducts } = cached);
+        } else {
+            // Fetch Advertiser by Slug
+            const advSnapshot = await db.collection('advertisers')
+                .where('slug', '==', slug)
+                .limit(1)
+                .get();
+
+            if (advSnapshot.empty) {
+                return res.status(404).render('404', { message: 'Brand not found' });
+            }
+
+            const brandDoc = advSnapshot.docs[0];
+            brandData = brandDoc.data();
+            const brandId = (brandData.id || brandData.advertiserId || brandData.data_id || (brandData.raw_data && brandData.raw_data.id))?.toString();
+
+            const finalCategoriesForBrand = await getGlobalCategories();
+
+            brand = {
+                name: brandData.name,
+                slug: brandData.slug,
+                logoUrl: brandData.storageLogoUrl || brandData.logoUrl || (brandData.raw_data && brandData.raw_data.logoUrl),
+                categories: (brandData.categories || []).map(catName => {
+                    const found = finalCategoriesForBrand.find(c => c.name.toLowerCase() === catName.toLowerCase());
+                    return {
+                        name: catName,
+                        slug: found ? found.slug : catName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '')
+                    };
+                })
+            };
+
+            // Fetch Offers + Products in parallel
+            const [offersSnapshot, productsSnapshot] = await Promise.all([
+                db.collection('offers').where('advertiserId', '==', brandId).get(),
+                db.collection('products').where('advertiserId', '==', brandId).get()
+            ]);
+
+            offers = offersSnapshot.docs.map(doc => {
+                const data = doc.data();
+                let expiresAt = 'Ongoing';
+                if (data.endDate) {
+                    try {
+                        const date = new Date(data.endDate);
+                        if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
+                    } catch (e) { }
+                }
+                const extractedCode = !isRealCode(data.code) ? extractCodeFromDescription(data.description) : null;
+                const resolvedCode = isRealCode(data.code) ? data.code : extractedCode;
+                return {
+                    ...data,
+                    id: doc.id,
+                    expiresAt,
+                    code: resolvedCode || data.code,
+                    isPromoCode: isRealCode(resolvedCode),
+                    brandSlug: brand.slug,
+                    brandLogo: brand.logoUrl,
+                    discountBadge: isRealCode(resolvedCode) ? 'CODE' : (data.description?.match(/(\d+%)|(\.\$\d+)/)?.[0] || 'DEAL')
+                };
+            });
+
+            allProducts = productsSnapshot.docs.map(doc => mapProductDoc(doc, { brandSlug: brand.slug }));
+
+            // Sort: on-sale first (most savings), then regular items
+            allProducts.sort((a, b) => {
+                const aSalePrice = Number(a.salePrice || 0);
+                const aOriginalPrice = Number(a.price || 0);
+                const bSalePrice = Number(b.salePrice || 0);
+                const bOriginalPrice = Number(b.price || 0);
+                const aIsSale = aSalePrice > 0 && aSalePrice < aOriginalPrice;
+                const bIsSale = bSalePrice > 0 && bSalePrice < bOriginalPrice;
+                if (aIsSale && !bIsSale) return -1;
+                if (!aIsSale && bIsSale) return 1;
+                if (aIsSale && bIsSale) return (bOriginalPrice - bSalePrice) - (aOriginalPrice - aSalePrice);
+                return 0;
+            });
+
+            // Cache for subsequent searches
+            setBrandCache(slug, { brand, brandData, offers, allProducts });
         }
 
-        const brandDoc = advSnapshot.docs[0];
-        const brandData = brandDoc.data();
+        const finalCategories = await getGlobalCategories();
         const brandId = (brandData.id || brandData.advertiserId || brandData.data_id || (brandData.raw_data && brandData.raw_data.id))?.toString();
 
-        const finalCategories = await getGlobalCategories();
+        // Apply search filters to products
+        const filteredProducts = (searchType === 'offers') ? [] : allProducts.filter(p => {
+            if (searchQuery && !p.name?.toLowerCase().includes(searchQuery)) return false;
 
-        const brand = {
-            name: brandData.name,
-            slug: brandData.slug,
-            logoUrl: brandData.storageLogoUrl || brandData.logoUrl || (brandData.raw_data && brandData.raw_data.logoUrl),
-            categories: (brandData.categories || []).map(catName => {
-                const found = finalCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
-                return {
-                    name: catName,
-                    slug: found ? found.slug : catName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '')
-                };
-            })
-        };
-
-        // 2. Fetch Offers for this Brand
-        const offersSnapshot = await db.collection('offers')
-            .where('advertiserId', '==', brandId)
-            .get();
-
-        const offers = offersSnapshot.docs.map(doc => {
-            const data = doc.data();
-            let expiresAt = 'Ongoing';
-            if (data.endDate) {
-                try {
-                    const date = new Date(data.endDate);
-                    if (!isNaN(date.getTime())) expiresAt = date.toLocaleDateString();
-                } catch (e) { }
-            }
-            const extractedCode = !isRealCode(data.code) ? extractCodeFromDescription(data.description) : null;
-            const resolvedCode = isRealCode(data.code) ? data.code : extractedCode;
-            return {
-                ...data,
-                id: doc.id,
-                expiresAt,
-                code: resolvedCode || data.code,
-                isPromoCode: isRealCode(resolvedCode),
-                brandSlug: brand.slug,
-                brandLogo: brand.logoUrl,
-                discountBadge: isRealCode(resolvedCode) ? 'CODE' : (data.description?.match(/(\d+%)|(\\$\d+)/)?.[0] || 'DEAL')
-            };
+            return true;
         });
 
-        // 3. Fetch Products for this Brand
-        const productsSnapshot = await db.collection('products')
-            .where('advertiserId', '==', brandId)
-            .get();
+        // Apply search filters to offers
+        const filteredOffers = (searchType === 'products') ? [] : offers.filter(o => {
+            if (searchQuery && !o.description?.toLowerCase().includes(searchQuery) && !o.code?.toLowerCase().includes(searchQuery)) return false;
 
-        const allProducts = productsSnapshot.docs.map(doc => mapProductDoc(doc, { brandSlug: brand.slug }));
-
-        // Sort: On-sale first (by most savings amount to least), then regular priced items
-        allProducts.sort((a, b) => {
-            const aSalePrice = Number(a.salePrice || 0);
-            const aOriginalPrice = Number(a.price || 0);
-            const bSalePrice = Number(b.salePrice || 0);
-            const bOriginalPrice = Number(b.price || 0);
-
-            const aIsSale = aSalePrice > 0 && aSalePrice < aOriginalPrice;
-            const bIsSale = bSalePrice > 0 && bSalePrice < bOriginalPrice;
-
-            if (aIsSale && !bIsSale) return -1;
-            if (!aIsSale && bIsSale) return 1;
-
-            // Both are sale items, sort by savings descending
-            if (aIsSale && bIsSale) {
-                const aSavings = aOriginalPrice - aSalePrice;
-                const bSavings = bOriginalPrice - bSalePrice;
-                return bSavings - aSavings;
-            }
-
-            return 0;
+            return true;
         });
+
+        const isSearchActive = !!(searchQuery || searchType !== 'all');
+        const displayProducts = isSearchActive ? filteredProducts : allProducts;
+        const displayOffers = isSearchActive ? filteredOffers : offers;
+        const searchTotal = filteredProducts.length + filteredOffers.length;
 
         const page = parseInt(req.query.page) || 1;
         const limit = 100;
         const offset = (page - 1) * limit;
-        const products = allProducts.slice(offset, offset + limit);
-        const hasMore = allProducts.length > offset + limit;
-        const totalPages = Math.ceil(allProducts.length / limit);
+        const products = displayProducts.slice(offset, offset + limit);
+        const hasMore = displayProducts.length > offset + limit;
+        const totalPages = Math.ceil(displayProducts.length / limit);
 
         const isCouponRoute = req.path.startsWith('/coupons');
 
@@ -1296,7 +1417,7 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
 
         const pageH1Sub = isCouponRoute
             ? "Verified Offers & Deals"
-            : "Explore Products & Offers";
+            : "Products & Offers";
 
         // Setup similar brands sidebar
         try {
@@ -1412,7 +1533,7 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             canonicalUrl: 'https://offerbae.com' + (req.path === '/' ? '' : req.path),
             settings,
             brand,
-            offers,
+            offers: isSearchActive ? displayOffers : offers,
             products,
             categories: finalCategories,
             showBrands: false,
@@ -1422,7 +1543,7 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             limit,
             hasMore,
             totalPages,
-            showOffers: offers.length > 0,
+            showOffers: (isSearchActive ? displayOffers : offers).length > 0,
             productsH2: "Top Products",
             offersH2: "Partner Perks",
             offersDescription: `Active promo codes and top deals from ${brand.name}.`,
@@ -1436,7 +1557,13 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
             breadcrumbPath: [
                 { name: 'Brands', url: '/brands' },
                 { name: brand.name, url: `/brands/${brand.slug}` }
-            ]
+            ],
+            // Search state — passed to section-brand-search.ejs to pre-fill the form
+            searchQuery,
+            searchType,
+            searchOnSale,
+            searchHasCode,
+            searchTotal
         });
     } catch (err) {
         console.error('Error resolving brand hub:', err);
@@ -1444,6 +1571,80 @@ app.get('/brands/:slug', populateSidebar, async (req, res) => {
     }
 });
 
+
+// Brand search API — returns all products + offers for client-side filtering on brand page
+app.get('/api/brands/:slug/search', async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const q = (req.query.q || '').toLowerCase().trim();
+        const type = req.query.type || 'all'; // 'products' | 'offers' | 'all'
+        const hasCode = req.query.hasCode === '1';
+        const onSale = req.query.onSale === '1';
+
+        const firebase = require('./config/firebase');
+        const db = firebase.db;
+
+        const advSnap = await db.collection('advertisers').where('slug', '==', slug).limit(1).get();
+        if (advSnap.empty) return res.status(404).json({ products: [], offers: [] });
+
+        const brandData = advSnap.docs[0].data();
+        const brandId = (brandData.id || brandData.advertiserId || (brandData.raw_data && brandData.raw_data.id))?.toString();
+        const brandSlug = brandData.slug;
+        const brandLogo = brandData.storageLogoUrl || brandData.logoUrl || null;
+
+        let products = [];
+        let offers = [];
+
+        if (type !== 'offers') {
+            const prodSnap = await db.collection('products').where('advertiserId', '==', brandId).get();
+            products = prodSnap.docs.map(doc => mapProductDoc(doc, { brandSlug })).filter(p => {
+                if (q && !p.name?.toLowerCase().includes(q)) return false;
+                if (onSale && !(Number(p.salePrice) > 0 && Number(p.salePrice) < Number(p.price))) return false;
+                return true;
+            });
+            // Sort: sale first, then by savings desc
+            products.sort((a, b) => {
+                const aIsSale = Number(a.salePrice) > 0 && Number(a.salePrice) < Number(a.price);
+                const bIsSale = Number(b.salePrice) > 0 && Number(b.salePrice) < Number(b.price);
+                if (aIsSale && !bIsSale) return -1;
+                if (!aIsSale && bIsSale) return 1;
+                if (aIsSale && bIsSale) return (Number(b.price) - Number(b.salePrice)) - (Number(a.price) - Number(a.salePrice));
+                return 0;
+            });
+        }
+
+        if (type !== 'products') {
+            const offerSnap = await db.collection('offers').where('advertiserId', '==', brandId).get();
+            offers = offerSnap.docs.map(doc => {
+                const data = doc.data();
+                let expiresAt = 'Ongoing';
+                if (data.endDate) {
+                    try { const d = new Date(data.endDate); if (!isNaN(d)) expiresAt = d.toLocaleDateString(); } catch (e) { }
+                }
+                const resolvedCode = isRealCode(data.code) ? data.code : extractCodeFromDescription(data.description);
+                return {
+                    ...data,
+                    id: doc.id,
+                    expiresAt,
+                    code: resolvedCode || data.code,
+                    isPromoCode: isRealCode(resolvedCode),
+                    brandSlug,
+                    brandLogo,
+                    tagline: data.tagline || null
+                };
+            }).filter(o => {
+                if (q && !o.description?.toLowerCase().includes(q) && !o.code?.toLowerCase().includes(q)) return false;
+                if (hasCode && !o.isPromoCode) return false;
+                return true;
+            });
+        }
+
+        res.json({ products, offers, total: products.length + offers.length });
+    } catch (err) {
+        console.error('Brand search API error:', err);
+        res.status(500).json({ products: [], offers: [], error: err.message });
+    }
+});
 
 // Products page for a brand — /products/:brandSlug
 // Shows only products for that brand; links to /offers/:brandSlug for coupons
@@ -2330,11 +2531,7 @@ initializeApp().then(() => {
         dataSync.syncAll();
     });
 
-    // Run the Love Letter generator once a day at 12:00 PM (Noon)
-    cron.schedule('0 12 * * *', () => {
-        console.log('Running scheduled Love Letter generation (Noon)...');
-        generateDailyLoveLetters().catch(console.error);
-    });
+    // Love letter auto-generation cron disabled
 
     app.listen(config.port, () => {
         console.log(`Server running at http://localhost:${config.port}`);

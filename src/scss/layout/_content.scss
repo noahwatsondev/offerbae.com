@@ -57,10 +57,11 @@
 
     .product-image-container {
         width: 100%;
+        aspect-ratio: 4/3;
         background: #fff;
         overflow: hidden;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: center;
 
         img {
@@ -140,8 +141,30 @@
         .product-savings {
             font-size: 0.8rem;
             font-weight: 700;
-            color: var(--color-green, #10b981); // Green for savings
+            color: var(--color-green, #10b981);
             margin-top: 2px;
+        }
+
+        .product-cta {
+            margin-top: 0.65rem;
+        }
+
+        .product-shop-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 0.45rem 0;
+            background: $primary-color;
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border-radius: 8px;
+            letter-spacing: 0.02em;
+            transition: background 0.15s, transform 0.1s;
+
+            &:hover {
+                background: color-mix(in srgb, $primary-color, black 12%);
+            }
         }
 
     }
@@ -876,10 +899,10 @@
                         align-items: center;
                         justify-content: flex-end;
                         min-height: 60px;
-                        align-content: start; // Rows sit at top; min-height keeps consistent card height
+                        align-content: start;
 
                         .stat-row {
-                            display: contents; // Flatten into parent grid so columns share widths
+                            display: contents;
                         }
 
                         .stat-divider {
@@ -913,16 +936,14 @@
 
                             .sale-label {
                                 color: var(--color-red, #ef4444);
-                                font-weight: 700;
+                                font-weight: 600;
                                 font-size: 0.75rem;
-                                font-style: italic;
                             }
 
                             .codes-label {
                                 color: var(--color-green, #22c55e);
-                                font-weight: 700;
+                                font-weight: 600;
                                 font-size: 0.75rem;
-                                font-style: italic;
                             }
                         }
                     }
@@ -934,8 +955,23 @@
                         gap: 6px;
                         margin-top: 1rem;
                         align-items: flex-start;
+                    }
+                }
 
+                .brand-shop-cta {
+                    grid-row: 3;
+                    grid-column: 1 / span 2;
+                    padding: 0.6rem 1.25rem;
+                    margin-top: 0.25rem;
+                    border-top: 1px solid rgba(0,0,0,0.06);
+                    font-size: 0.82rem;
+                    font-weight: 700;
+                    color: $primary-color;
+                    letter-spacing: 0.01em;
+                    transition: color 0.15s;
 
+                    &:hover {
+                        color: color-mix(in srgb, $primary-color, black 15%);
                     }
                 }
             }

@@ -14,7 +14,13 @@
                                 </span>
                                 <% } %>
                                     <span>
-                                        <%= typeof pageH1 !='undefined' ? pageH1 : '' %>
+                                        <% if (typeof brandWebsiteUrl !='undefined' && brandWebsiteUrl) { %>
+                                            <a href="<%= brandWebsiteUrl %>" target="_blank" style="text-decoration: none; color: inherit;">
+                                                <%= typeof pageH1 !='undefined' ? pageH1 : '' %>
+                                            </a>
+                                        <% } else { %>
+                                            <%= typeof pageH1 !='undefined' ? pageH1 : '' %>
+                                        <% } %>
                                     </span>
                         </span>
                         <span
@@ -34,8 +40,13 @@
                                     </div>
                                     <% } %>
                                         <h1 class="page-title">
-                                            <%= typeof pageH1 !='undefined' ? pageH1
-                                                : 'Exclusive Products and Savings from the Hottest Online Brands' %>
+                                            <% if (typeof brandWebsiteUrl !='undefined' && brandWebsiteUrl) { %>
+                                                <a href="<%= brandWebsiteUrl %>" target="_blank" style="text-decoration: none; color: inherit;">
+                                                    <%= typeof pageH1 !='undefined' ? pageH1 : 'Exclusive Products and Savings from the Hottest Online Brands' %>
+                                                </a>
+                                            <% } else { %>
+                                                <%= typeof pageH1 !='undefined' ? pageH1 : 'Exclusive Products and Savings from the Hottest Online Brands' %>
+                                            <% } %>
                                         </h1>
                             </div>
                             <% } %>
@@ -53,22 +64,18 @@
                                     </div>
                                     <% } %>
 
+                                    <% if (typeof brand !== 'undefined' && brand && ((typeof showProducts !== 'undefined' && showProducts) || (typeof showOffers !== 'undefined' && showOffers))) { %>
+                                        <%- include('section-brand-search') %>
+                                    <% } %>
+
                                         <% if (typeof brandDescription !='undefined' && brandDescription) { %>
                                             <div class="brand-description-guide"
-                                                style="max-width: 800px; color: #4b5563; font-weight: bold;font-size: 1.05rem; line-height: 1.7;">
+                                                style="color: #4b5563; font-weight: bold;font-size: 1.05rem; line-height: 1.7;">
                                                 <%- brandDescription %>
                                             </div>
                                             <% } %>
 
-                                                <% if (typeof brandWebsiteUrl !='undefined' && brandWebsiteUrl) { %>
-                                                    <div>
-                                                        <a href="<%= brandWebsiteUrl %>" target="_blank"
-                                                            class="context-link-cta">
-                                                            Visit the <%= typeof brand !='undefined' ? brand.name
-                                                                : 'Brand' %> Website
-                                                        </a>
-                                                    </div>
-                                                    <% } %>
+
 
                                                         <% if (typeof contextLink !='undefined' && contextLink) { %>
                                                             <div>

@@ -36,11 +36,9 @@
                                     <span class="original-price">$<%= originalPrice.toFixed(2) %></span>
                                     <% } %>
                             </div>
-                            <% if (hasDiscount) { %>
-                                <div class="product-savings">
-                                    Save $<%= (originalPrice - salePrice).toFixed(2) %>!
-                                </div>
-                                <% } %>
+                            <div class="product-cta">
+                                <span class="product-shop-btn">Shop Now →</span>
+                            </div>
                         </div>
         </article>
     </a>
