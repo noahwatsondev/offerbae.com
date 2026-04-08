@@ -921,33 +921,26 @@ h2 {
 }
 .offer-card .offer-content .offer-tagline-pill {
   display: inline-block;
-  font-size: 0.65rem;
+  font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 0.18rem 0.55rem;
-  border-radius: 999px;
-  margin-bottom: 0.35rem;
-  line-height: 1.4;
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
 }
 .offer-card .offer-content .offer-tagline-pill.offer-tag-savings {
-  background: #dcfce7;
   color: #15803d;
 }
 .offer-card .offer-content .offer-tagline-pill.offer-tag-shipping {
-  background: #dbeafe;
   color: #1d4ed8;
 }
 .offer-card .offer-content .offer-tagline-pill.offer-tag-bundle {
-  background: #fef9c3;
   color: #a16207;
 }
 .offer-card .offer-content .offer-tagline-pill.offer-tag-urgent {
-  background: #ffedd5;
   color: #c2410c;
 }
 .offer-card .offer-content .offer-tagline-pill.offer-tag-neutral {
-  background: #f3f4f6;
   color: #6b7280;
 }
 .offer-card .offer-content .offer-title {
