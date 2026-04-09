@@ -115,7 +115,7 @@
             <% } %>
 
             <!-- ZONE 3: Related Products -->
-            <% const _relatedProds = (typeof sidebarData !== 'undefined' && sidebarData.newestProducts && sidebarData.newestProducts.length > 0) ? sidebarData.newestProducts : []; %>
+            <% const _relatedProds = (typeof relatedProducts !== 'undefined' && relatedProducts && relatedProducts.length > 0) ? relatedProducts : []; %>
             <% if (_relatedProds.length > 0) { %>
                 <div class="pdp-related">
                     <h2 class="pdp-section-heading">More from <%= productDetails.brandName %></h2>

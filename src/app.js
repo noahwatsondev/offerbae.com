@@ -1956,9 +1956,9 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
         const finalCategories = await getGlobalCategories();
 
         // SETUP DYNAMIC SIDEBAR
+        let similarBrandProducts = []; // hoisted so it's in scope at render
         try {
             let offers = [];
-            let similarBrandProducts = [];
 
             if (brandId) {
                 // 1. Fetch Offers
@@ -2027,7 +2027,7 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
 
             res.locals.sidebarData = {
                 newestBrands: [],
-                newestProducts: similarBrandProducts,
+                newestProducts: [], // products live in main content, not duplicated in sidebar
                 newestOffers: offers,
                 mainTitle: `More from ${finalBrandName}`,
                 productsTitle: `More ${finalBrandName} Products`,
@@ -2097,6 +2097,7 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
             canonicalUrl: productUrl,
             settings,
             productDetails,
+            relatedProducts: similarBrandProducts,
             categories: finalCategories,
             showBrands: false,
             showProducts: false,
