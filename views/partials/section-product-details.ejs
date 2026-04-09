@@ -2,12 +2,11 @@
     <div class="product-details-container">
         <% if (typeof productDetails !='undefined' && productDetails) { %>
 
-            <%-- ══════════════════════════════════════════════
-                 ZONE 1 — Image + Price + Buy + Description
-                 ══════════════════════════════════════════════ --%>
+            <!-- ZONE 1: Image + Price + Buy + Description -->
+
             <div class="product-body">
 
-                <%-- Image --%>
+                <!-- Image -->
                 <div class="pdp-image-col">
                     <div class="pdp-image-wrap">
                         <% if (typeof productDetails.discountPercent !== 'undefined' && productDetails.discountPercent > 0) { %>
@@ -20,10 +19,10 @@
                     </div>
                 </div>
 
-                <%-- Info column --%>
+                
                 <div class="pdp-info-col">
 
-                    <%-- Pricing --%>
+                    
                     <% const _orig = Number(productDetails.price || 0);
                        const _sale = Number(productDetails.salePrice || 0);
                        const _hasDeal = _orig > _sale && _sale > 0;
@@ -36,13 +35,13 @@
                         <% } %>
                     </div>
 
-                    <%-- CTA --%>
+                    
                     <a href="<%= productDetails.link || '#' %>" target="_blank" rel="noopener noreferrer"
                         class="btn-primary pdp-cta">
                         Shop Now &rarr;
                     </a>
 
-                    <%-- Active offers stripe for this brand --%>
+                    
                     <% const _pdpOffers = (typeof sidebarData !== 'undefined' && sidebarData.newestOffers) ? sidebarData.newestOffers : []; %>
                     <% if (_pdpOffers.length > 0) { %>
                         <div class="pdp-offers-stripe">
@@ -67,7 +66,7 @@
                         </div>
                     <% } %>
 
-                    <%-- Product description --%>
+                    
                     <% if (productDetails.description) { %>
                         <div class="pdp-description">
                             <h2 class="pdp-section-heading">About this item</h2>
@@ -75,7 +74,7 @@
                         </div>
                     <% } %>
 
-                    <%-- ── Key Details Grid ── --%>
+                    
                     <div class="pdp-details-grid">
                         <h2 class="pdp-section-heading">Product details</h2>
                         <dl class="pdp-details-dl">
@@ -118,12 +117,10 @@
                         </dl>
                     </div>
 
-                </div><%-- /pdp-info-col --%>
-            </div><%-- /product-body --%>
+                </div>
+            </div>
 
-            <%-- ══════════════════════════════════════════════
-                 ZONE 2 — Brand Description
-                 ══════════════════════════════════════════════ --%>
+            <!-- ZONE 2: Brand Description -->
             <% if (typeof brandDescription !== 'undefined' && brandDescription) { %>
                 <div class="pdp-brand-about">
                     <h2 class="pdp-section-heading">About <%= productDetails.brandName %></h2>
@@ -141,9 +138,7 @@
                 </div>
             <% } %>
 
-            <%-- ══════════════════════════════════════════════
-                 ZONE 3 — More from this brand (related products)
-                 ══════════════════════════════════════════════ --%>
+            <!-- ZONE 3: Related Products -->
             <% const _relatedProds = (typeof sidebarData !== 'undefined' && sidebarData.newestProducts && sidebarData.newestProducts.length > 0) ? sidebarData.newestProducts : []; %>
             <% if (_relatedProds.length > 0) { %>
                 <div class="pdp-related">
