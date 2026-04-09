@@ -68,7 +68,7 @@
                                         <%- include('section-brand-search') %>
                                     <% } %>
 
-                                        <% if (typeof brandDescription !='undefined' && brandDescription) { %>
+                                        <% if (typeof brandDescription !='undefined' && brandDescription && !(typeof showProductDetails !== 'undefined' && showProductDetails)) { %>
                                             <div class="brand-description-guide"
                                                 style="color: #4b5563; font-weight: bold;font-size: 1.05rem; line-height: 1.7;">
                                                 <%- brandDescription %>
