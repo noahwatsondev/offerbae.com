@@ -1732,9 +1732,8 @@ h2 {
   border-radius: 12px;
   display: grid;
   grid-template-columns: 80px 1fr;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   flex: 1;
-  padding: 0 1.25rem 1.25rem 0;
   gap: 1.25rem;
   box-sizing: border-box;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
@@ -1780,6 +1779,7 @@ h2 {
   font-size: 1.15rem;
   line-height: 1.2;
   align-self: center;
+  margin-top: 8px;
 }
 .content .content-section .brand-grid .brand-card .brand-meta {
   grid-row: 2;
@@ -1844,22 +1844,8 @@ h2 {
   gap: 6px;
   margin-top: 1rem;
   align-items: flex-start;
-  min-height: 3rem; /* Ensures consistent spacing even with no categories */
-}
-.content .content-section .brand-grid .brand-card .brand-shop-cta {
-  grid-row: 3;
-  grid-column: 1/span 2;
-  padding: 0.6rem 1.25rem;
-  margin-top: 0.25rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--primary-color);
-  letter-spacing: 0.01em;
-  transition: color 0.15s;
-}
-.content .content-section .brand-grid .brand-card .brand-shop-cta:hover {
-  color: color-mix(in srgb, var(--primary-color), black 15%);
+  min-height: 3rem;
+  /* Ensures consistent spacing even with no categories */
 }
 @media (max-width: 768px) {
   .content .content-section .brand-grid {
