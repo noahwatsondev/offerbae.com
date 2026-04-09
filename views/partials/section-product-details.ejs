@@ -41,32 +41,8 @@
                         Shop Now &rarr;
                     </a>
 
-                    
-                    <% const _pdpOffers = (typeof sidebarData !== 'undefined' && sidebarData.newestOffers) ? sidebarData.newestOffers : []; %>
-                    <% if (_pdpOffers.length > 0) { %>
-                        <div class="pdp-offers-stripe">
-                            <div class="pdp-offers-label">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.91 8.84 8.56 2.23a1.93 1.93 0 0 0-1.81 0L3.1 4.13a2.12 2.12 0 0 0-.05 3.69l12.22 6.73a1.47 1.47 0 0 0 1.39 0l3.7-2.04a2.12 2.12 0 0 0 .55-3.67z"/><path d="m3 13 13.5 7.7a2 2 0 0 0 1.8 0L21 19"/></svg>
-                                Active deals for this brand
-                            </div>
-                            <div class="pdp-offers-chips">
-                                <% _pdpOffers.slice(0, 5).forEach(function(o) { %>
-                                    <a href="<%= o.clickUrl || '#' %>" target="_blank" rel="noopener noreferrer"
-                                       class="pdp-offer-chip<%= o.isPromoCode ? ' has-code' : '' %>">
-                                        <% if (o.isPromoCode && o.code && o.code !== 'N/A') { %>
-                                            <span class="chip-code"><%= o.code %></span>
-                                        <% } %>
-                                        <span class="chip-desc"><%= (o.description || '').substring(0, 48) %><%= (o.description || '').length > 48 ? '…' : '' %></span>
-                                    </a>
-                                <% }); %>
-                                <% if (typeof brandSlug !== 'undefined' && brandSlug) { %>
-                                    <a href="/offers/<%= productDetails.brandSlug || brandSlug %>" class="pdp-offer-see-all">All deals &rarr;</a>
-                                <% } %>
-                            </div>
-                        </div>
-                    <% } %>
 
-                    
+
                     <% if (productDetails.description) { %>
                         <div class="pdp-description">
                             <h2 class="pdp-section-heading">About this item</h2>
