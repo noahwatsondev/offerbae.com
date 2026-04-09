@@ -1732,7 +1732,7 @@ h2 {
   border-radius: 12px;
   display: grid;
   grid-template-columns: 80px 1fr;
-  grid-template-rows: min-content auto;
+  grid-template-rows: auto 1fr auto;
   flex: 1;
   padding: 0 1.25rem 1.25rem 0;
   gap: 1.25rem;
@@ -1844,6 +1844,7 @@ h2 {
   gap: 6px;
   margin-top: 1rem;
   align-items: flex-start;
+  min-height: 3rem; /* Ensures consistent spacing even with no categories */
 }
 .content .content-section .brand-grid .brand-card .brand-shop-cta {
   grid-row: 3;
