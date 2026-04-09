@@ -119,7 +119,7 @@
             <% if (_relatedProds.length > 0) { %>
                 <div class="pdp-related">
                     <h2 class="pdp-section-heading">More from <%= productDetails.brandName %></h2>
-                    <div class="pdp-related-scroll">
+                    <div class="pdp-related-grid">
                         <% _relatedProds.forEach(function(p) {
                             const _rOrig = Number(p.price || 0);
                             const _rSale = Number(p.salePrice || 0);

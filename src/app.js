@@ -2011,7 +2011,7 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
                         return { ...p, matchCount };
                     })
                     .sort((a, b) => b.matchCount - a.matchCount || Math.random() - 0.5)
-                    .slice(0, 5)
+                    .slice(0, 12)
                     .map(pData => ({
                         id: pData.id,
                         name: pData.name,
