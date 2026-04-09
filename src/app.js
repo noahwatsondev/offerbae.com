@@ -1940,6 +1940,10 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
             pageLogo = advData.storageLogoUrl || advData.logoUrl || (advData.raw_data && advData.raw_data.logoUrl);
             finalBrandName = advData.name || finalBrandName;
             brandId = (advData.id || advData.advertiserId || advData.data_id || (advData.raw_data && advData.raw_data.id))?.toString();
+            // Capture brand extras for PDP enrichment
+            var brandDescription = advData.manualDescription || advData.description || advData.savingsGuide || null;
+            var brandWebsiteUrl = advData.manualHomeUrl || advData.advertiserUrl || advData.url || (advData.raw_data && advData.raw_data.advertiserUrl) || null;
+            var brandNetwork = advData.network || (advData.raw_data && advData.raw_data.network) || null;
         }
 
         const productDetails = {
@@ -2099,6 +2103,9 @@ app.get('/products/:brandSlug/:productSlug', populateSidebar, async (req, res) =
             showOffers: false,
             showProductDetails: true,
             pageLogo,
+            brandDescription: brandDescription || null,
+            brandWebsiteUrl: brandWebsiteUrl || null,
+            brandNetwork: brandNetwork || null,
             metaTitle: `${productDetails.name} by ${productDetails.brandName} | Deals & Details | OfferBae`,
             metaDescription: productMetaDesc,
             pageH1: productDetails.brandName,

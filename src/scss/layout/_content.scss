@@ -436,7 +436,8 @@
 }
 
 // Mobile Sticky CTA for Detail Pages
-.product-sticky-cta {
+.product-sticky-cta,
+.pdp-cta {
     @media (max-width: 768px) {
         position: fixed !important;
         bottom: 1.5rem;
@@ -452,6 +453,377 @@
         box-sizing: border-box;
     }
 }
+
+// ─── Product Detail Page (PDP) ──────────────────────────────────────────────
+
+.product-details-container {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+// Zone 1 – two-column hero
+.product-body {
+    display: flex;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.pdp-image-col {
+    flex: 1 1 300px;
+    max-width: 480px;
+}
+
+.pdp-image-wrap {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+    background: #fafafa;
+
+    .pdp-discount-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: var(--primary-color);
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 800;
+        padding: 0.3rem 0.7rem;
+        border-radius: 6px;
+        z-index: 2;
+        letter-spacing: 0.04em;
+    }
+
+    .pdp-image {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: contain;
+        max-height: 480px;
+    }
+}
+
+.pdp-info-col {
+    flex: 1 1 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-top: 0.5rem;
+}
+
+// Price block
+.pdp-price-block {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+
+    .pdp-price {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: $text-color;
+
+        &.is-sale { color: #ef4444; }
+    }
+
+    .pdp-original-price {
+        font-size: 1.25rem;
+        color: #9ca3af;
+        text-decoration: line-through;
+    }
+
+    .pdp-savings {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #10b981;
+        background: #dcfce7;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+    }
+}
+
+// CTA button
+.pdp-cta {
+    display: inline-block;
+    padding: 0.9rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    transition: opacity 0.15s ease;
+    text-align: center;
+
+    &:hover { opacity: 0.88; }
+}
+
+// Offers stripe
+.pdp-offers-stripe {
+    background: #f8faff;
+    border: 1px solid #e0eaff;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+
+    .pdp-offers-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .pdp-offers-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .pdp-offer-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: white;
+        border: 1px solid #dde8ff;
+        border-radius: 8px;
+        padding: 0.35rem 0.75rem;
+        text-decoration: none;
+        color: $text-color;
+        font-size: 0.8rem;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        max-width: 250px;
+
+        &:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+        }
+
+        &.has-code .chip-code {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 0.78rem;
+            color: var(--primary-color);
+            background: #eef2ff;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .chip-desc {
+            color: #4b5563;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    }
+
+    .pdp-offer-see-all {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        text-decoration: none;
+        white-space: nowrap;
+        margin-left: 0.25rem;
+
+        &:hover { text-decoration: underline; }
+    }
+}
+
+// About this item
+.pdp-description {
+    color: #374151;
+    font-size: 1rem;
+    line-height: 1.75;
+}
+
+// Section headings used across all zones
+.pdp-section-heading {
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+// Key details grid
+.pdp-details-grid {
+    .pdp-details-dl {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0;
+        margin: 0;
+    }
+
+    .pdp-detail-row {
+        display: flex;
+        gap: 1rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid #f9f9f9;
+        font-size: 0.9rem;
+
+        &:last-child { border-bottom: none; }
+
+        dt {
+            width: 140px;
+            flex-shrink: 0;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        dd {
+            margin: 0;
+            color: $text-color;
+
+            a {
+                color: var(--primary-color);
+                text-decoration: none;
+                &:hover { text-decoration: underline; }
+            }
+        }
+    }
+}
+
+// Zone 2 – Brand about
+.pdp-brand-about {
+    .pdp-brand-about-body {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .pdp-brand-logo-inline {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: white;
+        border: 1px solid #eee;
+        flex-shrink: 0;
+        padding: 4px;
+    }
+
+    .pdp-brand-about-text {
+        flex: 1;
+        font-size: 0.95rem;
+        line-height: 1.75;
+        color: #4b5563;
+        min-width: 200px;
+    }
+
+    .pdp-brand-link {
+        display: inline-block;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        text-decoration: none;
+
+        &:hover { text-decoration: underline; }
+    }
+}
+
+// Zone 3 – Related products horizontal scroll
+.pdp-related {
+    .pdp-related-scroll {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 0.75rem;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+
+        &::-webkit-scrollbar { height: 4px; }
+        &::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+    }
+}
+
+.pdp-related-card {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 160px;
+    background: white;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    scroll-snap-align: start;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .pdp-related-img-wrap {
+        width: 100%;
+        height: 130px;
+        background: #fafafa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 0.5rem;
+        }
+    }
+
+    .pdp-related-info {
+        padding: 0.6rem 0.75rem 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .pdp-related-name {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: $text-color;
+        line-height: 1.3;
+    }
+
+    .pdp-related-price {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: $text-color;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+
+        &.is-sale { color: #ef4444; }
+
+        .pdp-related-original {
+            font-size: 0.72rem;
+            font-weight: 400;
+            color: #9ca3af;
+            text-decoration: line-through;
+        }
+    }
+}
+
 
 .content {
     grid-area: main;

@@ -1,60 +1,185 @@
 <section class="content-section">
-    <div class="product-details-container"
-        style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15); padding: 2rem;">
+    <div class="product-details-container">
         <% if (typeof productDetails !='undefined' && productDetails) { %>
-            <div class="product-body" style="display:flex; gap:2rem; flex-wrap: wrap;">
-                <div class="product-image" style="flex:1; min-width: 300px; position: relative;">
+
+            <%-- ══════════════════════════════════════════════
+                 ZONE 1 — Image + Price + Buy + Description
+                 ══════════════════════════════════════════════ --%>
+            <div class="product-body">
+
+                <%-- Image --%>
+                <div class="pdp-image-col">
+                    <div class="pdp-image-wrap">
+                        <% if (typeof productDetails.discountPercent !== 'undefined' && productDetails.discountPercent > 0) { %>
+                            <div class="pdp-discount-badge"><%= productDetails.discountPercent %>% OFF</div>
+                        <% } %>
+                        <a href="<%= productDetails.link || '#' %>" target="_blank" rel="noopener noreferrer">
+                            <img src="<%= productDetails.imageUrl %>" alt="<%= productDetails.name %>"
+                                class="pdp-image" onerror="this.style.display='none'">
+                        </a>
+                    </div>
+                </div>
+
+                <%-- Info column --%>
+                <div class="pdp-info-col">
+
+                    <%-- Pricing --%>
+                    <% const _orig = Number(productDetails.price || 0);
+                       const _sale = Number(productDetails.salePrice || 0);
+                       const _hasDeal = _orig > _sale && _sale > 0;
+                       const _display = _hasDeal ? _sale : (_sale > 0 ? _sale : _orig); %>
+                    <div class="pdp-price-block">
+                        <span class="pdp-price<%= _hasDeal ? ' is-sale' : '' %>">$<%= _display.toFixed(2) %></span>
+                        <% if (_hasDeal) { %>
+                            <span class="pdp-original-price">$<%= _orig.toFixed(2) %></span>
+                            <span class="pdp-savings">You save $<%= (_orig - _sale).toFixed(2) %></span>
+                        <% } %>
+                    </div>
+
+                    <%-- CTA --%>
                     <a href="<%= productDetails.link || '#' %>" target="_blank" rel="noopener noreferrer"
-                        style="position: absolute; top: 0; right: 0; background: rgba(255,255,255,0.9); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 600; text-decoration: none; color: var(--primary-color); border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 2;">See
-                        more images &nearr;</a>
-                    <img src="<%= productDetails.imageUrl %>" alt="<%= productDetails.name %>"
-                        style="max-width:100%; height:auto; border-radius: 0.5rem; border: 1px solid #eee;">
-                </div>
-                <div class="product-info" style="flex:1; min-width: 300px; padding-top: 1rem;">
-                    <% const originalPrice=Number(productDetails.price || 0); const
-                        salePrice=Number(productDetails.salePrice || 0); const hasDiscount=originalPrice> salePrice &&
-                        salePrice > 0;
-                        const displayPrice = hasDiscount ? salePrice : (salePrice > 0 ? salePrice : originalPrice);
-                        %>
-                        <div class="price-block" style="margin-bottom: 1.5rem;">
-                            <% if (hasDiscount && productDetails.discountPercent) { %>
-                                <div class="product-badge"
-                                    style="display: inline-block; background: var(--primary-color); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem;">
-                                    <%= productDetails.discountPercent %>% OFF
-                                </div>
-                                <% } %>
-                                    <div class="product-pricing"
-                                        style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                                        <span class="<%= hasDiscount ? 'sale-price' : 'regular-price' %>"
-                                            style="font-size:2.5rem; font-weight:bold; color: <%= hasDiscount ? '#ef4444' : 'inherit' %>;">
-                                            $<%= displayPrice.toFixed(2) %>
-                                        </span>
-                                        <% if (hasDiscount) { %>
-                                            <span class="original-price"
-                                                style="text-decoration:line-through; color:#9ca3af; font-size: 1.25rem;">
-                                                $<%= originalPrice.toFixed(2) %>
-                                            </span>
-                                            <% } %>
-                                    </div>
-                                    <% if (hasDiscount) { %>
-                                        <div class="product-savings"
-                                            style="color: #10b981; font-weight: 600; font-size: 1.1rem;">
-                                            Save $<%= (originalPrice - salePrice).toFixed(2) %>!
-                                        </div>
+                        class="btn-primary pdp-cta">
+                        Shop Now &rarr;
+                    </a>
+
+                    <%-- Active offers stripe for this brand --%>
+                    <% const _pdpOffers = (typeof sidebarData !== 'undefined' && sidebarData.newestOffers) ? sidebarData.newestOffers : []; %>
+                    <% if (_pdpOffers.length > 0) { %>
+                        <div class="pdp-offers-stripe">
+                            <div class="pdp-offers-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.91 8.84 8.56 2.23a1.93 1.93 0 0 0-1.81 0L3.1 4.13a2.12 2.12 0 0 0-.05 3.69l12.22 6.73a1.47 1.47 0 0 0 1.39 0l3.7-2.04a2.12 2.12 0 0 0 .55-3.67z"/><path d="m3 13 13.5 7.7a2 2 0 0 0 1.8 0L21 19"/></svg>
+                                Active deals for this brand
+                            </div>
+                            <div class="pdp-offers-chips">
+                                <% _pdpOffers.slice(0, 5).forEach(function(o) { %>
+                                    <a href="<%= o.clickUrl || '#' %>" target="_blank" rel="noopener noreferrer"
+                                       class="pdp-offer-chip<%= o.isPromoCode ? ' has-code' : '' %>">
+                                        <% if (o.isPromoCode && o.code && o.code !== 'N/A') { %>
+                                            <span class="chip-code"><%= o.code %></span>
                                         <% } %>
+                                        <span class="chip-desc"><%= (o.description || '').substring(0, 48) %><%= (o.description || '').length > 48 ? '…' : '' %></span>
+                                    </a>
+                                <% }); %>
+                                <% if (typeof brandSlug !== 'undefined' && brandSlug) { %>
+                                    <a href="/offers/<%= productDetails.brandSlug || brandSlug %>" class="pdp-offer-see-all">All deals &rarr;</a>
+                                <% } %>
+                            </div>
                         </div>
-                        <a href="<%= productDetails.link || '#' %>" target="_blank" rel="noopener noreferrer"
-                            class="btn-primary product-sticky-cta"
-                            style="display:inline-block; margin-top:2rem; padding:1rem 2rem; background:var(--primary-color); color:white; text-decoration:none; border-radius:0.5rem; font-weight: 600;">Buy
-                            Now</a>
-                        <p class="description"
-                            style="margin-top:1.5rem; line-height: 1.7; color: #4b5563; font-size: 1.05rem;">
-                            <%= productDetails.description || 'No description available.' %>
-                        </p>
+                    <% } %>
+
+                    <%-- Product description --%>
+                    <% if (productDetails.description) { %>
+                        <div class="pdp-description">
+                            <h2 class="pdp-section-heading">About this item</h2>
+                            <p><%= productDetails.description %></p>
+                        </div>
+                    <% } %>
+
+                    <%-- ── Key Details Grid ── --%>
+                    <div class="pdp-details-grid">
+                        <h2 class="pdp-section-heading">Product details</h2>
+                        <dl class="pdp-details-dl">
+                            <% if (productDetails.brandName) { %>
+                                <div class="pdp-detail-row">
+                                    <dt>Brand</dt>
+                                    <dd>
+                                        <% if (typeof brandWebsiteUrl !== 'undefined' && brandWebsiteUrl) { %>
+                                            <a href="<%= brandWebsiteUrl %>" target="_blank" rel="noopener noreferrer"><%= productDetails.brandName %></a>
+                                        <% } else { %>
+                                            <%= productDetails.brandName %>
+                                        <% } %>
+                                    </dd>
+                                </div>
+                            <% } %>
+                            <% if (productDetails.sku) { %>
+                                <div class="pdp-detail-row">
+                                    <dt>SKU</dt>
+                                    <dd><%= productDetails.sku %></dd>
+                                </div>
+                            <% } %>
+                            <% if (productDetails.primaryCategory || productDetails.category) { %>
+                                <div class="pdp-detail-row">
+                                    <dt>Category</dt>
+                                    <dd><%= productDetails.primaryCategory || productDetails.category %></dd>
+                                </div>
+                            <% } %>
+                            <% if (typeof brandNetwork !== 'undefined' && brandNetwork) { %>
+                                <div class="pdp-detail-row">
+                                    <dt>Store network</dt>
+                                    <dd><%= brandNetwork %></dd>
+                                </div>
+                            <% } %>
+                            <% if (productDetails.updatedAt) { %>
+                                <div class="pdp-detail-row">
+                                    <dt>Price last updated</dt>
+                                    <dd><%= new Date(productDetails.updatedAt.toDate ? productDetails.updatedAt.toDate() : productDetails.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></dd>
+                                </div>
+                            <% } %>
+                        </dl>
+                    </div>
+
+                </div><%-- /pdp-info-col --%>
+            </div><%-- /product-body --%>
+
+            <%-- ══════════════════════════════════════════════
+                 ZONE 2 — Brand Description
+                 ══════════════════════════════════════════════ --%>
+            <% if (typeof brandDescription !== 'undefined' && brandDescription) { %>
+                <div class="pdp-brand-about">
+                    <h2 class="pdp-section-heading">About <%= productDetails.brandName %></h2>
+                    <div class="pdp-brand-about-body">
+                        <% if (typeof pageLogo !== 'undefined' && pageLogo) { %>
+                            <img src="<%= pageLogo %>" alt="<%= productDetails.brandName %>" class="pdp-brand-logo-inline">
+                        <% } %>
+                        <div class="pdp-brand-about-text"><%- brandDescription %></div>
+                    </div>
+                    <% if (typeof brandWebsiteUrl !== 'undefined' && brandWebsiteUrl) { %>
+                        <a href="<%= brandWebsiteUrl %>" target="_blank" rel="noopener noreferrer" class="pdp-brand-link">
+                            Visit <%= productDetails.brandName %> &rarr;
+                        </a>
+                    <% } %>
                 </div>
-            </div>
-            <% } else { %>
-                <p>Product details not available.</p>
-                <% } %>
+            <% } %>
+
+            <%-- ══════════════════════════════════════════════
+                 ZONE 3 — More from this brand (related products)
+                 ══════════════════════════════════════════════ --%>
+            <% const _relatedProds = (typeof sidebarData !== 'undefined' && sidebarData.newestProducts && sidebarData.newestProducts.length > 0) ? sidebarData.newestProducts : []; %>
+            <% if (_relatedProds.length > 0) { %>
+                <div class="pdp-related">
+                    <h2 class="pdp-section-heading">More from <%= productDetails.brandName %></h2>
+                    <div class="pdp-related-scroll">
+                        <% _relatedProds.forEach(function(p) {
+                            const _rOrig = Number(p.price || 0);
+                            const _rSale = Number(p.salePrice || 0);
+                            const _rHasDeal = _rOrig > _rSale && _rSale > 0;
+                            const _rDisplay = _rHasDeal ? _rSale : (_rSale > 0 ? _rSale : _rOrig);
+                        %>
+                            <a href="/products/<%= p.brandSlug || productDetails.brandSlug %>/<%= p.slug %>"
+                               class="pdp-related-card">
+                                <% const _img = p.storageImageUrl || p.imageUrl; %>
+                                <% if (_img) { %>
+                                    <div class="pdp-related-img-wrap">
+                                        <img src="<%= _img %>" alt="<%= p.name %>" loading="lazy" onerror="this.parentElement.style.display='none'">
+                                    </div>
+                                <% } %>
+                                <div class="pdp-related-info">
+                                    <div class="pdp-related-name"><%= (p.name || '').substring(0, 60) %><%= (p.name || '').length > 60 ? '…' : '' %></div>
+                                    <% if (_rDisplay > 0) { %>
+                                        <div class="pdp-related-price<%= _rHasDeal ? ' is-sale' : '' %>">
+                                            $<%= _rDisplay.toFixed(2) %>
+                                            <% if (_rHasDeal) { %><span class="pdp-related-original">$<%= _rOrig.toFixed(2) %></span><% } %>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </a>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } %>
+
+        <% } else { %>
+            <p>Product details not available.</p>
+        <% } %>
     </div>
 </section>
