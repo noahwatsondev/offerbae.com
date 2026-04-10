@@ -41,13 +41,19 @@
                         </div>
                     <% } %>
 
-                    <div class="pdp-pricing">
-                        <span class="pdp-price<%= productDetails.salePrice < productDetails.price ? ' is-sale' : '' %>">
-                            $<%= (productDetails.salePrice || productDetails.price || 0) %>
+                    <div class="pdp-price-block">
+                        <% 
+                            const _pPrice = Number(productDetails.price || 0);
+                            const _pSale = Number(productDetails.salePrice || 0);
+                            const _pHasDeal = _pPrice > _pSale && _pSale > 0;
+                            const _pDisplay = _pHasDeal ? _pSale : (_pSale > 0 ? _pSale : _pPrice);
+                        %>
+                        <span class="pdp-price<%= _pHasDeal ? ' is-sale' : '' %>">
+                            $<%= _pDisplay.toFixed(2) %>
                         </span>
-                        <% if (productDetails.salePrice && productDetails.price && Number(productDetails.salePrice) < Number(productDetails.price)) { %>
-                            <span class="pdp-original-price">$<%= productDetails.price %></span>
-                            <span class="pdp-savings">Save <%= Math.round((1 - (productDetails.salePrice / productDetails.price)) * 100) %>%</span>
+                        <% if (_pHasDeal) { %>
+                            <span class="pdp-original-price">$<%= _pPrice.toFixed(2) %></span>
+                            <span class="pdp-savings">Save <%= Math.round((1 - (_pSale / _pPrice)) * 100) %>%</span>
                         <% } %>
                     </div>
 
