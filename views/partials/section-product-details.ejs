@@ -2,6 +2,42 @@
     <div class="product-details-container">
         <% if (typeof productDetails !='undefined' && productDetails) { %>
 
+            <!-- SEO: Structured Data for Google -->
+            <script type="application/ld+json">
+            {
+                "@context": "https://schema.org/",
+                "@type": "Product",
+                "name": "<%- productDetails.name.replace(/"/g, '\\"') %>",
+                "image": "<%- productDetails.imageUrl %>",
+                <% if (productDetails.longDescription || productDetails.description) { %>
+                "description": "<%- (productDetails.longDescription || productDetails.description).replace(/(<([^>]+)>)/gi, "").replace(/"/g, '\\"').substring(0, 300) %>...",
+                <% } %>
+                "sku": "<%- productDetails.sku %>",
+                "brand": {
+                    "@type": "Brand",
+                    "name": "<%- productDetails.brandName %>"
+                },
+                "offers": {
+                    "@type": "Offer",
+                    "url": "<%- productDetails.link %>",
+                    "priceCurrency": "USD",
+                    "price": "<%- productDetails.salePrice || productDetails.price || 0 %>",
+                    "itemCondition": "https://schema.org/NewCondition",
+                    "availability": "https://schema.org/InStock",
+                    "seller": {
+                        "@type": "Organization",
+                        "name": "<%- productDetails.brandName %>"
+                    }
+                }<% if (productDetails.rating && productDetails.reviewCount) { %>,
+                "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "<%- productDetails.rating %>",
+                    "reviewCount": "<%- productDetails.reviewCount %>"
+                }
+                <% } %>
+            }
+            </script>
+
             <!-- ZONE 1: Image + Price + Buy + Description -->
 
             <div class="product-body">
@@ -93,6 +129,34 @@
                         </div>
                     <% } %>
 
+                    <% if (productDetails.rating && productDetails.reviewCount) { %>
+                        <div class="pdp-reviews-section">
+                            <h2 class="pdp-section-heading">Customer Reviews</h2>
+                            <div class="pdp-reviews-summary">
+                                <div class="review-score-big">
+                                    <span class="score-number"><%= productDetails.rating %></span>
+                                    <span class="score-out-of">/ 5</span>
+                                </div>
+                                <div class="review-stars-big">
+                                    <div class="stars">
+                                        <% for(let i=1; i<=5; i++) { %>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="<%= i <= Math.round(productDetails.rating) ? '#fbbf24' : '#e5e7eb' %>" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                        <% } %>
+                                    </div>
+                                    <div class="review-count-text">Based on <%= productDetails.reviewCount.toLocaleString() %> verified ratings across the web</div>
+                                </div>
+                            </div>
+                            
+                            <% if (productDetails.reviews_url) { %>
+                                <div class="pdp-reviews-cta">
+                                    <p>We've captured and aggregated trusted feedback from multiple retailers to ensure you have the full picture.</p>
+                                    <a href="<%= productDetails.reviews_url %>" target="_blank" rel="noopener noreferrer" class="pdp-review-btn">
+                                        Read All <%= productDetails.reviewCount.toLocaleString() %> Detailed Reviews &rarr;
+                                    </a>
+                                </div>
+                            <% } %>
+                        </div>
+                    <% } %>
                     
                     <div class="pdp-details-grid">
                         <h2 class="pdp-section-heading">Product details</h2>

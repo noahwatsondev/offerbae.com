@@ -558,8 +558,8 @@
     }
 
     .pdp-savings {
-        background: #fef2f2;
-        color: #ef4444;
+        background: rgba(var(--color-green, .2));
+        color: var(--color-green);
         padding: 0.2rem 0.6rem;
         border-radius: 6px;
         font-size: 0.85rem;
@@ -637,6 +637,86 @@
                 font-size: 0.95rem;
                 font-weight: 500;
                 color: $text-color;
+            }
+        }
+    }
+}
+
+.pdp-reviews-section {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid #f3f4f6;
+
+    .pdp-reviews-summary {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+
+        .review-score-big {
+            display: flex;
+            align-items: baseline;
+            gap: 0.25rem;
+
+            .score-number {
+                font-size: 3rem;
+                font-weight: 800;
+                color: $text-color;
+                line-height: 1;
+            }
+
+            .score-out-of {
+                font-size: 1rem;
+                color: #6b7280;
+                font-weight: 600;
+            }
+        }
+
+        .review-stars-big {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+
+            .stars {
+                display: flex;
+                gap: 2px;
+            }
+
+            .review-count-text {
+                font-size: 0.9rem;
+                color: #6b7280;
+                font-weight: 500;
+            }
+        }
+    }
+
+    .pdp-reviews-cta {
+        p {
+            font-size: 1rem;
+            color: #4b5563;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .pdp-review-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            color: $text-color;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+
+            &:hover {
+                background: #f9fafb;
+                border-color: #9ca3af;
             }
         }
     }
