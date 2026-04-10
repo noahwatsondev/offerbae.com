@@ -2,6 +2,15 @@
     <div class="product-details-container">
         <% if (typeof productDetails !='undefined' && productDetails) { %>
 
+            <%
+                // Google deprecated the /shopping/product/ pages, so we redirect broken URLs to a smart search query instead
+                let safeReviewUrl = productDetails.reviews_url || null;
+                if (safeReviewUrl && safeReviewUrl.includes('google.com/shopping/product/')) {
+                    const query = encodeURIComponent((productDetails.brandName + ' ' + (productDetails.sku || productDetails.name)).substring(0, 100) + ' reviews');
+                    safeReviewUrl = 'https://www.google.com/search?q=' + query;
+                }
+            %>
+
             <!-- SEO: Structured Data for Google -->
             <script type="application/ld+json">
             {
@@ -72,7 +81,15 @@
                             </div>
                             <span class="rating-value"><%= productDetails.rating %></span>
                             <% if (productDetails.reviewCount) { %>
-                                <span class="review-count">(<%= productDetails.reviewCount.toLocaleString() %> reviews)</span>
+                                <span class="review-count">
+                                    <% if (typeof safeReviewUrl !== 'undefined' && safeReviewUrl) { %>
+                                        <a href="<%= safeReviewUrl %>" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">
+                                            (<%= productDetails.reviewCount %> reviews)
+                                        </a>
+                                    <% } else { %>
+                                        (<%= productDetails.reviewCount.toLocaleString() %> reviews)
+                                    <% } %>
+                                </span>
                             <% } %>
                         </div>
                     <% } %>
@@ -147,10 +164,10 @@
                                 </div>
                             </div>
                             
-                            <% if (productDetails.reviews_url) { %>
+                            <% if (safeReviewUrl) { %>
                                 <div class="pdp-reviews-cta">
                                     <p>We've captured and aggregated trusted feedback from multiple retailers to ensure you have the full picture.</p>
-                                    <a href="<%= productDetails.reviews_url %>" target="_blank" rel="noopener noreferrer" class="pdp-review-btn">
+                                    <a href="<%= safeReviewUrl %>" target="_blank" rel="noopener noreferrer" class="pdp-review-btn">
                                         Read All <%= productDetails.reviewCount.toLocaleString() %> Detailed Reviews &rarr;
                                     </a>
                                 </div>
