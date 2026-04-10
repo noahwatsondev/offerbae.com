@@ -26,6 +26,7 @@
     "@google-cloud/storage": "^7.17.2",
     "@google/genai": "^1.43.0",
     "axios": "^1.12.2",
+    "cheerio": "^1.2.0",
     "cors": "^2.8.5",
     "csv-parser": "^3.2.0",
     "dotenv": "^17.2.3",
@@ -34,6 +35,10 @@
     "firebase-admin": "^13.6.0",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
+    "p-limit": "^2.3.0",
+    "puppeteer-core": "^24.40.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "sharp": "^0.34.4",
     "xml2js": "^0.6.2"
   },

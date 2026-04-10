@@ -1107,17 +1107,85 @@ h2 {
   color: #ef4444;
 }
 .pdp-price-block .pdp-original-price {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   color: #9ca3af;
   text-decoration: line-through;
+  font-weight: 500;
 }
 .pdp-price-block .pdp-savings {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #10b981;
-  background: #dcfce7;
+  background: #fef2f2;
+  color: #ef4444;
   padding: 0.2rem 0.6rem;
   border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.pdp-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+.pdp-rating .stars {
+  display: flex;
+  gap: 2px;
+}
+.pdp-rating .rating-value {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #111827;
+}
+.pdp-rating .review-count {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.pdp-desc-content {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.pdp-ingredients {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+.pdp-ingredients .pdp-ingredients-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.pdp-specs-full {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+.pdp-specs-full .pdp-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+.pdp-specs-full .pdp-specs-grid .spec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.pdp-specs-full .pdp-specs-grid .spec-item .spec-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  font-weight: 700;
+}
+.pdp-specs-full .pdp-specs-grid .spec-item .spec-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #111827;
 }
 
 .pdp-cta {

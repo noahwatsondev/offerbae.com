@@ -23,30 +23,67 @@
                 <div class="pdp-info-col">
 
                     
-                    <% const _orig = Number(productDetails.price || 0);
-                       const _sale = Number(productDetails.salePrice || 0);
-                       const _hasDeal = _orig > _sale && _sale > 0;
-                       const _display = _hasDeal ? _sale : (_sale > 0 ? _sale : _orig); %>
-                    <div class="pdp-price-block">
-                        <span class="pdp-price<%= _hasDeal ? ' is-sale' : '' %>">$<%= _display.toFixed(2) %></span>
-                        <% if (_hasDeal) { %>
-                            <span class="pdp-original-price">$<%= _orig.toFixed(2) %></span>
-                            <span class="pdp-savings">You save $<%= (_orig - _sale).toFixed(2) %></span>
+                    <h1 class="pdp-title">
+                        <%= productDetails.name %>
+                    </h1>
+
+                    <% if (typeof productDetails.rating !== 'undefined' && productDetails.rating) { %>
+                        <div class="pdp-rating">
+                            <div class="stars">
+                                <% for(let i=1; i<=5; i++) { %>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="<%= i <= Math.round(productDetails.rating) ? '#fbbf24' : '#e5e7eb' %>" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                <% } %>
+                            </div>
+                            <span class="rating-value"><%= productDetails.rating %></span>
+                            <% if (productDetails.reviewCount) { %>
+                                <span class="review-count">(<%= productDetails.reviewCount.toLocaleString() %> reviews)</span>
+                            <% } %>
+                        </div>
+                    <% } %>
+
+                    <div class="pdp-pricing">
+                        <span class="pdp-price<%= productDetails.salePrice < productDetails.price ? ' is-sale' : '' %>">
+                            $<%= (productDetails.salePrice || productDetails.price || 0) %>
+                        </span>
+                        <% if (productDetails.salePrice && productDetails.price && Number(productDetails.salePrice) < Number(productDetails.price)) { %>
+                            <span class="pdp-original-price">$<%= productDetails.price %></span>
+                            <span class="pdp-savings">Save <%= Math.round((1 - (productDetails.salePrice / productDetails.price)) * 100) %>%</span>
                         <% } %>
                     </div>
 
-                    
                     <a href="<%= productDetails.link || '#' %>" target="_blank" rel="noopener noreferrer"
                         class="btn-primary pdp-cta">
                         Buy from <%= productDetails.brandName %> &rarr;
                     </a>
 
 
-
-                    <% if (productDetails.description) { %>
+                    <% if (productDetails.longDescription || productDetails.description) { %>
                         <div class="pdp-description">
                             <h2 class="pdp-section-heading">About this item</h2>
-                            <p><%= productDetails.description %></p>
+                            <div class="pdp-desc-content">
+                                <%- productDetails.longDescription || productDetails.description %>
+                            </div>
+                        </div>
+                    <% } %>
+
+                    <% if (productDetails.ingredients) { %>
+                        <div class="pdp-ingredients">
+                            <h2 class="pdp-section-heading">Ingredients</h2>
+                            <p class="pdp-ingredients-text"><%= productDetails.ingredients %></p>
+                        </div>
+                    <% } %>
+
+                    <% if (productDetails.specifications && Object.keys(productDetails.specifications).length > 0) { %>
+                        <div class="pdp-specs-full">
+                            <h2 class="pdp-section-heading">Full Specifications</h2>
+                            <div class="pdp-specs-grid">
+                                <% Object.entries(productDetails.specifications).forEach(([key, val]) => { %>
+                                    <div class="spec-item">
+                                        <span class="spec-label"><%= key %></span>
+                                        <span class="spec-value"><%= val %></span>
+                                    </div>
+                                <% }) %>
+                            </div>
                         </div>
                     <% } %>
 
